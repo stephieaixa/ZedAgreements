@@ -169,6 +169,18 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
   .tab-content{max-width:100vw;overflow-x:hidden;}
   .route-section{max-width:100%;overflow-x:hidden;}
 }
+
+.leaflet-tooltip-zed {
+  background: rgba(26,25,23,0.85);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 4px 8px;
+  box-shadow: none;
+}
+.leaflet-tooltip-zed::before { display:none; }
 </style>
 </head>
 <body>
@@ -186,7 +198,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 <div class="tabs">
   <button class="tab active" data-tab="solo">✓ Viajan solas</button>
   <button class="tab" data-tab="route">Buscar ruta</button>
-  <button class="tab" data-tab="map">🗺 Mapa</button>
+  <button class="tab" data-tab="map">Mapa</button>
 
 </div>
 
@@ -689,23 +701,80 @@ function runRouteSearch(){
             <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
             <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span><span style="font-size:11px;color:var(--text-muted)">→</span><span class="rrc-apt highlight">${selectedDest}</span></div>
           </div>`).join('')}</div>`:'';
-      const stopHtml=stopovers.length?`
-        <div class="route-section-subtitle" style="margin-bottom:10px">Con escala (${stopovers.length} combinaciones)</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">${stopovers.slice(0,20).map(r=>`
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;" onclick="openPanel('${r.a1.iata}')" title="Click para ver ${r.a1.name}">
-            <span class="rrc-apt highlight">${selectedOrigin}</span>
-            <span style="font-size:11px;color:var(--text-muted)">→</span>
-            <span style="display:inline-flex;align-items:center;gap:4px;"><span class="rrc-iata" style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${r.a1.iata}</span></span>
-            <span style="font-size:11px;color:var(--text-muted)">→</span>
-            <span class="rrc-apt" style="background:var(--amber-bg);color:var(--amber)">${r.hub}</span>
-            <span style="font-size:10px;color:var(--text-muted)">${r.hubCity}</span>
-            <span style="font-size:11px;color:var(--text-muted)">→</span>
-            <span style="display:inline-flex;align-items:center;gap:4px;"><span class="rrc-iata" style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${r.a2.iata}</span></span>
-            <span style="font-size:11px;color:var(--text-muted)">→</span>
-            <span class="rrc-apt highlight">${selectedDest}</span>
-          </div>`).join('')
-        }${stopovers.length>20?`<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">... y ${stopovers.length-20} combinaciones más</div>`:''}
-        </div>`:'';
+      function renderStopCard(r){
+        const sameAirline=r.stops===1&&r.a1.iata===r.a2.iata;
+        const c1=AIRLINE_COLORS[r.a1.iata]||'#999';
+        const c2=AIRLINE_COLORS[r.a2.iata]||'#999';
+        const c3=r.a3?(AIRLINE_COLORS[r.a3.iata]||'#999'):'#999';
+        const badge=sameAirline?'1 aerolínea':r.stops===2?'2 escalas':'2 aerolíneas';
+        const badgeBg=sameAirline?'var(--green-bg)':'var(--border)';
+        const badgeColor=sameAirline?'var(--green)':'var(--text-muted)';
+        let hubPath=`<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)">${r.hub}</span>`;
+        if(r.stops===2) hubPath+=` <span style="color:var(--text-muted)">→</span> <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)">${r.hub2}</span>`;
+        let tramo2='';
+        if(r.stops===2&&r.a3){
+          tramo2=`<div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="openPanel('${r.a2.iata}');event.stopPropagation()">
+            <div style="width:3px;height:34px;border-radius:2px;flex-shrink:0;background:${c2}"></div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c2};background:${c2}22;padding:1px 5px;border-radius:3px">${r.a2.iata}</span>
+                <span style="font-size:12px;font-weight:600">${r.a2.name}</span>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary)">${r.hub} → ${r.hub2}</div>
+            </div>
+          </div>
+          <div style="padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="openPanel('${r.a3.iata}');event.stopPropagation()">
+            <div style="width:3px;height:34px;border-radius:2px;flex-shrink:0;background:${c3}"></div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c3};background:${c3}22;padding:1px 5px;border-radius:3px">${r.a3.iata}</span>
+                <span style="font-size:12px;font-weight:600">${r.a3.name}</span>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary)">${r.hub2} → ${selectedDest}</div>
+            </div>
+          </div>`;
+        } else {
+          tramo2=`<div style="padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="openPanel('${r.a2.iata}');event.stopPropagation()">
+            <div style="width:3px;height:34px;border-radius:2px;flex-shrink:0;background:${c2}"></div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c2};background:${c2}22;padding:1px 5px;border-radius:3px">${r.a2.iata}</span>
+                <span style="font-size:12px;font-weight:600">${r.a2.name}</span>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary)">${r.hub} → ${selectedDest}</div>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted)">ver →</span>
+          </div>`;
+        }
+        return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--border);">
+            <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--green)">${selectedOrigin}</span>
+            <span style="color:var(--text-muted)">→</span>
+            ${hubPath}
+            <span style="color:var(--text-muted)">→</span>
+            <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent)">${selectedDest}</span>
+            <span style="margin-left:auto;font-size:10px;padding:1px 8px;border-radius:99px;background:${badgeBg};color:${badgeColor}">${badge}</span>
+          </div>
+          <div style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="openPanel('${r.a1.iata}');event.stopPropagation()">
+            <div style="width:3px;height:34px;border-radius:2px;flex-shrink:0;background:${c1}"></div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c1};background:${c1}22;padding:1px 5px;border-radius:3px">${r.a1.iata}</span>
+                <span style="font-size:12px;font-weight:600">${r.a1.name}</span>
+              </div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary)">${selectedOrigin} → ${r.hub}</div>
+            </div>
+            <span style="font-size:10px;color:var(--text-muted)">ver →</span>
+          </div>
+          ${tramo2}
+        </div>`;
+      }
+      const stopHtml=stopovers.length
+        ?'<div class="route-section-subtitle" style="margin-bottom:10px">CON ESCALA ('+stopovers.length+' combinaciones)</div>'
+         +'<div style="display:flex;flex-direction:column;gap:10px;">'+stopovers.slice(0,20).map(r=>renderStopCard(r)).join('')
+         +(stopovers.length>20?'<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">... y '+(stopovers.length-20)+' combinaciones más</div>':'')
+         +'</div>'
+        :'';
       resultsArea.innerHTML=directHtml+stopHtml;
     }
   }
@@ -832,32 +901,40 @@ document.querySelectorAll('.zone-pill').forEach(b=>b.addEventListener('click',()
 // ── MAP ───────────────────────────────────────────────────────────────
 let mapInstance=null, mapInitialized=false;
 let mapOriginCode=null, mapDestCode=null;
-let allMapLayers=[], routeLayers=[], markerLayers=[];
-let selectedAirport=null;
+let baseLines=[], routeLayers=[], airportMarkers={};
+let activeAirport=null, hoveredLine=null;
+let mapState='idle'; // idle | origin-selected | dest-selected | both
+
+const AIRLINE_MAP_COLORS={
+  VY:'#E8420A',AY:'#006CB7',OS:'#E84040',KM:'#C8102E',X3:'#003580',
+  ZO:'#1B2B4B',NO:'#2C3E7A',PM:'#2E7D32',S4:'#1565C0',SP:'#0D47A1',
+  HM:'#FF6B35',F8:'#FF3B30',F9:'#FF6B00',G4:'#E8420A','5T':'#2E7D32',
+  '9M':'#388E3C',WP:'#1B5E20',H2:'#003580',P5:'#FF6B00',VR:'#003399',
+  EY:'#C8A000',NZ:'#00205B',
+};
 
 const COORDS={
   BCN:[41.2971,2.0785],MAD:[40.4719,-3.5626],LIS:[38.7813,-9.1359],
   LGW:[51.1481,-0.1903],LHR:[51.4775,-0.4614],CDG:[49.0097,2.5479],
   AMS:[52.3086,4.7639],FRA:[50.0379,8.5622],MUC:[48.3538,11.7861],
   VIE:[48.1103,16.5697],ZRH:[47.4647,8.5492],GVA:[46.2381,6.1089],
-  FCO:[41.8003,12.2389],MXP:[45.6306,8.7281],MAH:[39.8626,4.2186],
-  PMI:[39.5517,2.7388],IBZ:[38.8729,1.3731],ACE:[28.9455,-13.6052],
-  FUE:[28.4527,-13.8638],LPA:[27.9319,-15.3866],TFS:[28.0445,-16.5725],
-  TFN:[28.4827,-16.3415],SPC:[28.6265,-17.7556],VDE:[27.8149,-17.8871],
-  GMZ:[28.0296,-17.2146],HEL:[60.3172,24.9633],ARN:[59.6519,17.9186],
-  OSL:[60.1939,11.1004],CPH:[55.6181,12.6561],WAW:[52.1657,20.9671],
-  PRG:[50.1008,14.2600],BUD:[47.4298,19.2610],BER:[52.3667,13.5033],
-  ATH:[37.9364,23.9445],IST:[41.2753,28.7519],MLA:[35.8575,14.4775],
-  DUB:[53.4213,-6.2701],BRU:[50.9010,4.4844],PDL:[37.7412,-25.6979],
-  TER:[38.7618,-27.0908],HOR:[38.5198,-28.7159],PIX:[38.5543,-28.4413],
-  SMA:[36.9714,-25.1706],GRW:[39.0922,-28.0298],SJZ:[38.6655,-28.1758],
-  FLW:[39.4553,-31.1314],CVU:[39.6714,-31.1136],OPO:[41.2481,-8.6814],
-  SEZ:[-4.6743,55.5218],PRI:[-4.3192,55.6914],NAP:[40.8860,14.2908],
-  VCE:[45.5053,12.3520],FLR:[43.8100,11.2051],MRS:[43.4393,5.2214],
-  LYS:[45.7256,5.0811],NCE:[43.6584,7.2158],TLS:[43.6293,1.3638],
-  BOD:[44.8283,-0.7153],AGP:[36.6749,-4.4991],ALC:[38.2822,-0.5582],
-  SVQ:[37.4180,-5.8931],VLC:[39.4893,-0.4816],BIO:[43.3011,-2.9106],
-  // North America
+  FCO:[41.8003,12.2389],MXP:[45.6306,8.7281],PMI:[39.5517,2.7388],
+  IBZ:[38.8729,1.3731],ACE:[28.9455,-13.6052],FUE:[28.4527,-13.8638],
+  LPA:[27.9319,-15.3866],TFS:[28.0445,-16.5725],TFN:[28.4827,-16.3415],
+  SPC:[28.6265,-17.7556],VDE:[27.8149,-17.8871],GMZ:[28.0296,-17.2146],
+  HEL:[60.3172,24.9633],ARN:[59.6519,17.9236],OSL:[60.1939,11.1004],
+  CPH:[55.6181,12.6561],WAW:[52.1657,20.9671],PRG:[50.1008,14.2600],
+  BUD:[47.4298,19.2610],BER:[52.3667,13.5033],ATH:[37.9364,23.9445],
+  IST:[41.2753,28.7519],MLA:[35.8575,14.4775],DUB:[53.4213,-6.2701],
+  BRU:[50.9010,4.4844],PDL:[37.7412,-25.6979],TER:[38.7618,-27.0908],
+  HOR:[38.5198,-28.7159],PIX:[38.5543,-28.4413],SMA:[36.9714,-25.1706],
+  GRW:[39.0922,-28.0298],SJZ:[38.6655,-28.1758],FLW:[39.4553,-31.1314],
+  CVU:[39.6714,-31.1136],OPO:[41.2481,-8.6814],SEZ:[-4.6743,55.5218],
+  PRI:[-4.3192,55.6914],NAP:[40.8860,14.2908],VCE:[45.5053,12.3520],
+  MRS:[43.4393,5.2214],LYS:[45.7256,5.0811],NCE:[43.6584,7.2158],
+  TLS:[43.6293,1.3638],BOD:[44.8283,-0.7153],AGP:[36.6749,-4.4991],
+  ALC:[38.2822,-0.5582],SVQ:[37.4180,-5.8931],VLC:[39.4893,-0.4816],
+  BIO:[43.3011,-2.9106],MAH:[39.8626,4.2186],
   JFK:[40.6413,-73.7781],EWR:[40.6895,-74.1745],LAX:[33.9425,-118.4081],
   ORD:[41.9742,-87.9073],MIA:[25.7959,-80.2870],BOS:[42.3656,-71.0096],
   IAD:[38.9531,-77.4565],SFO:[37.6213,-122.3790],SEA:[47.4502,-122.3088],
@@ -878,42 +955,37 @@ const COORDS={
   MBJ:[18.5037,-77.9134],SJD:[23.1518,-109.7210],PVR:[20.6801,-105.2544],
   CUN:[21.0365,-86.8771],SJU:[18.4394,-66.0018],CMH:[39.9998,-82.8919],
   CVG:[39.0488,-84.6678],IND:[39.7173,-86.2944],GRR:[42.8808,-85.5228],
-  TYS:[35.8110,-83.9940],CHA:[35.0353,-85.2035],LEX:[38.0365,-84.6059],
   BHM:[33.5629,-86.7535],SAV:[32.1276,-81.2021],MYR:[33.6797,-78.9283],
-  RIC:[37.5052,-77.3197],ILM:[34.2706,-77.9026],GSP:[34.8957,-82.2189],
-  EUG:[44.1246,-123.2119],GEG:[47.6199,-117.5338],BOI:[43.5644,-116.2228],
-  MSO:[46.9163,-114.0906],BIL:[45.8077,-108.5428],FAR:[46.9207,-96.8158],
-  FSD:[43.5820,-96.7419],DSM:[41.5340,-93.6631],OMA:[41.3032,-95.8940],
-  ICT:[37.6499,-97.4331],TUL:[36.1984,-95.8881],OKC:[35.3931,-97.6007],
-  PIT:[40.4914,-80.2329],CLE:[41.4058,-81.8540],MKE:[42.9472,-87.8966],
-  STL:[38.7487,-90.3700],MSY:[29.9934,-90.2580],SAT:[29.5337,-98.4698],
-  ABQ:[35.0402,-106.6090],PHL:[39.8719,-75.2411],SAN:[32.7336,-117.1897],
-  RDU:[35.8776,-78.7875],MCI:[39.2976,-94.7139],BNA:[36.1245,-86.6782],
-  AUS:[30.1975,-97.6664],HOU:[29.6454,-95.2789],PDX:[45.5887,-122.5975],
-  // Latin America
-  SCL:[-33.3930,-70.7858],EZE:[-34.8222,-58.5358],GRU:[-23.4356,-46.4731],
-  BOG:[4.7016,-74.1469],LIM:[-12.0219,-77.1143],UIO:[-0.1292,-78.3576],
-  GYE:[-2.1574,-79.8836],MDE:[6.1675,-75.4231],CTG:[10.4424,-75.5130],
-  CLO:[3.5432,-76.3816],BAQ:[10.8896,-74.7808],VVI:[-17.6448,-63.1354],
-  PTY:[9.0717,-79.3835],SDQ:[18.4297,-69.6689],HAV:[22.9892,-82.4091],
-  SJO:[9.9939,-84.2088],SAL:[13.4409,-89.0557],GUA:[14.5833,-90.5275],
-  CCS:[10.6031,-66.9913],PUJ:[18.5674,-68.3634],ADZ:[12.5836,-81.7112],
-  PEI:[4.8127,-75.7395],BGA:[7.1268,-73.1848],FOR:[-3.7762,-38.5326],
-  REC:[-8.1265,-34.9236],IQQ:[-20.5352,-70.1812],ANF:[-23.4445,-70.4450],
-  LSC:[-29.9162,-71.1995],CCP:[-36.7726,-72.4243],PMC:[-41.4388,-73.0942],
-  PUQ:[-53.0026,-70.8546],ZCO:[-38.7668,-72.6370],CJC:[-22.4982,-68.9036],
-  ARI:[-18.3485,-70.3387],CPO:[-27.2972,-70.7792],ZAL:[-39.6500,-73.0861],
-  // Middle East / Africa
-  AUH:[24.4330,54.6511],DXB:[25.2532,55.3657],DOH:[25.2609,51.6138],
-  KWI:[29.2267,47.9689],BEY:[33.8209,35.4883],AMM:[31.7226,35.9932],
-  TLV:[32.0114,34.8867],RUH:[24.9578,46.6989],JED:[21.6796,39.1565],
-  MCT:[23.5933,58.2844],CAI:[30.1219,31.4056],JNB:[-26.1392,28.2460],
-  NBO:[-1.3192,36.9275],LOS:[6.5774,3.3212],ADD:[8.9779,38.7993],
-  CMN:[33.3675,-7.5898],DSS:[14.6704,-17.0726],MRU:[-20.4302,57.6836],
-  RAI:[14.9245,-23.4936],SID:[16.7442,-22.9494],VXE:[16.8333,-24.9833],
-  BVC:[16.1364,-22.8889],OPO:[41.2481,-8.6814],PVD:[41.7268,-71.4284],
-  OAK:[37.7213,-122.2208],
-  // Asia Pacific
+  RIC:[37.5052,-77.3197],EUG:[44.1246,-123.2119],GEG:[47.6199,-117.5338],
+  BOI:[43.5644,-116.2228],MSO:[46.9163,-114.0906],BIL:[45.8077,-108.5428],
+  FAR:[46.9207,-96.8158],FSD:[43.5820,-96.7419],DSM:[41.5340,-93.6631],
+  OMA:[41.3032,-95.8940],ICT:[37.6499,-97.4331],TUL:[36.1984,-95.8881],
+  OKC:[35.3931,-97.6007],PIT:[40.4914,-80.2329],CLE:[41.4058,-81.8540],
+  MKE:[42.9472,-87.8966],STL:[38.7487,-90.3700],MSY:[29.9934,-90.2580],
+  SAT:[29.5337,-98.4698],ABQ:[35.0402,-106.6090],PHL:[39.8719,-75.2411],
+  SAN:[32.7336,-117.1897],RDU:[35.8776,-78.7875],MCI:[39.2976,-94.7139],
+  BNA:[36.1245,-86.6782],AUS:[30.1975,-97.6664],HOU:[29.6454,-95.2789],
+  PDX:[45.5887,-122.5975],SCL:[-33.3930,-70.7858],EZE:[-34.8222,-58.5358],
+  GRU:[-23.4356,-46.4731],BOG:[4.7016,-74.1469],LIM:[-12.0219,-77.1143],
+  UIO:[-0.1292,-78.3576],GYE:[-2.1574,-79.8836],MDE:[6.1675,-75.4231],
+  CTG:[10.4424,-75.5130],CLO:[3.5432,-76.3816],BAQ:[10.8896,-74.7808],
+  VVI:[-17.6448,-63.1354],PTY:[9.0717,-79.3835],SDQ:[18.4297,-69.6689],
+  HAV:[22.9892,-82.4091],SJO:[9.9939,-84.2088],SAL:[13.4409,-89.0557],
+  GUA:[14.5833,-90.5275],CCS:[10.6031,-66.9913],PUJ:[18.5674,-68.3634],
+  ADZ:[12.5836,-81.7112],PEI:[4.8127,-75.7395],BGA:[7.1268,-73.1848],
+  FOR:[-3.7762,-38.5326],REC:[-8.1265,-34.9236],IQQ:[-20.5352,-70.1812],
+  ANF:[-23.4445,-70.4450],LSC:[-29.9162,-71.1995],CCP:[-36.7726,-72.4243],
+  PMC:[-41.4388,-73.0942],PUQ:[-53.0026,-70.8546],ZCO:[-38.7668,-72.6370],
+  CJC:[-22.4982,-68.9036],ARI:[-18.3485,-70.3387],CPO:[-27.2972,-70.7792],
+  ZAL:[-39.6500,-73.0861],AUH:[24.4330,54.6511],DXB:[25.2532,55.3657],
+  DOH:[25.2609,51.6138],KWI:[29.2267,47.9689],BEY:[33.8209,35.4883],
+  AMM:[31.7226,35.9932],TLV:[32.0114,34.8867],RUH:[24.9578,46.6989],
+  JED:[21.6796,39.1565],MCT:[23.5933,58.2844],CAI:[30.1219,31.4056],
+  JNB:[-26.1392,28.2460],NBO:[-1.3192,36.9275],LOS:[6.5774,3.3212],
+  ADD:[8.9779,38.7993],CMN:[33.3675,-7.5898],DSS:[14.6704,-17.0726],
+  MRU:[-20.4302,57.6836],RAI:[14.9245,-23.4936],SID:[16.7442,-22.9494],
+  VXE:[16.8333,-24.9833],BVC:[16.1364,-22.8889],OPO2:[41.2481,-8.6839],
+  PVD:[41.7268,-71.4284],OAK:[37.7213,-122.2208],
   NRT:[35.7653,140.3856],HND:[35.5494,139.7798],KIX:[34.4347,135.2440],
   ICN:[37.4602,126.4407],PEK:[40.0799,116.6031],PVG:[31.1443,121.8083],
   HKG:[22.3080,113.9185],SIN:[1.3644,103.9915],BKK:[13.6811,100.7470],
@@ -924,9 +996,72 @@ const COORDS={
   AKL:[-37.0082,174.7850],WLG:[-41.3272,174.8051],CHC:[-43.4894,172.5322],
   ZQN:[-45.0211,168.7392],NAN:[-17.7554,177.4431],PPT:[-17.5534,-149.6067],
   HNL:[21.3187,-157.9224],DPS:[-8.7482,115.1671],YYT:[47.6186,-52.7519],
-  YHZ2:[44.8808,-63.5086],
 };
 
+// City names for display
+const CITY_NAMES={
+  BCN:'Barcelona',MAD:'Madrid',LIS:'Lisboa',LGW:'Londres Gatwick',LHR:'Londres Heathrow',
+  CDG:'París CDG',AMS:'Ámsterdam',FRA:'Frankfurt',MUC:'Múnich',VIE:'Viena',
+  ZRH:'Zúrich',GVA:'Ginebra',FCO:'Roma',MXP:'Milán Malpensa',PMI:'Palma',
+  IBZ:'Ibiza',ACE:'Lanzarote',FUE:'Fuerteventura',LPA:'Gran Canaria',TFS:'Tenerife Sur',
+  TFN:'Tenerife Norte',SPC:'La Palma',VDE:'El Hierro',GMZ:'La Gomera',
+  HEL:'Helsinki',ARN:'Estocolmo',OSL:'Oslo',CPH:'Copenhague',WAW:'Varsovia',
+  PRG:'Praga',BUD:'Budapest',BER:'Berlín',ATH:'Atenas',IST:'Estambul',
+  MLA:'Malta',DUB:'Dublín',BRU:'Bruselas',PDL:'Ponta Delgada',TER:'Terceira',
+  HOR:'Horta',PIX:'Pico',SMA:'Santa Maria',GRW:'Graciosa',SJZ:'São Jorge',
+  FLW:'Flores',CVU:'Corvo',OPO:'Oporto',SEZ:'Mahé',PRI:'Praslin',
+  NAP:'Nápoles',VCE:'Venecia',MRS:'Marsella',LYS:'Lyon',NCE:'Niza',
+  TLS:'Toulouse',BOD:'Burdeos',AGP:'Málaga',ALC:'Alicante',SVQ:'Sevilla',
+  VLC:'Valencia',BIO:'Bilbao',MAH:'Menorca',
+  JFK:'Nueva York JFK',EWR:'Newark',LAX:'Los Ángeles',ORD:'Chicago',
+  MIA:'Miami',BOS:'Boston',IAD:'Washington Dulles',SFO:'San Francisco',
+  SEA:'Seattle',DEN:'Denver',DFW:'Dallas',ATL:'Atlanta',IAH:'Houston',
+  PHX:'Phoenix',MSP:'Minneapolis',LAS:'Las Vegas',MCO:'Orlando',
+  SFB:'Orlando Sanford',PIE:'Tampa St Pete',PGD:'Punta Gorda',
+  AZA:'Phoenix Mesa',FLL:'Fort Lauderdale',TPA:'Tampa',
+  YYZ:'Toronto',YVR:'Vancouver',YYC:'Calgary',YOW:'Ottawa',
+  YEG:'Edmonton',YUL:'Montreal',YZF:'Yellowknife',YFB:'Iqaluit',
+  YHY:'Hay River',YXY:'Whitehorse',YRB:'Resolute Bay',YCB:'Cambridge Bay',
+  YXL:'Sioux Lookout',YQT:'Thunder Bay',YRL:'Red Lake',YFH:'Fort Hope',
+  YXS:'Prince George',YKA:'Kamloops',YXJ:'Fort St. John',YQQ:'Comox',
+  YHZ:'Halifax',YWG:'Winnipeg',YYJ:'Victoria',YXE:'Saskatoon',
+  YQR:'Regina',YXX:'Abbotsford',YLW:'Kelowna',NAS:'Nassau',
+  MBJ:'Montego Bay',SJD:'Los Cabos',PVR:'Puerto Vallarta',CUN:'Cancún',
+  SJU:'San Juan',CMH:'Columbus',CVG:'Cincinnati',IND:'Indianapolis',
+  GRR:'Grand Rapids',BHM:'Birmingham',SAV:'Savannah',MYR:'Myrtle Beach',
+  RIC:'Richmond',EUG:'Eugene',GEG:'Spokane',BOI:'Boise',MSO:'Missoula',
+  BIL:'Billings',FAR:'Fargo',FSD:'Sioux Falls',DSM:'Des Moines',
+  OMA:'Omaha',ICT:'Wichita',TUL:'Tulsa',OKC:'Oklahoma City',
+  PIT:'Pittsburgh',CLE:'Cleveland',MKE:'Milwaukee',STL:'St. Louis',
+  MSY:'Nueva Orleans',SAT:'San Antonio',ABQ:'Albuquerque',
+  PHL:'Filadelfia',SAN:'San Diego',RDU:'Raleigh',MCI:'Kansas City',
+  BNA:'Nashville',AUS:'Austin',HOU:'Houston Hobby',PDX:'Portland',
+  SCL:'Santiago',EZE:'Buenos Aires',GRU:'São Paulo',BOG:'Bogotá',
+  LIM:'Lima',UIO:'Quito',GYE:'Guayaquil',MDE:'Medellín',CTG:'Cartagena',
+  CLO:'Cali',BAQ:'Barranquilla',VVI:'Santa Cruz',PTY:'Panamá',
+  SDQ:'Santo Domingo',HAV:'La Habana',SJO:'San José CR',SAL:'San Salvador',
+  GUA:'Guatemala',CCS:'Caracas',PUJ:'Punta Cana',ADZ:'San Andrés',
+  PEI:'Pereira',BGA:'Bucaramanga',FOR:'Fortaleza',REC:'Recife',
+  IQQ:'Iquique',ANF:'Antofagasta',LSC:'La Serena',CCP:'Concepción',
+  PMC:'Puerto Montt',PUQ:'Punta Arenas',ZCO:'Temuco',CJC:'Calama',
+  ARI:'Arica',CPO:'Copiapó',ZAL:'Valdivia',
+  AUH:'Abu Dhabi',DXB:'Dubai',DOH:'Doha',KWI:'Kuwait',BEY:'Beirut',
+  AMM:'Ammán',TLV:'Tel Aviv',RUH:'Riad',JED:'Jeddah',MCT:'Muscat',
+  CAI:'El Cairo',JNB:'Johannesburgo',NBO:'Nairobi',LOS:'Lagos',
+  ADD:'Addis Abeba',CMN:'Casablanca',DSS:'Dakar',MRU:'Mauricio',
+  RAI:'Praia',SID:'Sal',VXE:'São Vicente',BVC:'Boa Vista',
+  PVD:'Providence',OAK:'Oakland',
+  NRT:'Tokyo Narita',HND:'Tokyo Haneda',KIX:'Osaka',ICN:'Seoul',
+  PEK:'Pekín',PVG:'Shanghai',HKG:'Hong Kong',SIN:'Singapur',
+  BKK:'Bangkok',KUL:'Kuala Lumpur',CGK:'Jakarta',MNL:'Manila',
+  DEL:'Delhi',BOM:'Mumbai',CMB:'Colombo',
+  SYD:'Sydney',MEL:'Melbourne',BNE:'Brisbane',PER:'Perth',
+  ADL:'Adelaide',CBR:'Canberra',AKL:'Auckland',WLG:'Wellington',
+  CHC:'Christchurch',ZQN:'Queenstown',NAN:'Nadi',PPT:'Papeete',
+  HNL:'Honolulú',DPS:'Bali',YYT:'St. Johns',
+};
+
+function cityOf(code){return CITY_NAMES[code]||airportMap[code]?.city||code;}
 function llOf(code){return COORDS[code]||null;}
 
 function initMap(){
@@ -938,202 +1073,247 @@ function initMap(){
   const script=document.createElement('script');
   script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
   script.onload=()=>{
-    mapInstance=L.map('map-container',{zoomControl:true,maxZoom:12,minZoom:2}).setView([30,10],2);
+    mapInstance=L.map('map-container',{zoomControl:true,maxZoom:13,minZoom:2}).setView([25,10],2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
       attribution:'© OpenStreetMap © CartoDB',maxZoom:19
     }).addTo(mapInstance);
     buildBaseMap();
-    attachMapSearch();
-    attachMapDropdown('map-origin','map-origin-dd',code=>{
-      mapOriginCode=code;
-      const el=document.getElementById('map-origin');
-      if(el)el.value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
-      updateMapFromInputs();
-    });
-    attachMapDropdown('map-dest','map-dest-dd',code=>{
-      mapDestCode=code;
-      const el=document.getElementById('map-dest');
-      if(el)el.value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
-      updateMapFromInputs();
-    });
-    // Also handle manual typing + enter
-    document.getElementById('map-origin').addEventListener('keydown',e=>{
-      if(e.key==='Enter'){
-        const v=e.target.value.trim().toUpperCase();
-        if(COORDS[v]){mapOriginCode=v;updateMapFromInputs();}
-      }
-    });
-    document.getElementById('map-dest').addEventListener('keydown',e=>{
-      if(e.key==='Enter'){
-        const v=e.target.value.trim().toUpperCase();
-        if(COORDS[v]){mapDestCode=v;updateMapFromInputs();}
-      }
-    });
-    document.getElementById('map-swap').addEventListener('click',()=>{
-      const tmp=mapOriginCode;mapOriginCode=mapDestCode;mapDestCode=tmp;
-      const ti=document.getElementById('map-origin').value;
-      document.getElementById('map-origin').value=document.getElementById('map-dest').value;
-      document.getElementById('map-dest').value=ti;
-      updateMapFromInputs();
+    setupMapSearch();
+    // Click on map background clears selection
+    mapInstance.on('click',()=>{
+      if(mapState==='idle')return;
+      // Don't clear on map background click — only clear button does
     });
   };
   document.head.appendChild(script);
 }
 
-// Build airport markers for all airports with coords
 function buildBaseMap(){
-  // Draw all route lines faintly
+  // Draw all routes faintly
   Object.entries(ROUTES).forEach(([iata,routes])=>{
-    const color=AIRLINE_COLORS[iata]||'#999';
+    const color=AIRLINE_MAP_COLORS[iata]||'#888';
     routes.forEach(pair=>{
       const [o,d]=pair.split('-');
       const oc=llOf(o),dc=llOf(d);
       if(!oc||!dc)return;
-      const line=L.polyline([oc,dc],{color,weight:1,opacity:0.12,className:'base-line'}).addTo(mapInstance);
-      allMapLayers.push(line);
+      const line=L.polyline([oc,dc],{color,weight:1,opacity:0.1,interactive:false}).addTo(mapInstance);
+      baseLines.push(line);
     });
   });
-
   // Draw airport markers
-  const airportsWithRoutes=new Set();
-  Object.values(ROUTES).forEach(routes=>routes.forEach(p=>{
-    const [o,d]=p.split('-');
-    airportsWithRoutes.add(o);airportsWithRoutes.add(d);
+  const airportsInRoutes=new Set();
+  Object.values(ROUTES).forEach(rs=>rs.forEach(p=>{
+    const [o,d]=p.split('-');airportsInRoutes.add(o);airportsInRoutes.add(d);
   }));
-
-  airportsWithRoutes.forEach(code=>{
+  airportsInRoutes.forEach(code=>{
     const c=llOf(code);if(!c)return;
     const isHub=DATA.some(a=>a.hub===code);
+    const r=isHub?7:4;
     const m=L.circleMarker(c,{
-      radius:isHub?6:4,
-      fillColor:isHub?'#E8420A':'#666',
-      color:'#fff',weight:1.5,
-      fillOpacity:isHub?0.9:0.5,
-      zIndexOffset:isHub?100:0
+      radius:r,fillColor:isHub?'#E8420A':'#888',
+      color:'#fff',weight:1.5,fillOpacity:isHub?0.9:0.4,
+      zIndexOffset:isHub?200:0,
     }).addTo(mapInstance);
-    m.on('click',()=>onAirportClick(code));
-    m.on('mouseover',()=>{
-      m.setStyle({fillOpacity:1,radius:isHub?8:6});
-      m.bindTooltip(`<b>${code}</b>${airportMap[code]?' — '+airportMap[code].city:''}`,{sticky:true}).openTooltip();
+    // Tooltip with code + city name
+    m.bindTooltip(`<b>${code}</b> — ${cityOf(code)}`,{
+      sticky:true,direction:'top',offset:[0,-6],
+      className:'leaflet-tooltip-zed'
     });
+    m.on('click',(e)=>{L.DomEvent.stopPropagation(e);onMarkerClick(code);});
+    m.on('mouseover',()=>m.setStyle({fillOpacity:1,radius:r+2}));
     m.on('mouseout',()=>{
-      m.setStyle({fillOpacity:isHub?0.9:0.5,radius:isHub?6:4});
-      m.unbindTooltip();
+      if(code!==mapOriginCode&&code!==mapDestCode)
+        m.setStyle({fillOpacity:isHub?0.9:0.4,radius:r});
     });
-    allMapLayers.push(m);
+    airportMarkers[code]=m;
   });
 }
 
-function clearRoutes(){
+function clearRouteLayer(){
   routeLayers.forEach(l=>{try{mapInstance.removeLayer(l);}catch(e){}});
   routeLayers=[];
 }
 
-function clearMap(){
-  clearRoutes();
-  mapOriginCode=null;mapDestCode=null;selectedAirport=null;
-  document.getElementById('map-origin').value='';
-  document.getElementById('map-dest').value='';
-  document.getElementById('map-mode-badge').textContent='Click en un aeropuerto para explorar';
-  closeSidePanel();
-  // Reset all lines to faint
-  allMapLayers.forEach(l=>{if(l.setStyle)l.setStyle({opacity:0.12,fillOpacity:l.options.fillColor==='#E8420A'?0.9:0.5});});
-}
-
-function closeSidePanel(){
-  const side=document.getElementById('map-side');
-  side.style.display='none';
-}
-
-function onAirportClick(code){
-  selectedAirport=code;
-  if(mapOriginCode&&!mapDestCode){
-    mapDestCode=code;
-    document.getElementById('map-dest').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
-    updateMapFromInputs();
-  } else if(!mapOriginCode&&mapDestCode){
-    mapOriginCode=code;
-    document.getElementById('map-origin').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
-    updateMapFromInputs();
-  } else if(!mapOriginCode&&!mapDestCode){
-    showAirportRoutes(code);
-  } else {
-    showAirportRoutes(code);
-  }
-}
-
-function showAirportRoutes(code){
-  clearRoutes();
-  const city=airportMap[code]?airportMap[code].city:code;
-  document.getElementById('map-mode-badge').textContent=`Rutas desde/hacia ${code}`;
-
-  // Find all routes through this airport
-  const routesFrom=[];
-  const routesTo=[];
-  Object.entries(ROUTES).forEach(([iata,routes])=>{
-    const airline=DATA.find(a=>a.iata===iata);
-    if(!airline)return;
-    routes.forEach(pair=>{
-      const [o,d]=pair.split('-');
-      if(o===code){
-        const dc=llOf(d);
-        if(dc)routesFrom.push({iata,airline,from:code,to:d,toCoords:dc});
-      }
-      if(d===code){
-        const oc=llOf(o);
-        if(oc)routesTo.push({iata,airline,from:o,to:code,fromCoords:oc});
-      }
+function resetAllMarkers(){
+  Object.entries(airportMarkers).forEach(([code,m])=>{
+    const isHub=DATA.some(a=>a.hub===code);
+    m.setStyle({
+      fillColor:isHub?'#E8420A':'#888',
+      fillOpacity:isHub?0.9:0.4,
+      radius:isHub?7:4,
+      zIndexOffset:isHub?200:0
     });
   });
+}
 
-  // Draw lines
-  const allRoutes=[...routesFrom,...routesTo];
-  const destSet=new Set();
-  allRoutes.forEach(r=>{
-    const color=AIRLINE_COLORS[r.iata]||'#999';
-    const oc=llOf(code);
-    const other=r.from===code?llOf(r.to):llOf(r.from);
-    if(!oc||!other)return;
-    const line=L.polyline([oc,other],{color,weight:2.5,opacity:0.7}).addTo(mapInstance);
-    line.on('mouseover',()=>line.setStyle({weight:4,opacity:1}));
-    line.on('mouseout',()=>line.setStyle({weight:2.5,opacity:0.7}));
-    routeLayers.push(line);
-    destSet.add(r.from===code?r.to:r.from);
-  });
+function highlightMarker(code,color,radius){
+  const m=airportMarkers[code];
+  if(m)m.setStyle({fillColor:color,fillOpacity:1,radius,zIndexOffset:500});
+}
 
-  // Highlight selected airport
-  const c=llOf(code);
-  if(c){
-    const m=L.circleMarker(c,{radius:10,fillColor:'#E8420A',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
-      .bindTooltip(`<b>${code}</b> — ${city}`,{permanent:true,direction:'top',offset:[0,-10]})
-      .addTo(mapInstance);
-    routeLayers.push(m);
+function onMarkerClick(code){
+  if(!mapOriginCode){
+    // Set as origin
+    mapOriginCode=code;
+    document.getElementById('map-origin').value=`${cityOf(code)} (${code})`;
+    mapState='origin-selected';
+    renderFromOrigin(code);
+    updateMapBadge();
+  } else if(code===mapOriginCode){
+    // Click same origin → clear origin, back to idle
+    mapOriginCode=null;
+    document.getElementById('map-origin').value='';
+    mapState='idle';
+    clearRouteLayer();
+    resetAllMarkers();
+    closeSidePanel();
+    updateMapBadge();
+  } else if(!mapDestCode){
+    // Set as dest
+    mapDestCode=code;
+    document.getElementById('map-dest').value=`${cityOf(code)} (${code})`;
+    mapState='both';
+    renderBothSelected();
+    updateMapBadge();
+  } else if(code===mapDestCode){
+    // Click same dest → clear dest, back to origin-only
+    mapDestCode=null;
+    document.getElementById('map-dest').value='';
+    mapState='origin-selected';
+    renderFromOrigin(mapOriginCode);
+    updateMapBadge();
+  } else {
+    // Click different airport when both set → replace dest
+    mapDestCode=code;
+    document.getElementById('map-dest').value=`${cityOf(code)} (${code})`;
+    mapState='both';
+    renderBothSelected();
+    updateMapBadge();
   }
+}
 
-  // Show side panel
+function updateMapBadge(){
+  const badge=document.getElementById('map-mode-badge');
+  if(mapState==='idle') badge.textContent='Click en un aeropuerto para explorar';
+  else if(mapState==='origin-selected') badge.textContent=`Desde ${mapOriginCode} — click en un destino`;
+  else if(mapState==='both') badge.textContent=`${mapOriginCode} → ${mapDestCode}`;
+}
+
+function renderFromOrigin(orig){
+  clearRouteLayer();
+  resetAllMarkers();
+  // Highlight origin
+  highlightMarker(orig,'#1A6B3C',10);
+  // Draw all routes from this airport
+  const destCodes=new Set();
+  const airlinesByDest={};
+  Object.entries(ROUTES).forEach(([iata,routes])=>{
+    routes.forEach(pair=>{
+      const [o,d]=pair.split('-');
+      let dest=null;
+      if(o===orig)dest=d;
+      else if(d===orig)dest=o;
+      if(!dest)return;
+      destCodes.add(dest);
+      if(!airlinesByDest[dest])airlinesByDest[dest]=[];
+      const al=DATA.find(a=>a.iata===iata);
+      if(al&&!airlinesByDest[dest].find(x=>x.iata===iata))airlinesByDest[dest].push(al);
+    });
+  });
+  const oc=llOf(orig);
+  destCodes.forEach(dest=>{
+    const dc=llOf(dest);if(!oc||!dc)return;
+    const airlines=airlinesByDest[dest]||[];
+    const color=airlines.length===1?(AIRLINE_MAP_COLORS[airlines[0].iata]||'#999'):'#888';
+    const line=L.polyline([oc,dc],{color,weight:2,opacity:0.5}).addTo(mapInstance);
+    line.on('mouseover',()=>{
+      line.setStyle({weight:4,opacity:1});
+      highlightMarker(dest,'#E8420A',7);
+    });
+    line.on('mouseout',()=>{
+      line.setStyle({weight:2,opacity:0.5});
+      if(dest!==mapDestCode)highlightMarker(dest,airlines.length===1?(AIRLINE_MAP_COLORS[airlines[0].iata]||'#888'):'#888',5);
+    });
+    line.on('click',(e)=>{L.DomEvent.stopPropagation(e);onMarkerClick(dest);});
+    routeLayers.push(line);
+    // Dest marker highlight
+    highlightMarker(dest,color,5);
+  });
+  // Side panel
+  showSidePanelOrigin(orig,airlinesByDest);
+}
+
+function renderBothSelected(){
+  clearRouteLayer();
+  resetAllMarkers();
+  const oc=llOf(mapOriginCode),dc=llOf(mapDestCode);
+  // Origin = green, dest = red
+  highlightMarker(mapOriginCode,'#1A6B3C',10);
+  highlightMarker(mapDestCode,'#E8420A',10);
+  // Find direct routes
+  const direct=DATA.filter(a=>isDirect(a.iata,mapOriginCode,mapDestCode));
+  // Find stopovers
+  const stopovers=findStopoverRoutes(mapOriginCode,mapDestCode);
+  // Draw direct lines
+  direct.forEach(a=>{
+    const color=AIRLINE_MAP_COLORS[a.iata]||'#E8420A';
+    if(oc&&dc){
+      const line=L.polyline([oc,dc],{color,weight:4,opacity:0.85}).addTo(mapInstance);
+      line.bindTooltip(`${a.iata} — ${a.name}`,{sticky:true});
+      routeLayers.push(line);
+    }
+  });
+  // Draw stopover lines (dashed)
+  stopovers.slice(0,10).forEach(r=>{
+    const hc=llOf(r.hub);
+    const c1=AIRLINE_MAP_COLORS[r.a1.iata]||'#999';
+    const c2=AIRLINE_MAP_COLORS[r.a2.iata]||'#999';
+    if(oc&&hc){
+      const l1=L.polyline([oc,hc],{color:c1,weight:2,opacity:0.5,dashArray:'6,4'}).addTo(mapInstance);
+      l1.bindTooltip(`${r.a1.iata} — ${r.a1.name}: ${mapOriginCode}→${r.hub}`,{sticky:true});
+      routeLayers.push(l1);
+    }
+    if(hc&&dc){
+      const l2=L.polyline([hc,dc],{color:c2,weight:2,opacity:0.5,dashArray:'6,4'}).addTo(mapInstance);
+      l2.bindTooltip(`${r.a2.iata} — ${r.a2.name}: ${r.hub}→${mapDestCode}`,{sticky:true});
+      routeLayers.push(l2);
+    }
+    if(hc){
+      const mh=L.circleMarker(hc,{radius:6,fillColor:'#F9A067',color:'#fff',weight:1.5,fillOpacity:0.9,zIndexOffset:300})
+        .bindTooltip(`Escala: ${r.hub} — ${cityOf(r.hub)}`,{sticky:true})
+        .addTo(mapInstance);
+      routeLayers.push(mh);
+    }
+  });
+  // Fit bounds
+  const pts=[oc,dc,...stopovers.slice(0,10).map(r=>llOf(r.hub))].filter(Boolean);
+  if(pts.length>1)mapInstance.fitBounds(pts,{padding:[50,50]});
+  // Side panel
+  showSidePanelBoth(direct,stopovers);
+}
+
+function showSidePanelOrigin(orig,airlinesByDest){
   const side=document.getElementById('map-side');
   side.style.display='flex';
-  document.getElementById('map-side-title').textContent=`${code} — ${city}`;
-
-  // Group by airline
-  const byAirline={};
-  allRoutes.forEach(r=>{
-    if(!byAirline[r.iata])byAirline[r.iata]={airline:r.airline,routes:[]};
-    const dest=r.from===code?r.to:r.from;
-    if(!byAirline[r.iata].routes.includes(dest))byAirline[r.iata].routes.push(dest);
-  });
-
-  let html='<div style="padding:10px 14px;">';
-  html+=`<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">${destSet.size} destinos · ${Object.keys(byAirline).length} aerolíneas</div>`;
-  Object.entries(byAirline).forEach(([iata,{airline,routes}])=>{
-    const color=AIRLINE_COLORS[iata]||'#999';
-    html+=`<div style="margin-bottom:14px;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer;" onclick="highlightAirlineRoutes('${iata}','${code}')">
-        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};background:${color}22;padding:2px 6px;border-radius:4px">${iata}</span>
-        <span style="font-size:12px;font-weight:500">${airline.name}</span>
+  document.getElementById('map-side-title').innerHTML=`
+    <span style="font-family:var(--mono);color:var(--accent);font-weight:700">${orig}</span>
+    <span style="font-weight:400;color:var(--text-secondary);font-size:12px;margin-left:4px">${cityOf(orig)}</span>`;
+  const dests=Object.keys(airlinesByDest).sort();
+  let html=`<div style="padding:10px 14px;">
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">${dests.length} destinos directos · Click en destino para ver combinaciones</div>`;
+  dests.forEach(dest=>{
+    const airlines=airlinesByDest[dest];
+    const city=cityOf(dest);
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;margin-bottom:4px;cursor:pointer;background:var(--surface-2);" 
+      onmouseover="this.style.background='var(--accent-light)'"
+      onmouseout="this.style.background='var(--surface-2)'"
+      onclick="onMarkerClick('${dest}')">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-primary)">${city}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">${dest}</div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;padding-left:4px;">
-        ${routes.map(r=>`<span style="font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;cursor:pointer;" onclick="setMapDest('${r}','${code}')">${r}</span>`).join('')}
+      <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;">
+        ${airlines.map(a=>`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${AIRLINE_MAP_COLORS[a.iata]||'#999'};background:${AIRLINE_MAP_COLORS[a.iata]||'#999'}22;border-radius:3px;padding:1px 5px">${a.iata}</span>`).join('')}
       </div>
     </div>`;
   });
@@ -1141,172 +1321,112 @@ function showAirportRoutes(code){
   document.getElementById('map-side-content').innerHTML=html;
 }
 
-function highlightAirlineRoutes(iata,hubCode){
-  clearRoutes();
-  const color=AIRLINE_COLORS[iata]||'#999';
-  const routes=ROUTES[iata]||[];
-  const oc=llOf(hubCode);
-
-  routes.forEach(pair=>{
-    const [o,d]=pair.split('-');
-    if(o!==hubCode&&d!==hubCode)return;
-    const other=o===hubCode?d:o;
-    const dc=llOf(other);
-    if(!oc||!dc)return;
-    const line=L.polyline([oc,dc],{color,weight:3,opacity:0.9}).addTo(mapInstance);
-    line.on('click',()=>setMapDest(other,hubCode));
-    routeLayers.push(line);
-    const m2=L.circleMarker(dc,{radius:5,fillColor:color,color:'#fff',weight:1.5,fillOpacity:0.9})
-      .bindTooltip(other,{sticky:true}).addTo(mapInstance);
-    m2.on('click',()=>setMapDest(other,hubCode));
-    routeLayers.push(m2);
-  });
-
-  const m=L.circleMarker(oc,{radius:9,fillColor:color,color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
-    .bindTooltip(`<b>${hubCode}</b>`,{permanent:true,direction:'top',offset:[0,-10]}).addTo(mapInstance);
-  routeLayers.push(m);
-}
-
-function setMapDest(dest,origin){
-  mapOriginCode=origin;mapDestCode=dest;
-  document.getElementById('map-origin').value=`${airportMap[origin]?airportMap[origin].city:origin} (${origin})`;
-  document.getElementById('map-dest').value=`${airportMap[dest]?airportMap[dest].city:dest} (${dest})`;
-  updateMapFromInputs();
-}
-
-function updateMapFromInputs(){
-  clearRoutes();
-  closeSidePanel();
-  if(!mapOriginCode&&!mapDestCode)return;
-
-  if(mapOriginCode&&!mapDestCode){
-    showAirportRoutes(mapOriginCode);
-    document.getElementById('map-mode-badge').textContent=`Saliendo desde ${mapOriginCode}`;
-    return;
-  }
-  if(!mapOriginCode&&mapDestCode){
-    showAirportRoutes(mapDestCode);
-    document.getElementById('map-mode-badge').textContent=`Llegando a ${mapDestCode}`;
-    return;
-  }
-
-  // Both — find direct + stopover
-  const direct=DATA.filter(a=>isDirect(a.iata,mapOriginCode,mapDestCode));
-  const stopovers=findStopoverRoutes(mapOriginCode,mapDestCode);
-
-  const oc=llOf(mapOriginCode),dc=llOf(mapDestCode);
-  let badge='';
-
-  if(direct.length){
-    badge+=`${direct.length} directos`;
-    direct.forEach(a=>{
-      const color=AIRLINE_COLORS[a.iata]||'#E8420A';
-      if(oc&&dc){
-        const line=L.polyline([oc,dc],{color,weight:4,opacity:0.9}).addTo(mapInstance);
-        routeLayers.push(line);
-      }
-    });
-  }
-
-  if(stopovers.length){
-    if(badge)badge+=' · ';
-    badge+=`${stopovers.length} con escala`;
-    stopovers.forEach(r=>{
-      const hc=llOf(r.hub);
-      const c1=AIRLINE_COLORS[r.a1.iata]||'#999';
-      const c2=AIRLINE_COLORS[r.a2.iata]||'#999';
-      if(oc&&hc){
-        const l1=L.polyline([oc,hc],{color:c1,weight:2.5,opacity:0.6,dashArray:'6,4'}).addTo(mapInstance);
-        routeLayers.push(l1);
-      }
-      if(hc&&dc){
-        const l2=L.polyline([hc,dc],{color:c2,weight:2.5,opacity:0.6,dashArray:'6,4'}).addTo(mapInstance);
-        routeLayers.push(l2);
-      }
-      if(hc){
-        const mh=L.circleMarker(hc,{radius:5,fillColor:'#F9A67A',color:'#fff',weight:1.5,fillOpacity:0.9})
-          .bindTooltip(`Escala: ${r.hub}`,{sticky:true}).addTo(mapInstance);
-        routeLayers.push(mh);
-      }
-    });
-  }
-
-  if(!direct.length&&!stopovers.length){
-    badge='Sin rutas ZED disponibles';
-  }
-
-  // Origin/dest markers
-  if(oc){
-    const m=L.circleMarker(oc,{radius:10,fillColor:'#1A6B3C',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
-      .bindTooltip(`<b>${mapOriginCode}</b>`,{permanent:true,direction:'top',offset:[0,-10]}).addTo(mapInstance);
-    routeLayers.push(m);
-  }
-  if(dc){
-    const m=L.circleMarker(dc,{radius:10,fillColor:'#E8420A',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
-      .bindTooltip(`<b>${mapDestCode}</b>`,{permanent:true,direction:'top',offset:[0,-10]}).addTo(mapInstance);
-    routeLayers.push(m);
-  }
-
-  document.getElementById('map-mode-badge').textContent=`${mapOriginCode} → ${mapDestCode} · ${badge}`;
-
-  // Show side panel with results
+function showSidePanelBoth(direct,stopovers){
   const side=document.getElementById('map-side');
   side.style.display='flex';
-  document.getElementById('map-side-title').textContent=`${mapOriginCode} → ${mapDestCode}`;
-
+  document.getElementById('map-side-title').innerHTML=`
+    <span style="font-family:var(--mono);color:var(--green);font-weight:700">${mapOriginCode}</span>
+    <span style="color:var(--text-muted);margin:0 4px">→</span>
+    <span style="font-family:var(--mono);color:var(--accent);font-weight:700">${mapDestCode}</span>`;
   let html='<div style="padding:10px 14px;">';
   if(direct.length){
-    html+=`<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Directos (${direct.length})</div>`;
+    html+=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px">Directos (${direct.length})</div>`;
     direct.forEach(a=>{
-      const color=AIRLINE_COLORS[a.iata]||'#999';
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:6px;margin-bottom:6px;cursor:pointer;" onclick="openPanel('${a.iata}')">
+      const color=AIRLINE_MAP_COLORS[a.iata]||'#999';
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:6px;margin-bottom:6px;cursor:pointer;border-left:3px solid ${color};"
+        onclick="openPanel('${a.iata}')">
         <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color}">${a.iata}</span>
         <span style="font-size:12px;font-weight:500;flex:1">${a.name}</span>
-        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">${mapOriginCode}→${mapDestCode}</span>
+        <span style="font-size:10px;color:var(--text-muted)">ver →</span>
       </div>`;
     });
   }
   if(stopovers.length){
-    html+=`<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:12px 0 8px">Con escala (${stopovers.length})</div>`;
+    html+=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:12px 0 8px">Con escala (${stopovers.length})</div>`;
     stopovers.slice(0,15).forEach(r=>{
-      const c1=AIRLINE_COLORS[r.a1.iata]||'#999';
-      const c2=AIRLINE_COLORS[r.a2.iata]||'#999';
-      html+=`<div style="background:var(--surface-2);border-radius:6px;padding:10px;margin-bottom:8px;">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:4px;">
-          <span style="font-weight:700">${mapOriginCode}</span>
-          <span style="color:var(--text-muted)">→</span>
-          <span style="color:var(--amber);font-weight:600">${r.hub}</span>
-          <span style="color:var(--text-muted)">→</span>
-          <span style="font-weight:700">${mapDestCode}</span>
+      const c1=AIRLINE_MAP_COLORS[r.a1.iata]||'#999';
+      const c2=AIRLINE_MAP_COLORS[r.a2.iata]||'#999';
+      html+=`<div style="background:var(--surface-2);border-radius:6px;padding:8px 10px;margin-bottom:6px;">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-family:var(--mono)">
+          ${mapOriginCode} → <b style="color:var(--amber)">${r.hub}</b> (${cityOf(r.hub)}) → ${mapDestCode}
         </div>
-        <div style="display:flex;gap:6px;flex-direction:column;">
-          <div style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openPanel('${r.a1.iata}')">
-            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c1};width:24px">${r.a1.iata}</span>
-            <span style="font-size:11px;flex:1">${r.a1.name}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted)">${mapOriginCode}→${r.hub}</span>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;cursor:pointer;padding:5px 8px;background:#fff;border-radius:4px;border-left:2px solid ${c1};" onclick="openPanel('${r.a1.iata}')">
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${c1}">${r.a1.iata}</div>
+            <div style="font-size:11px;color:var(--text-primary)">${r.a1.name}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openPanel('${r.a2.iata}')">
-            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c2};width:24px">${r.a2.iata}</span>
-            <span style="font-size:11px;flex:1">${r.a2.name}</span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted)">${r.hub}→${mapDestCode}</span>
+          <div style="flex:1;cursor:pointer;padding:5px 8px;background:#fff;border-radius:4px;border-left:2px solid ${c2};" onclick="openPanel('${r.a2.iata}')">
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${c2}">${r.a2.iata}</div>
+            <div style="font-size:11px;color:var(--text-primary)">${r.a2.name}</div>
           </div>
         </div>
       </div>`;
     });
   }
   if(!direct.length&&!stopovers.length){
-    html+='<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No se encontraron rutas ZED entre estos aeropuertos.</div>';
+    html+=`<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No se encontraron rutas ZED entre estos puntos.</div>`;
   }
   html+='</div>';
   document.getElementById('map-side-content').innerHTML=html;
-
-  // Fit bounds
-  const coords=[oc,dc,...stopovers.map(r=>llOf(r.hub))].filter(Boolean);
-  if(coords.length>1)mapInstance.fitBounds(coords,{padding:[40,40]});
 }
 
-function attachMapSearch(){
-  // handled in initMap via attachMapDropdown
+function closeSidePanel(){
+  document.getElementById('map-side').style.display='none';
+}
+
+function clearMap(){
+  mapOriginCode=null;mapDestCode=null;mapState='idle';
+  document.getElementById('map-origin').value='';
+  document.getElementById('map-dest').value='';
+  clearRouteLayer();
+  resetAllMarkers();
+  closeSidePanel();
+  updateMapBadge();
+}
+
+function setupMapSearch(){
+  attachMapDropdown('map-origin','map-origin-dd',code=>{
+    mapOriginCode=code;
+    document.getElementById('map-origin').value=`${cityOf(code)} (${code})`;
+    if(mapDestCode){mapState='both';renderBothSelected();}
+    else{mapState='origin-selected';renderFromOrigin(code);}
+    updateMapBadge();
+    if(airportMarkers[code])mapInstance.panTo(llOf(code));
+  });
+  attachMapDropdown('map-dest','map-dest-dd',code=>{
+    mapDestCode=code;
+    document.getElementById('map-dest').value=`${cityOf(code)} (${code})`;
+    if(mapOriginCode){mapState='both';renderBothSelected();}
+    else{mapState='origin-selected';renderFromOrigin(code);}
+    updateMapBadge();
+  });
+  document.getElementById('map-swap').addEventListener('click',()=>{
+    const tmp=mapOriginCode;mapOriginCode=mapDestCode;mapDestCode=tmp;
+    const tv=document.getElementById('map-origin').value;
+    document.getElementById('map-origin').value=document.getElementById('map-dest').value;
+    document.getElementById('map-dest').value=tv;
+    if(mapOriginCode&&mapDestCode)renderBothSelected();
+    else if(mapOriginCode)renderFromOrigin(mapOriginCode);
+    else{clearRouteLayer();resetAllMarkers();closeSidePanel();}
+    updateMapBadge();
+  });
+  // Clear on input clear
+  ['map-origin','map-dest'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',e=>{
+      if(!e.target.value.trim()){
+        if(id==='map-origin'){
+          mapOriginCode=null;
+          if(mapDestCode){mapState='origin-selected';renderFromOrigin(mapDestCode);}
+          else{mapState='idle';clearRouteLayer();resetAllMarkers();closeSidePanel();}
+        } else {
+          mapDestCode=null;
+          if(mapOriginCode){mapState='origin-selected';renderFromOrigin(mapOriginCode);}
+          else{mapState='idle';clearRouteLayer();resetAllMarkers();closeSidePanel();}
+        }
+        updateMapBadge();
+      }
+    });
+  });
 }
 
 function attachMapDropdown(inputId,ddId,onSelect){
@@ -1316,20 +1436,19 @@ function attachMapDropdown(inputId,ddId,onSelect){
   input.addEventListener('input',()=>{
     const q=input.value.toLowerCase().trim();
     if(q.length<1){dd.classList.remove('open');return;}
-    // Search both COORDS keys and airportMap cities
-    const allKeys=new Set([...Object.keys(COORDS),...Object.keys(airportMap)]);
-    const matches=[...allKeys].filter(c=>{
-      const city=airportMap[c]?airportMap[c].city:(COORDS[c]?c:'');
+    const allKeys=[...new Set([...Object.keys(COORDS),...Object.keys(airportMap)])];
+    const matches=allKeys.filter(c=>{
+      const city=cityOf(c);
       return c.toLowerCase().includes(q)||city.toLowerCase().includes(q);
     }).slice(0,12);
     if(!matches.length){dd.classList.remove('open');return;}
-    dd.innerHTML=matches.map(c=>`<div class="airport-option" data-code="${c}"><span class="opt-code">${c}</span><span class="opt-city">${airportMap[c]?airportMap[c].city:c}</span></div>`).join('');
+    dd.innerHTML=matches.map(c=>`<div class="airport-option" data-code="${c}">
+      <span class="opt-code">${c}</span>
+      <span class="opt-city">${cityOf(c)}</span>
+    </div>`).join('');
     dd.classList.add('open');
     dd.querySelectorAll('.airport-option').forEach(opt=>{
-      opt.addEventListener('click',()=>{
-        onSelect(opt.dataset.code);
-        dd.classList.remove('open');
-      });
+      opt.addEventListener('click',()=>{onSelect(opt.dataset.code);dd.classList.remove('open');});
     });
   });
   document.addEventListener('click',e=>{
@@ -1337,14 +1456,10 @@ function attachMapDropdown(inputId,ddId,onSelect){
   });
 }
 
-window.setMapDest=setMapDest;
-window.highlightAirlineRoutes=highlightAirlineRoutes;
 window.clearMap=clearMap;
 window.closeSidePanel=closeSidePanel;
 
 // ── Init ──────────────────────────────────────────────────────────────
-renderSolo();
-renderRouteInputs();// ── Init ──────────────────────────────────────────────────────────────
 renderSolo();
 renderRouteInputs();
 </script>
