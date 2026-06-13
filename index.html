@@ -428,32 +428,52 @@ function openPanel(iata,highlightCode){
   </div>`;
   if(a.dests&&a.dests.length){
     const total=a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0);
+    // Build connections info: which other airlines fly from each dest
+    function getConnections(destCode){
+      const connAirlines=[];
+      DATA.forEach(other=>{
+        if(other.iata===a.iata)return;
+        if(isDirect(other.iata,destCode,other.hub)||isDirect(other.iata,other.hub,destCode)){
+          connAirlines.push(other);
+        }
+      });
+      return connAirlines;
+    }
     html+=`<div class="panel-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div class="panel-section-title" style="margin-bottom:0">Destinos (${total})</div>
-        <button onclick="toggleAllDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;padding:2px 6px;">Ver todos</button>
+        <button onclick="toggleAllDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;padding:2px 6px;font-family:var(--sans);">Ver todos ↓</button>
       </div>
       <div id="dests-preview">`;
-    // Show first region only by default
     const firstR=a.dests[0];
     if(firstR){
-      html+=`<div class="region-label">${firstR.r}</div><div class="dest-grid">`;
-      (firstR.c||[]).slice(0,8).forEach(d=>{
+      html+=`<div class="region-label">${firstR.r}</div>`;
+      (firstR.c||[]).slice(0,6).forEach(d=>{
         const m=highlightCode&&d.c===highlightCode;
-        html+=`<div class="dest-card ${m?'match':''}"><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div></div>`;
+        const conns=getConnections(d.c);
+        html+=`<div class="dest-card ${m?'match':''}" style="margin-bottom:4px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div></div>
+            ${conns.length?`<div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;max-width:80px;">${conns.slice(0,3).map(c=>`<span style="font-family:var(--mono);font-size:9px;background:${AIRLINE_COLORS[c.iata]||'#999'}22;color:${AIRLINE_COLORS[c.iata]||'#999'};border-radius:3px;padding:1px 4px;font-weight:700">${c.iata}</span>`).join('')}${conns.length>3?`<span style="font-size:9px;color:var(--text-muted)">+${conns.length-3}</span>`:''}</div>`:''}
+          </div>
+        </div>`;
       });
-      if((firstR.c||[]).length>8) html+=`<div style="font-size:11px;color:var(--text-muted);padding:6px 0">+${firstR.c.length-8} más en esta región</div>`;
-      html+=`</div>`;
+      if((firstR.c||[]).length>6) html+=`<div style="font-size:11px;color:var(--text-muted);padding:4px 0">+${firstR.c.length-6} más en esta región</div>`;
     }
     html+=`</div>
       <div id="dests-full" style="display:none;">`;
     a.dests.forEach(r=>{
-      html+=`<div class="region-label">${r.r}</div><div class="dest-grid">`;
+      html+=`<div class="region-label">${r.r}</div>`;
       (r.c||[]).forEach(d=>{
         const m=highlightCode&&d.c===highlightCode;
-        html+=`<div class="dest-card ${m?'match':''}"><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div></div>`;
+        const conns=getConnections(d.c);
+        html+=`<div class="dest-card ${m?'match':''}" style="margin-bottom:4px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div></div>
+            ${conns.length?`<div style="display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;max-width:80px;">${conns.slice(0,3).map(c=>`<span style="font-family:var(--mono);font-size:9px;background:${AIRLINE_COLORS[c.iata]||'#999'}22;color:${AIRLINE_COLORS[c.iata]||'#999'};border-radius:3px;padding:1px 4px;font-weight:700">${c.iata}</span>`).join('')}${conns.length>3?`<span style="font-size:9px;color:var(--text-muted)">+${conns.length-3}</span>`:''}</div>`:''}
+          </div>
+        </div>`;
       });
-      html+=`</div>`;
     });
     html+=`</div></div>`;
   }
@@ -761,14 +781,25 @@ function findStopoverRoutes(orig,dest){
     });
   }
 
-  // Sort: fewer airline changes first, then fewest stops
-  results.sort((a,b)=>{
-    const changesA=a.stops===1?(a.a1.iata===a.a2.iata?0:1):2;
-    const changesB=b.stops===1?(b.a1.iata===b.a2.iata?0:1):2;
-    return changesA-changesB||a.stops-b.stops;
+  // Deduplicate: remove same-airline same-hub duplicates
+  const finalResults=[];
+  const dedupKeys=new Set();
+  results.forEach(r=>{
+    // For same airline, only keep one entry per hub
+    const dk=r.stops===1
+      ? `${r.a1.iata===r.a2.iata?r.a1.iata:'X'}|${r.hub}`
+      : `${r.a1.iata}|${r.hub}|${r.a2.iata}|${r.hub2||''}|${r.a3?r.a3.iata:''}`;
+    if(!dedupKeys.has(dk)){dedupKeys.add(dk);finalResults.push(r);}
   });
 
-  return results.slice(0,30);
+  // Sort: same-airline first, then fewer stops, then fewer airline changes
+  finalResults.sort((a,b)=>{
+    const sameA=a.stops===1&&a.a1.iata===a.a2.iata?0:1;
+    const sameB=b.stops===1&&b.a1.iata===b.a2.iata?0:1;
+    return sameA-sameB||a.stops-b.stops;
+  });
+
+  return finalResults.slice(0,25);
 }
 
 
@@ -915,13 +946,28 @@ function initMap(){
     attachMapSearch();
     attachMapDropdown('map-origin','map-origin-dd',code=>{
       mapOriginCode=code;
-      document.getElementById('map-origin').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
+      const el=document.getElementById('map-origin');
+      if(el)el.value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
       updateMapFromInputs();
     });
     attachMapDropdown('map-dest','map-dest-dd',code=>{
       mapDestCode=code;
-      document.getElementById('map-dest').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
+      const el=document.getElementById('map-dest');
+      if(el)el.value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
       updateMapFromInputs();
+    });
+    // Also handle manual typing + enter
+    document.getElementById('map-origin').addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const v=e.target.value.trim().toUpperCase();
+        if(COORDS[v]){mapOriginCode=v;updateMapFromInputs();}
+      }
+    });
+    document.getElementById('map-dest').addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const v=e.target.value.trim().toUpperCase();
+        if(COORDS[v]){mapDestCode=v;updateMapFromInputs();}
+      }
     });
     document.getElementById('map-swap').addEventListener('click',()=>{
       const tmp=mapOriginCode;mapOriginCode=mapDestCode;mapDestCode=tmp;
@@ -1268,12 +1314,14 @@ function attachMapDropdown(inputId,ddId,onSelect){
   const dd=document.getElementById(ddId);
   if(!input||!dd)return;
   input.addEventListener('input',()=>{
-    const q=input.value.toLowerCase();
+    const q=input.value.toLowerCase().trim();
     if(q.length<1){dd.classList.remove('open');return;}
-    const matches=Object.keys(COORDS).filter(c=>{
-      const city=airportMap[c]?airportMap[c].city:'';
+    // Search both COORDS keys and airportMap cities
+    const allKeys=new Set([...Object.keys(COORDS),...Object.keys(airportMap)]);
+    const matches=[...allKeys].filter(c=>{
+      const city=airportMap[c]?airportMap[c].city:(COORDS[c]?c:'');
       return c.toLowerCase().includes(q)||city.toLowerCase().includes(q);
-    }).slice(0,10);
+    }).slice(0,12);
     if(!matches.length){dd.classList.remove('open');return;}
     dd.innerHTML=matches.map(c=>`<div class="airport-option" data-code="${c}"><span class="opt-code">${c}</span><span class="opt-city">${airportMap[c]?airportMap[c].city:c}</span></div>`).join('');
     dd.classList.add('open');
