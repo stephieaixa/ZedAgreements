@@ -139,7 +139,32 @@ td{padding:8px 10px;vertical-align:middle;}
 .dest-card.match .dest-code{color:var(--accent);}
 aside::-webkit-scrollbar,.panel-body::-webkit-scrollbar{width:4px;}
 aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-@media(max-width:768px){aside{display:none;}.all-main{padding:16px;}header{padding:12px 16px;}.solo-grid{padding:0 16px 16px;}.route-section{padding:16px;}.panel{width:100%;}.tabs{padding:0 16px;}}
+@media(max-width:768px){
+  header{padding:10px 14px;gap:8px;}
+  header h1{font-size:13px;}
+  header .ref{display:none;}
+  .tabs{padding:0 14px;}
+  .tab{padding:10px 14px;font-size:13px;}
+  /* Solo tab — hide sidebar, show zone pills instead */
+  .solo-sidebar{display:none!important;}
+  .solo-zone-pills{display:flex!important;}
+  .solo-grid{padding:0 14px 20px;}
+  /* Route section */
+  .route-section{padding:16px 14px;}
+  .route-section h2{font-size:15px;}
+  .route-section p{font-size:12px;}
+  #route-inputs-area > div{flex-direction:column;gap:8px;}
+  #route-inputs-area label{display:none;}
+  .airport-search-wrap{max-width:100%!important;width:100%!important;}
+  .flight-toggle-wrap{margin-left:0!important;width:100%;}
+  .flight-toggle-wrap button{flex:1;text-align:center;}
+  .route-result-grid{grid-template-columns:1fr!important;}
+  .route-result-card{padding:12px;}
+  /* Panel */
+  .panel{width:100%!important;}
+  /* Suggest modal */
+  #suggest-overlay > div{margin:12px;}
+}
 </style>
 </head>
 <body>
@@ -163,7 +188,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 <!-- TAB 1: Viajan solas -->
 <div class="tab-content active" id="tab-solo">
   <div style="display:flex;">
-    <aside style="width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:83px;height:calc(100vh - 83px);overflow-y:auto;display:flex;flex-direction:column;gap:4px;">
+    <aside class="solo-sidebar" style="width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:83px;height:calc(100vh - 83px);overflow-y:auto;display:flex;flex-direction:column;gap:4px;">
       <span style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:8px;">Zona IATA</span>
       <button class="sidebar-btn active" data-solo-zone="all"><span class="dot" style="background:#9E9C96"></span>Todas<span class="cnt" id="scnt-all">—</span></button>
       <button class="sidebar-btn" data-solo-zone="1"><span class="dot" style="background:#185FA5"></span>Zona 1 · Europa<span class="cnt" id="scnt-1">—</span></button>
@@ -178,6 +203,16 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
         <h2>Aerolíneas verificadas — beneficiaria viaja sola</h2>
         <span class="solo-count" id="solo-count">0 aerolíneas</span>
       </div>
+      <!-- Mobile zone pills -->
+      <div class="solo-zone-pills" style="display:none;gap:6px;flex-wrap:wrap;padding:0 14px 14px;overflow-x:auto;">
+        <button class="zone-pill active" data-pill-zone="all" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;">Todas</button>
+        <button class="zone-pill" data-pill-zone="1" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap;">Europa</button>
+        <button class="zone-pill" data-pill-zone="2" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap;">N. América</button>
+        <button class="zone-pill" data-pill-zone="3" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap;">Latinoamérica</button>
+        <button class="zone-pill" data-pill-zone="4" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap;">M. Oriente</button>
+        <button class="zone-pill" data-pill-zone="5" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap;">Asia</button>
+        <button class="zone-pill" data-pill-zone="6" style="padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;white-space:nowrap;">Oceanía</button>
+      </div>
       <div class="solo-grid" id="solo-grid"></div>
     </div>
   </div>
@@ -191,7 +226,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
       <div id="route-inputs-area" style="flex:1;min-width:0;"></div>
-      <div style="flex-shrink:0;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
+      <div class="flight-toggle-wrap" style="flex-shrink:0;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
         <button id="flight-direct" onclick="setFlightType('direct')" style="padding:7px 14px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;">Directa</button>
         <button id="flight-stopover" onclick="setFlightType('stopover')" style="padding:7px 14px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;">Con escala</button>
       </div>
@@ -222,95 +257,95 @@ const ZONES={1:{name:"Europa",color:"#185FA5",bg:"#E6F1FB"},2:{name:"Norte Amér
 
 // Solo aerolíneas VERIFICADAS como "viaja sola"
 const DATA=[
-{name:"Vueling",iata:"VY",zone:1,ruta:"—",note:"Aerolínea propia",dests:[
+{name:"Vueling",iata:"VY",hub:"BCN",zone:1,ruta:"—",note:"Aerolínea propia",dests:[
   {r:"España",c:[{y:"Madrid",c:"MAD"},{y:"Barcelona",c:"BCN"},{y:"Sevilla",c:"SVQ"},{y:"Valencia",c:"VLC"},{y:"Bilbao",c:"BIO"},{y:"Málaga",c:"AGP"},{y:"Palma",c:"PMI"},{y:"Ibiza",c:"IBZ"},{y:"Alicante",c:"ALC"},{y:"Menorca",c:"MAH"},{y:"Gran Canaria",c:"LPA"},{y:"Tenerife Sur",c:"TFS"},{y:"Lanzarote",c:"ACE"},{y:"Fuerteventura",c:"FUE"},{y:"La Palma",c:"SPC"}]},
   {r:"Europa",c:[{y:"París CDG",c:"CDG"},{y:"Roma FCO",c:"FCO"},{y:"Ámsterdam",c:"AMS"},{y:"Londres LGW",c:"LGW"},{y:"Bruselas",c:"BRU"},{y:"Dublín",c:"DUB"},{y:"Lisboa",c:"LIS"},{y:"Atenas",c:"ATH"},{y:"Nápoles",c:"NAP"},{y:"Milán MXP",c:"MXP"},{y:"Venecia",c:"VCE"},{y:"Florencia",c:"FLR"},{y:"Marsella",c:"MRS"},{y:"Lyon",c:"LYS"},{y:"Niza",c:"NCE"},{y:"Toulouse",c:"TLS"},{y:"Burdeos",c:"BOD"},{y:"Zúrich",c:"ZRH"},{y:"Ginebra",c:"GVA"},{y:"Copenhague",c:"CPH"},{y:"Oslo",c:"OSL"},{y:"Estocolmo",c:"ARN"},{y:"Helsinki",c:"HEL"},{y:"Varsovia",c:"WAW"},{y:"Praga",c:"PRG"},{y:"Budapest",c:"BUD"},{y:"Viena",c:"VIE"},{y:"Berlín",c:"BER"}]},
   {r:"Norte de África",c:[{y:"Casablanca",c:"CMN"},{y:"Marrakech",c:"RAK"},{y:"Agadir",c:"AGA"},{y:"Túnez",c:"TUN"},{y:"Argel",c:"ALG"}]},
 ]},
-{name:"Finnair",iata:"AY",zone:1,ruta:"MAD-HEL",note:"Verificado",dests:[
+{name:"Finnair",iata:"AY",hub:"HEL",zone:1,ruta:"MAD-HEL",note:"Verificado",dests:[
   {r:"Europa",c:[{y:"Helsinki",c:"HEL"},{y:"Estocolmo",c:"ARN"},{y:"Oslo",c:"OSL"},{y:"Copenhague",c:"CPH"},{y:"Londres LHR",c:"LHR"},{y:"París CDG",c:"CDG"},{y:"Frankfurt",c:"FRA"},{y:"Ámsterdam",c:"AMS"},{y:"Zúrich",c:"ZRH"},{y:"Berlín",c:"BER"},{y:"Roma FCO",c:"FCO"},{y:"Milán MXP",c:"MXP"},{y:"Madrid",c:"MAD"},{y:"Barcelona",c:"BCN"},{y:"Bruselas",c:"BRU"},{y:"Viena",c:"VIE"},{y:"Varsovia",c:"WAW"},{y:"Praga",c:"PRG"},{y:"Budapest",c:"BUD"}]},
   {r:"Asia",c:[{y:"Tokyo NRT",c:"NRT"},{y:"Osaka KIX",c:"KIX"},{y:"Pekín",c:"PEK"},{y:"Shanghai PVG",c:"PVG"},{y:"Hong Kong",c:"HKG"},{y:"Singapur",c:"SIN"},{y:"Bangkok",c:"BKK"},{y:"Delhi",c:"DEL"},{y:"Seoul ICN",c:"ICN"}]},
   {r:"América del Norte",c:[{y:"Nueva York JFK",c:"JFK"},{y:"Los Ángeles",c:"LAX"},{y:"Chicago ORD",c:"ORD"},{y:"Miami",c:"MIA"}]},
 ]},
-{name:"Austrian Airlines",iata:"OS",zone:1,ruta:"VIE-LHR",note:"Verificado",dests:[
+{name:"Austrian Airlines",iata:"OS",hub:"VIE",zone:1,ruta:"VIE-LHR",note:"Verificado",dests:[
   {r:"Europa",c:[{y:"Viena",c:"VIE"},{y:"Londres LHR",c:"LHR"},{y:"París CDG",c:"CDG"},{y:"Frankfurt",c:"FRA"},{y:"Ámsterdam",c:"AMS"},{y:"Zúrich",c:"ZRH"},{y:"Roma FCO",c:"FCO"},{y:"Madrid",c:"MAD"},{y:"Barcelona",c:"BCN"},{y:"Berlín",c:"BER"},{y:"Bruselas",c:"BRU"},{y:"Varsovia",c:"WAW"},{y:"Praga",c:"PRG"},{y:"Budapest",c:"BUD"},{y:"Bucarest",c:"OTP"},{y:"Sofía",c:"SOF"},{y:"Belgrado",c:"BEG"},{y:"Zagreb",c:"ZAG"},{y:"Estambul",c:"IST"},{y:"Atenas",c:"ATH"},{y:"Estocolmo",c:"ARN"},{y:"Copenhague",c:"CPH"},{y:"Oslo",c:"OSL"},{y:"Helsinki",c:"HEL"}]},
   {r:"Medio Oriente / Asia",c:[{y:"Dubai DXB",c:"DXB"},{y:"Abu Dhabi",c:"AUH"},{y:"Tokyo NRT",c:"NRT"},{y:"Shanghai PVG",c:"PVG"},{y:"Pekín PEK",c:"PEK"},{y:"Delhi",c:"DEL"},{y:"Mumbai",c:"BOM"},{y:"Bangkok",c:"BKK"},{y:"Singapur",c:"SIN"}]},
   {r:"América del Norte",c:[{y:"Nueva York JFK",c:"JFK"},{y:"Washington IAD",c:"IAD"},{y:"Chicago ORD",c:"ORD"},{y:"Toronto YYZ",c:"YYZ"},{y:"Los Ángeles",c:"LAX"},{y:"Miami",c:"MIA"}]},
   {r:"África",c:[{y:"El Cairo",c:"CAI"},{y:"Johannesburgo",c:"JNB"},{y:"Nairobi",c:"NBO"}]},
 ]},
-{name:"KM Malta Airlines",iata:"KM",zone:1,ruta:"MLA-LHR",note:"Verificado",dests:[
+{name:"KM Malta Airlines",iata:"KM",hub:"MLA",zone:1,ruta:"MLA-LHR",note:"Verificado",dests:[
   {r:"Europa",c:[{y:"Malta MLA",c:"MLA"},{y:"Londres LHR",c:"LHR"},{y:"Londres LGW",c:"LGW"},{y:"París CDG",c:"CDG"},{y:"Roma FCO",c:"FCO"},{y:"Milán MXP",c:"MXP"},{y:"Ámsterdam",c:"AMS"},{y:"Frankfurt",c:"FRA"},{y:"Berlín",c:"BER"},{y:"Madrid",c:"MAD"},{y:"Barcelona",c:"BCN"},{y:"Bruselas",c:"BRU"},{y:"Dublín",c:"DUB"},{y:"Atenas",c:"ATH"},{y:"Zúrich",c:"ZRH"},{y:"Viena",c:"VIE"},{y:"Varsovia",c:"WAW"},{y:"Praga",c:"PRG"},{y:"Catania",c:"CTA"},{y:"Palermo",c:"PMO"},{y:"Nápoles",c:"NAP"},{y:"Venecia",c:"VCE"},{y:"Copenhague",c:"CPH"},{y:"Estocolmo",c:"ARN"},{y:"Oslo",c:"OSL"},{y:"Helsinki",c:"HEL"},{y:"Lisboa",c:"LIS"}]},
 ]},
-{name:"TUI Fly",iata:"X3",zone:1,ruta:"DUS-PMI",note:"Verificado",dests:[
+{name:"TUI Fly",iata:"X3",hub:"DUS",zone:1,ruta:"DUS-PMI",note:"Verificado",dests:[
   {r:"Alemania",c:[{y:"Düsseldorf",c:"DUS"},{y:"Frankfurt",c:"FRA"},{y:"Múnich",c:"MUC"},{y:"Hamburgo",c:"HAM"},{y:"Berlín",c:"BER"},{y:"Stuttgart",c:"STR"},{y:"Hannover",c:"HAJ"},{y:"Colonia",c:"CGN"},{y:"Leipzig",c:"LEJ"},{y:"Nuremberg",c:"NUE"}]},
   {r:"Mediterráneo / Canarias",c:[{y:"Palma",c:"PMI"},{y:"Ibiza",c:"IBZ"},{y:"Menorca",c:"MAH"},{y:"Tenerife TFS",c:"TFS"},{y:"Gran Canaria",c:"LPA"},{y:"Lanzarote",c:"ACE"},{y:"Fuerteventura",c:"FUE"},{y:"Málaga",c:"AGP"},{y:"Alicante",c:"ALC"},{y:"Heraklion",c:"HER"},{y:"Rodas",c:"RHO"},{y:"Kos",c:"KGS"},{y:"Santorini",c:"JTR"},{y:"Mykonos",c:"JMK"},{y:"Antalya",c:"AYT"},{y:"Bodrum",c:"BJV"},{y:"Dalaman",c:"DLM"},{y:"Agadir",c:"AGA"},{y:"Marrakech",c:"RAK"},{y:"Funchal",c:"FNC"}]},
   {r:"Larga distancia",c:[{y:"Cancún",c:"CUN"},{y:"Punta Cana",c:"PUJ"},{y:"Jamaica MBJ",c:"MBJ"},{y:"Varadero",c:"VRA"},{y:"Dubai DXB",c:"DXB"},{y:"Bangkok BKK",c:"BKK"},{y:"Phuket",c:"HKT"},{y:"Maldivas MLE",c:"MLE"},{y:"Zanzibar",c:"ZNZ"},{y:"Mauricio MRU",c:"MRU"},{y:"Bali DPS",c:"DPS"}]},
 ]},
-{name:"Norse Atlantic UK",iata:"ZO",zone:1,ruta:"LGW-JFK",note:"Verificado",dests:[
+{name:"Norse Atlantic UK",iata:"ZO",hub:"LGW",zone:1,ruta:"LGW-JFK",note:"Verificado",dests:[
   {r:"Europa → América",c:[{y:"Londres LGW",c:"LGW"},{y:"Nueva York JFK",c:"JFK"},{y:"Los Ángeles",c:"LAX"},{y:"Orlando MCO",c:"MCO"},{y:"Fort Lauderdale",c:"FLL"},{y:"Las Vegas",c:"LAS"},{y:"Boston",c:"BOS"},{y:"Washington IAD",c:"IAD"}]},
 ]},
-{name:"Norse Atlantic NO",iata:"NO",zone:1,ruta:"OSL-JFK",note:"Verificado",dests:[
+{name:"Norse Atlantic NO",iata:"NO",hub:"OSL",zone:1,ruta:"OSL-JFK",note:"Verificado",dests:[
   {r:"Escandinavia → América / Asia",c:[{y:"Oslo OSL",c:"OSL"},{y:"Bergen BGO",c:"BGO"},{y:"Nueva York JFK",c:"JFK"},{y:"Los Ángeles",c:"LAX"},{y:"Fort Lauderdale",c:"FLL"},{y:"Miami MIA",c:"MIA"},{y:"Chicago ORD",c:"ORD"},{y:"Bangkok BKK",c:"BKK"},{y:"Bali DPS",c:"DPS"},{y:"Singapur SIN",c:"SIN"}]},
 ]},
-{name:"Canary Fly",iata:"PM",zone:1,ruta:"TFN-LPA",note:"Verificado",dests:[
+{name:"Canary Fly",iata:"PM",hub:"TFN",zone:1,ruta:"TFN-LPA",note:"Verificado",dests:[
   {r:"Islas Canarias",c:[{y:"Tenerife Norte TFN",c:"TFN"},{y:"Gran Canaria LPA",c:"LPA"},{y:"Lanzarote",c:"ACE"},{y:"Fuerteventura",c:"FUE"},{y:"La Palma",c:"SPC"},{y:"El Hierro",c:"VDE"},{y:"La Gomera",c:"GMZ"}]},
 ]},
-{name:"SATA International",iata:"S4",zone:1,ruta:"PDL-LIS",note:"Verificado — S4 = SATA International",dests:[
+{name:"SATA International",iata:"S4",hub:"PDL",zone:1,ruta:"PDL-LIS",note:"Verificado — S4 = SATA International",dests:[
   {r:"Açores / Europa",c:[{y:"Ponta Delgada PDL",c:"PDL"},{y:"Terceira TER",c:"TER"},{y:"Faial HOR",c:"HOR"},{y:"Pico PIX",c:"PIX"},{y:"Lisboa LIS",c:"LIS"},{y:"Oporto OPO",c:"OPO"},{y:"Londres LGW",c:"LGW"},{y:"Ámsterdam",c:"AMS"},{y:"Frankfurt",c:"FRA"},{y:"Madrid",c:"MAD"},{y:"París CDG",c:"CDG"}]},
   {r:"América del Norte",c:[{y:"Boston BOS",c:"BOS"},{y:"Oakland OAK",c:"OAK"},{y:"Providence PVD",c:"PVD"},{y:"Toronto YYZ",c:"YYZ"},{y:"Montreal YUL",c:"YUL"}]},
 ]},
-{name:"SATA Açores",iata:"SP",zone:1,ruta:"PDL-TER",note:"Verificado — SP = inter-islas Açores",dests:[
+{name:"SATA Açores",iata:"SP",hub:"PDL",zone:1,ruta:"PDL-TER",note:"Verificado — SP = inter-islas Açores",dests:[
   {r:"Inter-islas Açores",c:[{y:"Ponta Delgada PDL",c:"PDL"},{y:"Terceira TER",c:"TER"},{y:"Santa Maria SMA",c:"SMA"},{y:"Graciosa GRW",c:"GRW"},{y:"São Jorge SJZ",c:"SJZ"},{y:"Horta HOR",c:"HOR"},{y:"Pico PIX",c:"PIX"},{y:"Flores FLW",c:"FLW"},{y:"Corvo CVU",c:"CVU"}]},
   {r:"Portugal continental",c:[{y:"Lisboa LIS",c:"LIS"},{y:"Oporto OPO",c:"OPO"}]},
 ]},
-{name:"Air Seychelles",iata:"HM",zone:1,ruta:"SEZ-DXB",note:"Verificado",dests:[
+{name:"Air Seychelles",iata:"HM",hub:"SEZ",zone:1,ruta:"SEZ-DXB",note:"Verificado",dests:[
   {r:"Océano Índico / África",c:[{y:"Mahé SEZ",c:"SEZ"},{y:"Praslin PRI",c:"PRI"},{y:"Mauricio MRU",c:"MRU"},{y:"Johannesburgo JNB",c:"JNB"},{y:"Nairobi NBO",c:"NBO"},{y:"Addis Abeba ADD",c:"ADD"}]},
   {r:"Medio Oriente / Europa",c:[{y:"Dubai DXB",c:"DXB"},{y:"Abu Dhabi AUH",c:"AUH"},{y:"París CDG",c:"CDG"},{y:"Milán MXP",c:"MXP"}]},
 ]},
-{name:"Flair Airlines",iata:"F8",zone:2,ruta:"YYZ-YVR",note:"Verificado",dests:[
+{name:"Flair Airlines",iata:"F8",hub:"YYZ",zone:2,ruta:"YYZ-YVR",note:"Verificado",dests:[
   {r:"Canadá",c:[{y:"Toronto YYZ",c:"YYZ"},{y:"Vancouver YVR",c:"YVR"},{y:"Calgary YYC",c:"YYC"},{y:"Edmonton YEG",c:"YEG"},{y:"Winnipeg YWG",c:"YWG"},{y:"Ottawa YOW",c:"YOW"},{y:"Halifax YHZ",c:"YHZ"},{y:"Abbotsford YXX",c:"YXX"},{y:"Kelowna YLW",c:"YLW"},{y:"Victoria YYJ",c:"YYJ"},{y:"Saskatoon YXE",c:"YXE"},{y:"Regina YQR",c:"YQR"}]},
   {r:"Vacacional",c:[{y:"Cancún CUN",c:"CUN"},{y:"Punta Cana PUJ",c:"PUJ"},{y:"Puerto Vallarta PVR",c:"PVR"},{y:"Los Cabos SJD",c:"SJD"},{y:"Montego Bay MBJ",c:"MBJ"},{y:"Nassau NAS",c:"NAS"}]},
 ]},
-{name:"Frontier Airlines",iata:"F9",zone:2,ruta:"DEN-LAX",note:"Verificado",dests:[
+{name:"Frontier Airlines",iata:"F9",hub:"DEN",zone:2,ruta:"DEN-LAX",note:"Verificado",dests:[
   {r:"Estados Unidos",c:[{y:"Denver DEN",c:"DEN"},{y:"Los Ángeles LAX",c:"LAX"},{y:"Las Vegas LAS",c:"LAS"},{y:"Orlando MCO",c:"MCO"},{y:"Phoenix PHX",c:"PHX"},{y:"Atlanta ATL",c:"ATL"},{y:"Chicago MDW",c:"MDW"},{y:"Dallas DFW",c:"DFW"},{y:"Miami MIA",c:"MIA"},{y:"Tampa TPA",c:"TPA"},{y:"Charlotte CLT",c:"CLT"},{y:"Nashville BNA",c:"BNA"},{y:"Austin AUS",c:"AUS"},{y:"Houston HOU",c:"HOU"},{y:"San Francisco SFO",c:"SFO"},{y:"Seattle SEA",c:"SEA"},{y:"Portland PDX",c:"PDX"},{y:"Minneapolis MSP",c:"MSP"},{y:"Washington IAD",c:"IAD"},{y:"Boston BOS",c:"BOS"},{y:"Nueva York JFK",c:"JFK"},{y:"Filadelfia PHL",c:"PHL"},{y:"San Diego SAN",c:"SAN"},{y:"Raleigh RDU",c:"RDU"},{y:"Indianapolis IND",c:"IND"},{y:"Kansas City MCI",c:"MCI"},{y:"Cincinnati CVG",c:"CVG"},{y:"Cleveland CLE",c:"CLE"},{y:"Pittsburgh PIT",c:"PIT"},{y:"Milwaukee MKE",c:"MKE"},{y:"St. Louis STL",c:"STL"},{y:"New Orleans MSY",c:"MSY"},{y:"San Antonio SAT",c:"SAT"},{y:"Albuquerque ABQ",c:"ABQ"},{y:"Omaha OMA",c:"OMA"}]},
   {r:"México / Caribe",c:[{y:"Cancún CUN",c:"CUN"},{y:"Punta Cana PUJ",c:"PUJ"},{y:"San Juan SJU",c:"SJU"},{y:"Puerto Vallarta PVR",c:"PVR"},{y:"Los Cabos SJD",c:"SJD"},{y:"Montego Bay MBJ",c:"MBJ"},{y:"Nassau NAS",c:"NAS"}]},
 ]},
-{name:"Allegiant Air",iata:"G4",zone:2,ruta:"SFB-PIT",note:"Verificado",dests:[
+{name:"Allegiant Air",iata:"G4",hub:"SFB",zone:2,ruta:"SFB-PIT",note:"Verificado",dests:[
   {r:"Florida / Bases",c:[{y:"Orlando SFB",c:"SFB"},{y:"Tampa PIE",c:"PIE"},{y:"Punta Gorda PGD",c:"PGD"},{y:"Fort Lauderdale FLL",c:"FLL"}]},
   {r:"Oeste EE.UU.",c:[{y:"Las Vegas LAS",c:"LAS"},{y:"Phoenix AZA",c:"AZA"},{y:"Los Ángeles LAX",c:"LAX"},{y:"San Diego SAN",c:"SAN"},{y:"Bellingham BLI",c:"BLI"},{y:"Eugene EUG",c:"EUG"},{y:"Spokane GEG",c:"GEG"},{y:"Boise BOI",c:"BOI"},{y:"Missoula MSO",c:"MSO"},{y:"Billings BIL",c:"BIL"},{y:"Provo PVU",c:"PVU"}]},
   {r:"Centro / Este EE.UU.",c:[{y:"Pittsburgh PIT",c:"PIT"},{y:"Cleveland CLE",c:"CLE"},{y:"Columbus CMH",c:"CMH"},{y:"Cincinnati CVG",c:"CVG"},{y:"Indianapolis IND",c:"IND"},{y:"Grand Rapids GRR",c:"GRR"},{y:"Knoxville TYS",c:"TYS"},{y:"Chattanooga CHA",c:"CHA"},{y:"Lexington LEX",c:"LEX"},{y:"Fargo FAR",c:"FAR"},{y:"Sioux Falls FSD",c:"FSD"},{y:"Des Moines DSM",c:"DSM"},{y:"Omaha OMA",c:"OMA"},{y:"Wichita ICT",c:"ICT"},{y:"Tulsa TUL",c:"TUL"},{y:"Oklahoma City OKC",c:"OKC"},{y:"Birmingham BHM",c:"BHM"},{y:"Savannah SAV",c:"SAV"},{y:"Myrtle Beach MYR",c:"MYR"},{y:"Wilmington ILM",c:"ILM"},{y:"Greenville GSP",c:"GSP"},{y:"Richmond RIC",c:"RIC"}]},
   {r:"México / Caribe",c:[{y:"Cancún CUN",c:"CUN"},{y:"Punta Cana PUJ",c:"PUJ"},{y:"Nassau NAS",c:"NAS"},{y:"Montego Bay MBJ",c:"MBJ"},{y:"Los Cabos SJD",c:"SJD"},{y:"Puerto Vallarta PVR",c:"PVR"},{y:"San José CR SJO",c:"SJO"}]},
 ]},
-{name:"Canadian North",iata:"5T",zone:2,ruta:"YOW-YFB",note:"Verificado — norte de Canadá",dests:[
+{name:"Canadian North",iata:"5T",hub:"YOW",zone:2,ruta:"YOW-YFB",note:"Verificado — norte de Canadá",dests:[
   {r:"Este / Centro",c:[{y:"Ottawa YOW",c:"YOW"},{y:"Toronto YYZ",c:"YYZ"},{y:"Montreal YUL",c:"YUL"},{y:"Iqaluit YFB",c:"YFB"},{y:"St. John's YYT",c:"YYT"}]},
   {r:"Oeste / Ártico",c:[{y:"Edmonton YEG",c:"YEG"},{y:"Yellowknife YZF",c:"YZF"},{y:"Hay River YHY",c:"YHY"},{y:"Inuvik YEV",c:"YEV"},{y:"Whitehorse YXY",c:"YXY"},{y:"Resolute Bay YRB",c:"YRB"},{y:"Cambridge Bay YCB",c:"YCB"},{y:"Grise Fiord YGZ",c:"YGZ"},{y:"Whale Cove YXN",c:"YXN"}]},
 ]},
-{name:"Central Mountain Air",iata:"9M",zone:2,ruta:"YVR-YXS",note:"Verificado — BC interior",dests:[
+{name:"Central Mountain Air",iata:"9M",hub:"YXS",zone:2,ruta:"YVR-YXS",note:"Verificado — BC interior",dests:[
   {r:"BC / Alberta",c:[{y:"Vancouver YVR",c:"YVR"},{y:"Calgary YYC",c:"YYC"},{y:"Edmonton YEG",c:"YEG"},{y:"Prince George YXS",c:"YXS"},{y:"Kamloops YKA",c:"YKA"},{y:"Comox YQQ",c:"YQQ"},{y:"Fort St. John YXJ",c:"YXJ"},{y:"Fort Nelson YYE",c:"YYE"},{y:"Smithers YYD",c:"YYD"},{y:"Terrace YXT",c:"YXT"},{y:"Prince Rupert YPR",c:"YPR"},{y:"Dawson Creek YDQ",c:"YDQ"}]},
 ]},
-{name:"Wasaya Airways",iata:"WP",zone:2,ruta:"YXL-YFH",note:"Verificado — código WP",dests:[
+{name:"Wasaya Airways",iata:"WP",hub:"YXL",zone:2,ruta:"YXL-YFH",note:"Verificado — código WP",dests:[
   {r:"Norte de Ontario",c:[{y:"Thunder Bay YQT",c:"YQT"},{y:"Sioux Lookout YXL",c:"YXL"},{y:"Red Lake YRL",c:"YRL"},{y:"Fort Hope YFH",c:"YFH"},{y:"Ogoki Post YOG",c:"YOG"},{y:"Angling Lake YAX",c:"YAX"},{y:"Poplar Hill YHP",c:"YHP"},{y:"North Spirit Lake YNO",c:"YNO"},{y:"Pikangikum YPM",c:"YPM"},{y:"Kashechewan ZKE",c:"ZKE"},{y:"Fort Frances YAG",c:"YAG"},{y:"Shamattawa ZTM",c:"ZTM"}]},
 ]},
-{name:"SKY Airline",iata:"H2",zone:3,ruta:"SCL-LIM",note:"Verificado",dests:[
+{name:"SKY Airline",iata:"H2",hub:"SCL",zone:3,ruta:"SCL-LIM",note:"Verificado",dests:[
   {r:"Sudamérica",c:[{y:"Santiago SCL",c:"SCL"},{y:"Lima LIM",c:"LIM"},{y:"Bogotá BOG",c:"BOG"},{y:"Buenos Aires EZE",c:"EZE"},{y:"São Paulo GRU",c:"GRU"},{y:"Santa Cruz VVI",c:"VVI"},{y:"Medellín MDE",c:"MDE"},{y:"Iquique IQQ",c:"IQQ"},{y:"Antofagasta ANF",c:"ANF"},{y:"La Serena LSC",c:"LSC"},{y:"Concepción CCP",c:"CCP"},{y:"Puerto Montt PMC",c:"PMC"},{y:"Punta Arenas PUQ",c:"PUQ"},{y:"Temuco ZCO",c:"ZCO"},{y:"Calama CJC",c:"CJC"},{y:"Arica ARI",c:"ARI"},{y:"Copiapó CPO",c:"CPO"}]},
 ]},
-{name:"Wingo",iata:"P5",zone:3,ruta:"BOG-CTG",note:"Verificado",dests:[
+{name:"Wingo",iata:"P5",hub:"BOG",zone:3,ruta:"BOG-CTG",note:"Verificado",dests:[
   {r:"Colombia",c:[{y:"Bogotá BOG",c:"BOG"},{y:"Cartagena CTG",c:"CTG"},{y:"Medellín MDE",c:"MDE"},{y:"Cali CLO",c:"CLO"},{y:"Barranquilla BAQ",c:"BAQ"},{y:"Cúcuta CUC",c:"CUC"},{y:"San Andrés ADZ",c:"ADZ"},{y:"Pereira PEI",c:"PEI"},{y:"Bucaramanga BGA",c:"BGA"}]},
   {r:"Internacional",c:[{y:"Panamá PTY",c:"PTY"},{y:"Lima LIM",c:"LIM"},{y:"Quito UIO",c:"UIO"},{y:"Guayaquil GYE",c:"GYE"},{y:"Santo Domingo SDQ",c:"SDQ"},{y:"La Habana HAV",c:"HAV"},{y:"Cancún CUN",c:"CUN"},{y:"San José CR SJO",c:"SJO"},{y:"San Salvador SAL",c:"SAL"},{y:"Guatemala GUA",c:"GUA"},{y:"Caracas CCS",c:"CCS"}]},
 ]},
-{name:"Cabo Verde Airlines",iata:"VR",zone:3,ruta:"RAI-LIS",note:"Verificado",dests:[
+{name:"Cabo Verde Airlines",iata:"VR",hub:"RAI",zone:3,ruta:"RAI-LIS",note:"Verificado",dests:[
   {r:"Cabo Verde",c:[{y:"Praia RAI",c:"RAI"},{y:"Sal SID",c:"SID"},{y:"São Vicente VXE",c:"VXE"},{y:"Boa Vista BVC",c:"BVC"}]},
   {r:"Europa",c:[{y:"Lisboa LIS",c:"LIS"},{y:"Oporto OPO",c:"OPO"},{y:"Ámsterdam",c:"AMS"},{y:"Londres LGW",c:"LGW"},{y:"París CDG",c:"CDG"},{y:"Madrid",c:"MAD"},{y:"Roma FCO",c:"FCO"},{y:"Milán MXP",c:"MXP"}]},
   {r:"América / África",c:[{y:"Boston BOS",c:"BOS"},{y:"Providence PVD",c:"PVD"},{y:"Fortaleza FOR",c:"FOR"},{y:"Recife REC",c:"REC"},{y:"São Paulo GRU",c:"GRU"},{y:"Dakar DSS",c:"DSS"}]},
 ]},
-{name:"Etihad Airways",iata:"EY",zone:4,ruta:"MAD-AUH",note:"Verificado",dests:[
+{name:"Etihad Airways",iata:"EY",hub:"AUH",zone:4,ruta:"MAD-AUH",note:"Verificado",dests:[
   {r:"Medio Oriente",c:[{y:"Abu Dhabi AUH",c:"AUH"},{y:"Dubai DXB",c:"DXB"},{y:"Doha DOH",c:"DOH"},{y:"Kuwait KWI",c:"KWI"},{y:"Beirut BEY",c:"BEY"},{y:"Ammán AMM",c:"AMM"},{y:"Tel Aviv TLV",c:"TLV"},{y:"Riad RUH",c:"RUH"},{y:"Jeddah JED",c:"JED"},{y:"Muscat MCT",c:"MCT"}]},
   {r:"Europa",c:[{y:"Londres LHR",c:"LHR"},{y:"París CDG",c:"CDG"},{y:"Frankfurt FRA",c:"FRA"},{y:"Ámsterdam",c:"AMS"},{y:"Madrid",c:"MAD"},{y:"Barcelona BCN",c:"BCN"},{y:"Roma FCO",c:"FCO"},{y:"Milán MXP",c:"MXP"},{y:"Zúrich",c:"ZRH"},{y:"Ginebra",c:"GVA"},{y:"Dublín",c:"DUB"},{y:"Bruselas",c:"BRU"},{y:"Atenas ATH",c:"ATH"},{y:"Viena VIE",c:"VIE"},{y:"Munich MUC",c:"MUC"}]},
   {r:"Asia",c:[{y:"Tokyo NRT",c:"NRT"},{y:"Osaka KIX",c:"KIX"},{y:"Seoul ICN",c:"ICN"},{y:"Pekín PEK",c:"PEK"},{y:"Shanghai PVG",c:"PVG"},{y:"Hong Kong HKG",c:"HKG"},{y:"Singapur SIN",c:"SIN"},{y:"Bangkok BKK",c:"BKK"},{y:"Mumbai BOM",c:"BOM"},{y:"Delhi DEL",c:"DEL"},{y:"Karachi KHI",c:"KHI"},{y:"Colombo CMB",c:"CMB"},{y:"Kuala Lumpur KUL",c:"KUL"},{y:"Jakarta CGK",c:"CGK"},{y:"Manila MNL",c:"MNL"}]},
   {r:"América del Norte",c:[{y:"Nueva York JFK",c:"JFK"},{y:"Los Ángeles LAX",c:"LAX"},{y:"Chicago ORD",c:"ORD"},{y:"Washington IAD",c:"IAD"},{y:"Toronto YYZ",c:"YYZ"},{y:"Boston BOS",c:"BOS"},{y:"Dallas DFW",c:"DFW"},{y:"Houston IAH",c:"IAH"},{y:"San Francisco SFO",c:"SFO"}]},
   {r:"África / Oceanía",c:[{y:"Johannesburgo JNB",c:"JNB"},{y:"Nairobi NBO",c:"NBO"},{y:"El Cairo CAI",c:"CAI"},{y:"Lagos LOS",c:"LOS"},{y:"Sydney SYD",c:"SYD"},{y:"Melbourne MEL",c:"MEL"},{y:"Auckland AKL",c:"AKL"},{y:"Brisbane BNE",c:"BNE"}]},
 ]},
-{name:"Air New Zealand",iata:"NZ",zone:6,ruta:"AKL-SYD",note:"Verificado",dests:[
+{name:"Air New Zealand",iata:"NZ",hub:"AKL",zone:6,ruta:"AKL-SYD",note:"Verificado",dests:[
   {r:"Nueva Zelanda",c:[{y:"Auckland AKL",c:"AKL"},{y:"Wellington WLG",c:"WLG"},{y:"Christchurch CHC",c:"CHC"},{y:"Queenstown ZQN",c:"ZQN"},{y:"Dunedin DUD",c:"DUD"},{y:"Nelson NSN",c:"NSN"},{y:"Hamilton HLZ",c:"HLZ"},{y:"Palmerston North PMR",c:"PMR"},{y:"Rotorua ROT",c:"ROT"},{y:"Napier NPE",c:"NPE"},{y:"New Plymouth NPL",c:"NPL"},{y:"Tauranga TRG",c:"TRG"},{y:"Invercargill IVC",c:"IVC"}]},
   {r:"Australia",c:[{y:"Sydney SYD",c:"SYD"},{y:"Melbourne MEL",c:"MEL"},{y:"Brisbane BNE",c:"BNE"},{y:"Perth PER",c:"PER"},{y:"Adelaide ADL",c:"ADL"},{y:"Canberra CBR",c:"CBR"},{y:"Gold Coast OOL",c:"OOL"},{y:"Cairns CNS",c:"CNS"}]},
   {r:"América del Norte",c:[{y:"Los Ángeles LAX",c:"LAX"},{y:"San Francisco SFO",c:"SFO"},{y:"Chicago ORD",c:"ORD"},{y:"Houston IAH",c:"IAH"},{y:"Vancouver YVR",c:"YVR"},{y:"Honolulú HNL",c:"HNL"}]},
@@ -339,6 +374,7 @@ function openPanel(iata,highlightCode){
     <div class="panel-section-title">Acuerdo ZED</div>
     <div class="info-block">
       <div class="info-row"><span class="info-key">Estado</span><span class="info-val" style="color:var(--green)">✓ Viaja sola</span></div>
+      ${a.hub?`<div class="info-row"><span class="info-key">Hub principal</span><span class="info-val" style="font-family:var(--mono)">${a.hub}</span></div>`:''}
     </div>
   </div>`;
   if(a.dests&&a.dests.length){
@@ -388,6 +424,7 @@ function renderSolo(){
           <div class="solo-card" onclick="openPanel('${a.iata}')">
             <div class="solo-card-iata">${a.iata}</div>
             <div class="solo-card-name">${a.name}</div>
+            ${a.hub?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;font-family:var(--mono)">Hub: ${a.hub}</div>`:''}
             ${a.dests?`<div class="solo-card-dests">${a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)} destinos</div>`:''}
           </div>`).join('')}
         </div>
@@ -398,6 +435,7 @@ function renderSolo(){
       <div class="solo-card" onclick="openPanel('${a.iata}')">
         <div class="solo-card-iata">${a.iata}</div>
         <div class="solo-card-name">${a.name}</div>
+        ${a.hub?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;font-family:var(--mono)">Hub: ${a.hub}</div>`:''}
         ${a.dests?`<div class="solo-card-dests">${a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)} destinos</div>`:''}
       </div>`).join('');
   }
@@ -593,6 +631,20 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
   document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+}));
+
+// ── Mobile zone pills ─────────────────────────────────────────────────
+document.querySelectorAll('.zone-pill').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.zone-pill').forEach(x=>{
+    x.style.background='var(--surface)';x.style.color='var(--text-secondary)';x.style.borderColor='var(--border)';
+  });
+  b.style.background='var(--accent)';b.style.color='#fff';b.style.borderColor='var(--accent)';
+  soloZone=b.dataset.pillZone;
+  // Sync sidebar too
+  document.querySelectorAll('.sidebar-btn[data-solo-zone]').forEach(x=>x.classList.remove('active'));
+  const sideBtn=document.querySelector(`.sidebar-btn[data-solo-zone="${b.dataset.pillZone}"]`);
+  if(sideBtn)sideBtn.classList.add('active');
+  renderSolo();
 }));
 
 // ── Init ──────────────────────────────────────────────────────────────
