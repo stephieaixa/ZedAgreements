@@ -147,7 +147,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
   <div class="logo">ZED</div>
   <h1>ZED Vueling · Beneficiarios</h1>
   <span class="ref">Verificado junio 2026</span>
-  <button onclick="openSuggest()" style="margin-left:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--sans);font-size:12px;cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;gap:6px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+  <button onclick="openSuggest()" style="margin-left:12px;padding:8px 16px;border:none;border-radius:6px;background:var(--accent);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;color:#fff;display:flex;align-items:center;gap:6px;transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Sugerí una aerolínea
   </button>
@@ -157,7 +157,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 <div class="tabs">
   <button class="tab active" data-tab="solo">✓ Viajan solas</button>
   <button class="tab" data-tab="route">Buscar ruta</button>
-  <button class="tab" data-tab="all">Todas las aerolíneas</button>
+
 </div>
 
 <!-- TAB 1: Viajan solas -->
@@ -187,52 +187,20 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 <div class="tab-content" id="tab-route">
   <div class="route-section">
     <h2>Buscar ruta</h2>
-    <p>Encontrá qué aerolíneas podés usar entre dos puntos — solo muestra las que permiten viajar sola.</p>
+    <p>Completá uno o los dos campos — solo muestra aerolíneas que permiten viajar sola.</p>
 
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-      <div class="route-modes" style="margin-bottom:0;">
-        <button class="mode-btn active" data-mode="from">Salir desde…</button>
-        <button class="mode-btn" data-mode="to">Llegar a…</button>
-        <button class="mode-btn" data-mode="between">Entre dos aeropuertos</button>
-      </div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
+      <div id="route-inputs-area" style="flex:1;min-width:0;"></div>
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
         <button id="flight-direct" onclick="setFlightType('direct')" style="padding:7px 14px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;">Directa</button>
         <button id="flight-stopover" onclick="setFlightType('stopover')" style="padding:7px 14px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;">Con escala</button>
       </div>
     </div>
-
-    <div id="route-inputs-area"></div>
     <div class="route-results-area" id="route-results-area"></div>
   </div>
 </div>
 
-<!-- TAB 3: Todas -->
-<div class="tab-content" id="tab-all">
-  <div class="layout">
-    <aside>
-      <div>
-        <label class="filter-label">Buscar</label>
-        <div class="search-wrap">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="airline-search" id="airline-search" placeholder="Nombre o IATA…"/>
-        </div>
-      </div>
-      <div>
-        <span class="filter-label">Zona IATA</span>
-        <div class="sidebar-btns">
-          <button class="sidebar-btn active" data-zone="all"><span class="dot" style="background:#9E9C96"></span>Todas<span class="cnt" id="cnt-all">—</span></button>
-          <button class="sidebar-btn" data-zone="1"><span class="dot" style="background:#185FA5"></span>Zona 1 · Europa<span class="cnt" id="cnt-1">—</span></button>
-          <button class="sidebar-btn" data-zone="2"><span class="dot" style="background:#1A6B3C"></span>Zona 2 · N. América<span class="cnt" id="cnt-2">—</span></button>
-          <button class="sidebar-btn" data-zone="3"><span class="dot" style="background:#8A5C00"></span>Zona 3 · Latinoamérica<span class="cnt" id="cnt-3">—</span></button>
-          <button class="sidebar-btn" data-zone="4"><span class="dot" style="background:#534AB7"></span>Zona 4 · M. Oriente / África<span class="cnt" id="cnt-4">—</span></button>
-          <button class="sidebar-btn" data-zone="5"><span class="dot" style="background:#993C1D"></span>Zona 5 · Asia / Pacífico<span class="cnt" id="cnt-5">—</span></button>
-          <button class="sidebar-btn" data-zone="6"><span class="dot" style="background:#993556"></span>Zona 6 · Oceanía<span class="cnt" id="cnt-6">—</span></button>
-        </div>
-      </div>
-    </aside>
-    <div class="all-main" id="all-main"></div>
-  </div>
-</div>
+
 
 <!-- Panel lateral -->
 <div class="panel-overlay" id="overlay"></div>
@@ -399,17 +367,41 @@ function closePanel(){document.getElementById('overlay').classList.remove('open'
 let soloZone='all';
 function renderSolo(){
   const zoneColors={1:'#185FA5',2:'#1A6B3C',3:'#8A5C00',4:'#534AB7',5:'#993C1D',6:'#993556'};
+  const zoneBgs={1:'#E6F1FB',2:'#EAF3DE',3:'#FEF6E4',4:'#EEEDFE',5:'#FAECE7',6:'#FBEAF0'};
   const pool=DATA.filter(a=>soloZone==='all'||String(a.zone)===soloZone);
   document.getElementById('solo-count').textContent=pool.length+' aerol\u00ednea'+(pool.length!==1?'s':'');
   document.getElementById('scnt-all').textContent=DATA.length;
   [1,2,3,4,5,6].forEach(z=>{const el=document.getElementById('scnt-'+z);if(el)el.textContent=DATA.filter(a=>a.zone===z).length;});
-  document.getElementById('solo-grid').innerHTML=pool.map(a=>`
-    <div class="solo-card" onclick="openPanel('${a.iata}')">
-      <div class="solo-card-iata">${a.iata}</div>
-      <div class="solo-card-name">${a.name}</div>
-      <div class="solo-card-zone" style="color:${zoneColors[a.zone]}">Zona ${a.zone} · ${ZONES[a.zone].name}</div>
-      ${a.dests?`<div class="solo-card-dests">${a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)} destinos</div>`:''}
-    </div>`).join('');
+  
+  if(soloZone==='all'){
+    // Group by zone
+    const byZ={};
+    pool.forEach(a=>{if(!byZ[a.zone])byZ[a.zone]=[];byZ[a.zone].push(a);});
+    document.getElementById('solo-grid').innerHTML=Object.keys(byZ).sort((a,b)=>a-b).map(z=>{
+      const zn=parseInt(z),rows=byZ[z];
+      return`<div style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+          <span style="font-family:var(--mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;background:${zoneBgs[zn]};color:${zoneColors[zn]}">Zona ${z}</span>
+          <span style="font-size:14px;font-weight:600;">${ZONES[zn].name}</span>
+          <span style="margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--text-muted)">${rows.length} aerol\u00ednea${rows.length!==1?'s':''}</span>
+        </div>
+        <div class="solo-grid" style="padding:0;margin:0;">${rows.map(a=>`
+          <div class="solo-card" onclick="openPanel('${a.iata}')">
+            <div class="solo-card-iata">${a.iata}</div>
+            <div class="solo-card-name">${a.name}</div>
+            ${a.dests?`<div class="solo-card-dests">${a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)} destinos</div>`:''}
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('solo-grid').innerHTML=pool.map(a=>`
+      <div class="solo-card" onclick="openPanel('${a.iata}')">
+        <div class="solo-card-iata">${a.iata}</div>
+        <div class="solo-card-name">${a.name}</div>
+        ${a.dests?`<div class="solo-card-dests">${a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)} destinos</div>`:''}
+      </div>`).join('');
+  }
 }
 document.querySelectorAll('.sidebar-btn[data-solo-zone]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.sidebar-btn[data-solo-zone]').forEach(x=>x.classList.remove('active'));
@@ -417,38 +409,27 @@ document.querySelectorAll('.sidebar-btn[data-solo-zone]').forEach(b=>b.addEventL
 }));
 
 // ── TAB 2: Route finder ───────────────────────────────────────────────
-let routeMode='from';
 let selectedOrigin=null;
 let selectedDest=null;
 
 function renderRouteInputs(){
   const area=document.getElementById('route-inputs-area');
-  if(routeMode==='from'){
-    area.innerHTML=`<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">¿Desde qué aeropuerto querés salir?</div>`+airportSearchHTML('origin');
-  } else if(routeMode==='to'){
-    area.innerHTML=`<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">¿A qué aeropuerto querés llegar?</div>`+airportSearchHTML('dest');
-  } else {
-    area.innerHTML=`<div class="route-inputs">
-      <label>Origen</label>${airportSearchHTML('origin')}
-      <button id="swap-btn" title="Intercambiar origen y destino" style="flex-shrink:0;border:1px solid var(--border);background:var(--surface);border-radius:6px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all .15s;" onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--accent)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--text-secondary)'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-      </button>
-      <label>Destino</label>${airportSearchHTML('dest')}
-    </div>`;
-    document.getElementById('swap-btn').addEventListener('click',()=>{
-      const tmp=selectedOrigin;
-      selectedOrigin=selectedDest;
-      selectedDest=tmp;
-      const iO=document.getElementById('input-origin');
-      const iD=document.getElementById('input-dest');
-      if(iO&&iD){
-        const tmpVal=iO.value;
-        iO.value=iD.value;
-        iD.value=tmpVal;
-      }
-      if(selectedOrigin||selectedDest) runRouteSearch();
-    });
-  }
+  area.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label style="font-size:12px;color:var(--text-secondary);font-weight:500;white-space:nowrap;">Origen</label>
+    ${airportSearchHTML('origin')}
+    <button id="swap-btn" title="Intercambiar" style="flex-shrink:0;border:1px solid var(--border);background:var(--surface);border-radius:6px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all .15s;" onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--accent)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--text-secondary)'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    </button>
+    <label style="font-size:12px;color:var(--text-secondary);font-weight:500;white-space:nowrap;">Destino</label>
+    ${airportSearchHTML('dest')}
+  </div>`;
+  document.getElementById('swap-btn').addEventListener('click',()=>{
+    const tmp=selectedOrigin;selectedOrigin=selectedDest;selectedDest=tmp;
+    const iO=document.getElementById('input-origin');
+    const iD=document.getElementById('input-dest');
+    if(iO&&iD){const tv=iO.value;iO.value=iD.value;iD.value=tv;}
+    runRouteSearch();
+  });
   attachDropdowns();
 }
 
@@ -490,31 +471,26 @@ function attachDropdowns(){
 
 function runRouteSearch(){
   const resultsArea=document.getElementById('route-results-area');
-  if(routeMode==='from'&&!selectedOrigin){resultsArea.innerHTML='';return;}
-  if(routeMode==='to'&&!selectedDest){resultsArea.innerHTML='';return;}
-  if(routeMode==='between'&&(!selectedOrigin||!selectedDest)){resultsArea.innerHTML='';return;}
+  if(!selectedOrigin&&!selectedDest){resultsArea.innerHTML='';return;}
 
-  if(routeMode==='from'){
-    const oAirlines=airportMap[selectedOrigin]?airportMap[selectedOrigin].airlines:[];
-    const airlines=DATA.filter(a=>oAirlines.includes(a.iata));
-    if(!airlines.length){
-      resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED desde ${selectedOrigin} que permitan viajar sola.</div>`;return;
-    }
-    // Group destinations by airline
+  if(selectedOrigin&&!selectedDest){
+    // Only origin — show all airlines departing from there
+    const airlines=DATA.filter(a=>airportMap[selectedOrigin]&&airportMap[selectedOrigin].airlines.includes(a.iata));
+    if(!airlines.length){resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED desde ${selectedOrigin} que permitan viajar sola.</div>`;return;}
     resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${airlines.length} aerolínea${airlines.length!==1?'s':''} desde ${airportMap[selectedOrigin].city} (${selectedOrigin})</div>
     <div class="route-result-grid">${airlines.map(a=>{
-      const otherDests=a.dests?a.dests.flatMap(r=>r.c||[]).filter(d=>d.c!==selectedOrigin):[];
+      const others=a.dests?a.dests.flatMap(r=>r.c||[]).filter(d=>d.c!==selectedOrigin):[];
       return`<div class="route-result-card" onclick="openPanel('${a.iata}','${selectedOrigin}')">
         <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
-        <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span>${otherDests.slice(0,8).map(d=>`<span class="rrc-apt">${d.c}</span>`).join('')}${otherDests.length>8?`<span style="font-size:11px;color:var(--text-muted)">+${otherDests.length-8} más</span>`:''}</div>
+        <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span>${others.slice(0,8).map(d=>`<span class="rrc-apt">${d.c}</span>`).join('')}${others.length>8?`<span style="font-size:11px;color:var(--text-muted)">+${others.length-8} más</span>`:''}</div>
       </div>`;}).join('')}</div>`;
+    return;
+  }
 
-  } else if(routeMode==='to'){
-    const dAirlines=airportMap[selectedDest]?airportMap[selectedDest].airlines:[];
-    const airlines=DATA.filter(a=>dAirlines.includes(a.iata));
-    if(!airlines.length){
-      resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED hacia ${selectedDest} que permitan viajar sola.</div>`;return;
-    }
+  if(!selectedOrigin&&selectedDest){
+    // Only dest — show all airlines arriving there
+    const airlines=DATA.filter(a=>airportMap[selectedDest]&&airportMap[selectedDest].airlines.includes(a.iata));
+    if(!airlines.length){resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED hacia ${selectedDest} que permitan viajar sola.</div>`;return;}
     resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${airlines.length} aerolínea${airlines.length!==1?'s':''} que llegan a ${airportMap[selectedDest].city} (${selectedDest})</div>
     <div class="route-result-grid">${airlines.map(a=>{
       const origins=a.dests?a.dests.flatMap(r=>r.c||[]).filter(d=>d.c!==selectedDest):[];
@@ -522,8 +498,11 @@ function runRouteSearch(){
         <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
         <div class="rrc-airports">${origins.slice(0,8).map(d=>`<span class="rrc-apt">${d.c}</span>`).join('')}<span class="rrc-apt highlight">${selectedDest}</span>${origins.length>8?`<span style="font-size:11px;color:var(--text-muted)">+${origins.length-8} más</span>`:''}</div>
       </div>`;}).join('')}</div>`;
+    return;
+  }
 
-  } else {
+  // Both origin and dest
+  {
     const oA=airportMap[selectedOrigin]?airportMap[selectedOrigin].airlines:[];
     const dA=airportMap[selectedDest]?airportMap[selectedDest].airlines:[];
     const common=DATA.filter(a=>oA.includes(a.iata)&&dA.includes(a.iata));
@@ -574,15 +553,6 @@ function runRouteSearch(){
   }
 }
 
-document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  routeMode=b.dataset.mode;
-  selectedOrigin=null;selectedDest=null;
-  renderRouteInputs();
-  document.getElementById('route-results-area').innerHTML='';
-}));
-
 let flightType='direct';
 function setFlightType(t){
   flightType=t;
@@ -616,45 +586,7 @@ function findStopoverRoutes(orig,dest){
   return results;
 }
 
-// ── TAB 3: All airlines ───────────────────────────────────────────────
-let activeZone='all',airlineQ='';
-function renderAll(){
-  const q=airlineQ.toLowerCase();
-  const pool=DATA.filter(a=>(activeZone==='all'||String(a.zone)===activeZone)&&(!q||a.name.toLowerCase().includes(q)||a.iata.toLowerCase().includes(q)));
-  const fc=DATA.filter(a=>(!q||a.name.toLowerCase().includes(q)||a.iata.toLowerCase().includes(q)));
-  document.getElementById('cnt-all').textContent=fc.length;
-  [1,2,3,4,5,6].forEach(z=>{const el=document.getElementById('cnt-'+z);if(el)el.textContent=fc.filter(a=>a.zone===z).length;});
-  const byZ={};pool.forEach(a=>{if(!byZ[a.zone])byZ[a.zone]=[];byZ[a.zone].push(a);});
-  const main=document.getElementById('all-main');
-  if(!pool.length){main.innerHTML='<div class="empty-state">No se encontraron aerolíneas.</div>';return;}
-  main.innerHTML=Object.keys(byZ).sort((a,b)=>a-b).map(z=>{
-    const zn=parseInt(z),info=ZONES[zn],rows=byZ[z];
-    return`<div class="zone-section">
-      <div class="zone-title">
-        <span class="zone-num" style="background:${info.bg};color:${info.color}">Zona ${z}</span>
-        <h3>${info.name}</h3>
-        <span class="zcnt">${rows.length} aerolínea${rows.length!==1?'s':''}</span>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>IATA</th><th>Aerolínea</th><th>Estado</th><th>Destinos</th><th>Ruta verificada</th></tr></thead>
-        <tbody>${rows.map(a=>`
-          <tr onclick="openPanel('${a.iata}')">
-            <td class="td-iata">${a.iata}</td>
-            <td class="td-name">${a.name}</td>
-            <td><span class="badge-ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Viaja sola</span></td>
-            <td><div style="font-size:12px;color:var(--text-secondary)">${a.dests?a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)+' destinos':'—'}</div><div class="click-hint">Ver →</div></td>
-            <td style="font-family:var(--mono);font-size:12px;color:var(--text-secondary)">${a.ruta}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>`;
-  }).join('');
-}
-document.getElementById('airline-search').addEventListener('input',e=>{airlineQ=e.target.value;renderAll();});
-document.querySelectorAll('.sidebar-btn[data-zone]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.sidebar-btn[data-zone]').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');activeZone=b.dataset.zone;renderAll();
-}));
+
 
 // ── Tabs ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
@@ -667,7 +599,6 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
 // ── Init ──────────────────────────────────────────────────────────────
 renderSolo();
 renderRouteInputs();
-renderAll();
 </script>
 <!-- Suggest modal -->
 <div id="suggest-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,25,23,.5);z-index:400;align-items:center;justify-content:center;">
