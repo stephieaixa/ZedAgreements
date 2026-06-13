@@ -140,30 +140,34 @@ td{padding:8px 10px;vertical-align:middle;}
 aside::-webkit-scrollbar,.panel-body::-webkit-scrollbar{width:4px;}
 aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 @media(max-width:768px){
-  header{padding:10px 14px;gap:8px;}
-  header h1{font-size:13px;}
+  header{padding:10px 14px;gap:8px;flex-wrap:wrap;}
+  header h1{font-size:12px;}
   header .ref{display:none;}
   .tabs{padding:0 14px;}
-  .tab{padding:10px 14px;font-size:13px;}
-  /* Solo tab — hide sidebar, show zone pills instead */
+  .tab{padding:10px 12px;font-size:12px;}
   .solo-sidebar{display:none!important;}
   .solo-zone-pills{display:flex!important;}
   .solo-grid{padding:0 14px 20px;}
-  /* Route section */
-  .route-section{padding:16px 14px;}
+  .route-section{padding:14px;}
   .route-section h2{font-size:15px;}
-  .route-section p{font-size:12px;}
-  #route-inputs-area > div{flex-direction:column;gap:8px;}
-  #route-inputs-area label{display:none;}
-  .airport-search-wrap{max-width:100%!important;width:100%!important;}
-  .flight-toggle-wrap{margin-left:0!important;width:100%;}
-  .flight-toggle-wrap button{flex:1;text-align:center;}
+  .route-section p{font-size:12px;margin-bottom:14px;}
+  /* Route inputs stack vertically on mobile */
+  #route-inputs-area>div{flex-direction:column!important;gap:8px!important;align-items:stretch!important;}
+  #route-inputs-area label{display:none!important;}
+  #swap-btn{align-self:center;width:34px;}
+  .airport-search-wrap{max-width:100%!important;width:100%!important;min-width:0!important;}
+  .airport-search-wrap input{width:100%!important;}
+  /* Toggle full width below inputs */
+  #tab-route>.route-section>div:first-of-type{flex-direction:column!important;align-items:stretch!important;gap:10px!important;}
+  #flight-toggle{width:100%!important;display:flex!important;}
+  #flight-toggle button{flex:1;text-align:center;}
   .route-result-grid{grid-template-columns:1fr!important;}
   .route-result-card{padding:12px;}
-  /* Panel */
   .panel{width:100%!important;}
-  /* Suggest modal */
-  #suggest-overlay > div{margin:12px;}
+  #suggest-overlay>div{margin:12px;}
+  /* Prevent horizontal overflow */
+  .tab-content{max-width:100vw;overflow-x:hidden;}
+  .route-section{max-width:100%;overflow-x:hidden;}
 }
 </style>
 </head>
@@ -226,7 +230,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
       <div id="route-inputs-area" style="flex:1;min-width:0;"></div>
-      <div class="flight-toggle-wrap" style="flex-shrink:0;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
+        <div class="flight-toggle-wrap" id="flight-toggle" style="flex-shrink:0;display:none;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
         <button id="flight-direct" onclick="setFlightType('direct')" style="padding:7px 14px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;">Directa</button>
         <button id="flight-stopover" onclick="setFlightType('stopover')" style="padding:7px 14px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;">Con escala</button>
       </div>
@@ -353,6 +357,38 @@ const DATA=[
   {r:"Europa",c:[{y:"Londres LHR",c:"LHR"}]},
 ]},
 ];
+
+
+// Explicit direct route pairs per airline (verified routes)
+const ROUTES={
+  VY:["BCN-MAD","BCN-SVQ","BCN-VLC","BCN-BIO","BCN-AGP","BCN-PMI","BCN-IBZ","BCN-ALC","BCN-MAH","BCN-LPA","BCN-TFS","BCN-ACE","BCN-FUE","BCN-SPC","MAD-BCN","MAD-SVQ","MAD-VLC","MAD-AGP","MAD-PMI","MAD-IBZ","MAD-ALC","MAD-LPA","MAD-TFS","MAD-ACE","MAD-FUE","MAD-CDG","MAD-FCO","MAD-AMS","MAD-LGW","MAD-BRU","MAD-DUB","MAD-LIS","MAD-ATH","MAD-MXP","MAD-VCE","MAD-FLR","MAD-MRS","MAD-LYS","MAD-NCE","MAD-TLS","MAD-BOD","MAD-ZRH","MAD-GVA","MAD-CPH","MAD-OSL","MAD-ARN","MAD-HEL","MAD-WAW","MAD-PRG","MAD-BUD","MAD-VIE","MAD-BER","MAD-NAP","BCN-CDG","BCN-FCO","BCN-AMS","BCN-LGW","BCN-BRU","BCN-DUB","BCN-LIS","BCN-ATH","BCN-MXP","BCN-ZRH","BCN-GVA","BCN-CPH","BCN-OSL","BCN-ARN","BCN-HEL","BCN-WAW","BCN-PRG","BCN-BUD","BCN-VIE","BCN-BER","MAD-CMN","MAD-RAK","MAD-AGA","MAD-TUN","MAD-ALG","BCN-CMN","BCN-RAK"],
+  AY:["HEL-LHR","HEL-CDG","HEL-FRA","HEL-AMS","HEL-ZRH","HEL-BER","HEL-FCO","HEL-MXP","HEL-MAD","HEL-BCN","HEL-BRU","HEL-VIE","HEL-WAW","HEL-PRG","HEL-BUD","HEL-ARN","HEL-OSL","HEL-CPH","HEL-NRT","HEL-KIX","HEL-PEK","HEL-PVG","HEL-HKG","HEL-SIN","HEL-BKK","HEL-DEL","HEL-ICN","HEL-JFK","HEL-LAX","HEL-ORD","HEL-MIA"],
+  OS:["VIE-LHR","VIE-CDG","VIE-FRA","VIE-AMS","VIE-ZRH","VIE-FCO","VIE-MAD","VIE-BCN","VIE-BER","VIE-BRU","VIE-WAW","VIE-PRG","VIE-BUD","VIE-OTP","VIE-SOF","VIE-BEG","VIE-ZAG","VIE-IST","VIE-ATH","VIE-ARN","VIE-CPH","VIE-OSL","VIE-HEL","VIE-DXB","VIE-AUH","VIE-NRT","VIE-PVG","VIE-PEK","VIE-DEL","VIE-BOM","VIE-BKK","VIE-SIN","VIE-JFK","VIE-IAD","VIE-ORD","VIE-YYZ","VIE-LAX","VIE-MIA","VIE-CAI","VIE-JNB","VIE-NBO"],
+  KM:["MLA-LHR","MLA-LGW","MLA-CDG","MLA-FCO","MLA-MXP","MLA-AMS","MLA-FRA","MLA-BER","MLA-MAD","MLA-BCN","MLA-BRU","MLA-DUB","MLA-ATH","MLA-ZRH","MLA-VIE","MLA-WAW","MLA-PRG","MLA-CTA","MLA-PMO","MLA-NAP","MLA-VCE","MLA-CPH","MLA-ARN","MLA-OSL","MLA-HEL","MLA-LIS"],
+  X3:["DUS-PMI","DUS-IBZ","DUS-MAH","DUS-TFS","DUS-LPA","DUS-ACE","DUS-FUE","DUS-AGP","DUS-ALC","DUS-HER","DUS-RHO","DUS-KGS","DUS-JTR","DUS-JMK","DUS-AYT","DUS-BJV","DUS-DLM","DUS-AGA","DUS-RAK","DUS-FNC","DUS-CUN","DUS-PUJ","DUS-MBJ","DUS-VRA","DUS-DXB","DUS-BKK","DUS-HKT","DUS-MLE","DUS-ZNZ","DUS-MRU","DUS-DPS","FRA-PMI","FRA-TFS","FRA-LPA","FRA-AYT","FRA-CUN","MUC-PMI","MUC-TFS","MUC-LPA","MUC-AYT","MUC-CUN","HAM-PMI","HAM-TFS","HAM-AYT","BER-PMI","BER-TFS","BER-AYT"],
+  ZO:["LGW-JFK","LGW-LAX","LGW-MCO","LGW-FLL","LGW-LAS","LGW-BOS","LGW-IAD"],
+  NO:["OSL-JFK","OSL-LAX","OSL-FLL","OSL-MIA","OSL-ORD","OSL-BKK","OSL-DPS","OSL-SIN","BGO-JFK"],
+  PM:["TFN-LPA","TFN-ACE","TFN-FUE","TFN-SPC","TFN-VDE","TFN-GMZ","LPA-ACE","LPA-FUE","LPA-SPC","LPA-VDE","LPA-GMZ","ACE-FUE","ACE-SPC"],
+  S4:["PDL-TER","PDL-HOR","PDL-PIX","PDL-LIS","PDL-OPO","PDL-LGW","PDL-AMS","PDL-FRA","PDL-MAD","PDL-CDG","PDL-BOS","PDL-OAK","PDL-PVD","PDL-YYZ","PDL-YUL","TER-LIS","TER-OPO"],
+  SP:["PDL-TER","PDL-SMA","PDL-GRW","PDL-SJZ","PDL-HOR","PDL-PIX","PDL-FLW","PDL-CVU","TER-HOR","TER-SJZ","TER-GRW","TER-PIX","TER-SMA","HOR-PIX","PDL-LIS","PDL-OPO","TER-LIS"],
+  HM:["SEZ-PRI","SEZ-DXB","SEZ-AUH","SEZ-MRU","SEZ-JNB","SEZ-NBO","SEZ-ADD","SEZ-CDG","SEZ-MXP"],
+  F8:["YYZ-YVR","YYZ-YYC","YYZ-YEG","YYZ-YWG","YYZ-YOW","YYZ-YHZ","YYZ-YXX","YYZ-YLW","YYZ-YYJ","YYZ-YXE","YYZ-YQR","YYZ-CUN","YYZ-PUJ","YYZ-PVR","YYZ-SJD","YYZ-MBJ","YYZ-NAS","YVR-YYC","YVR-YEG","YVR-YWG","YVR-YOW","YVR-YHZ","YYC-YWG","YYC-YOW","YYC-YHZ"],
+  F9:["DEN-LAX","DEN-LAS","DEN-MCO","DEN-PHX","DEN-ATL","DEN-MDW","DEN-DFW","DEN-MIA","DEN-TPA","DEN-CLT","DEN-BNA","DEN-AUS","DEN-HOU","DEN-SFO","DEN-SEA","DEN-PDX","DEN-MSP","DEN-IAD","DEN-BOS","DEN-JFK","DEN-PHL","DEN-SAN","DEN-RDU","DEN-IND","DEN-MCI","DEN-CVG","DEN-CLE","DEN-PIT","DEN-MKE","DEN-STL","DEN-MSY","DEN-SAT","DEN-ABQ","DEN-OMA","DEN-CUN","DEN-PUJ","DEN-SJU","DEN-PVR","DEN-SJD","DEN-MBJ","DEN-NAS","LAX-MCO","LAX-LAS","LAX-PHX","LAX-ATL","LAX-MDW","LAX-DFW","LAX-MIA","LAX-CUN","LAS-MCO","LAS-PHX","LAS-ATL","LAS-MDW","LAS-DFW","LAS-MIA"],
+  G4:["SFB-PIT","SFB-CLE","SFB-CMH","SFB-CVG","SFB-IND","SFB-GRR","SFB-TYS","SFB-CHA","SFB-LEX","SFB-BHM","SFB-SAV","SFB-MYR","SFB-RIC","SFB-ILM","SFB-GSP","PIE-PIT","PIE-CLE","PIE-CVG","PIE-IND","PIE-GRR","LAS-EUG","LAS-GEG","LAS-BOI","LAS-MSO","LAS-BIL","LAS-FAR","LAS-FSD","LAS-DSM","LAS-OMA","LAS-ICT","LAS-TUL","LAS-OKC","LAS-PIT","LAS-CLE","LAS-CMH","LAS-IND","AZA-FAR","AZA-FSD","AZA-DSM","AZA-OMA","AZA-ICT","AZA-MCI","SFB-CUN","SFB-PUJ","SFB-NAS","SFB-MBJ","SFB-SJD","SFB-PVR","SFB-SJO","PIE-CUN","PIE-PUJ","LAS-CUN","LAS-SJD","LAS-PVR"],
+  "5T":["YOW-YFB","YFB-YYZ","YFB-YUL","YFB-YYT","YEG-YZF","YEG-YHY","YZF-YEV","YZF-YXY","YZF-YHY","YZF-YRB","YZF-YCB","YZF-YGZ","YZF-YFB","YZF-YXN"],
+  "9M":["YVR-YXS","YVR-YKA","YVR-YXJ","YVR-YQQ","YYC-YXS","YYC-YKA","YYC-YXJ","YYC-YQQ","YEG-YXJ","YXS-YKA","YXS-YQQ","YXS-YYD","YXT-YPR","YXJ-YYE","YXJ-YDQ"],
+  WP:["YQT-YXL","YXL-YFH","YXL-YOG","YXL-YAX","YXL-YHP","YXL-YNO","YXL-YRL","YXL-YPM","YXL-ZKE","YXL-YAG","YXL-ZTM","YQT-ZKE","YQT-YAG"],
+  H2:["SCL-LIM","SCL-BOG","SCL-EZE","SCL-GRU","SCL-VVI","SCL-MDE","SCL-IQQ","SCL-ANF","SCL-LSC","SCL-CCP","SCL-PMC","SCL-PUQ","SCL-ZCO","SCL-CJC","SCL-ARI","SCL-CPO","SCL-ZAL","LIM-BOG","LIM-EZE","LIM-GRU"],
+  P5:["BOG-CTG","BOG-MDE","BOG-CLO","BOG-BAQ","BOG-CUC","BOG-ADZ","BOG-PEI","BOG-BGA","BOG-PTY","BOG-LIM","BOG-UIO","BOG-GYE","BOG-SDQ","BOG-HAV","BOG-CUN","BOG-SJO","BOG-SAL","BOG-GUA","BOG-CCS","CTG-MDE","CTG-CLO","MDE-CLO","MDE-PTY"],
+  VR:["RAI-SID","RAI-VXE","RAI-BVC","RAI-LIS","RAI-OPO","RAI-AMS","RAI-LGW","RAI-CDG","RAI-MAD","RAI-FCO","RAI-MXP","RAI-BOS","RAI-PVD","RAI-FOR","RAI-REC","RAI-GRU","RAI-DSS","SID-LIS","SID-AMS","SID-LGW","SID-CDG","SID-MAD"],
+  EY:["AUH-LHR","AUH-CDG","AUH-FRA","AUH-AMS","AUH-MAD","AUH-BCN","AUH-FCO","AUH-MXP","AUH-ZRH","AUH-GVA","AUH-DUB","AUH-BRU","AUH-ATH","AUH-VIE","AUH-MUC","AUH-NRT","AUH-KIX","AUH-ICN","AUH-PEK","AUH-PVG","AUH-HKG","AUH-SIN","AUH-BKK","AUH-BOM","AUH-DEL","AUH-KHI","AUH-CMB","AUH-KUL","AUH-CGK","AUH-MNL","AUH-JFK","AUH-LAX","AUH-ORD","AUH-IAD","AUH-YYZ","AUH-BOS","AUH-DFW","AUH-IAH","AUH-SFO","AUH-JNB","AUH-NBO","AUH-CAI","AUH-LOS","AUH-SYD","AUH-MEL","AUH-AKL","AUH-BNE","AUH-DXB","AUH-DOH","AUH-KWI","AUH-BEY","AUH-AMM","AUH-TLV","AUH-RUH","AUH-JED","AUH-MCT"],
+  NZ:["AKL-WLG","AKL-CHC","AKL-ZQN","AKL-DUD","AKL-NSN","AKL-HLZ","AKL-PMR","AKL-ROT","AKL-NPE","AKL-NPL","AKL-TRG","AKL-IVC","AKL-SYD","AKL-MEL","AKL-BNE","AKL-PER","AKL-ADL","AKL-CBR","AKL-OOL","AKL-CNS","AKL-LAX","AKL-SFO","AKL-ORD","AKL-IAH","AKL-YVR","AKL-HNL","AKL-SIN","AKL-HKG","AKL-NRT","AKL-PEK","AKL-PVG","AKL-DPS","AKL-NAN","AKL-PPT","AKL-APW","AKL-TBU","AKL-RAR","AKL-NOU","AKL-VLI","AKL-LHR","WLG-CHC","WLG-ZQN","WLG-NPE","WLG-NSN","CHC-ZQN"],
+};
+
+function isDirect(iata, orig, dest){
+  const routes=ROUTES[iata]||[];
+  return routes.includes(orig+'-'+dest)||routes.includes(dest+'-'+orig);
+}
 
 // ── Airport index ─────────────────────────────────────────────────────
 const airportMap={};
@@ -508,10 +544,18 @@ function attachDropdowns(){
 
 function runRouteSearch(){
   const resultsArea=document.getElementById('route-results-area');
-  if(!selectedOrigin&&!selectedDest){resultsArea.innerHTML='';return;}
+  const toggle=document.getElementById('flight-toggle');
+  
+  if(!selectedOrigin&&!selectedDest){
+    resultsArea.innerHTML='';
+    if(toggle)toggle.style.display='none';
+    return;
+  }
+
+  // Only show toggle when both fields are filled
+  if(toggle) toggle.style.display=(selectedOrigin&&selectedDest)?'flex':'none';
 
   if(selectedOrigin&&!selectedDest){
-    // Only origin — show all airlines departing from there
     const airlines=DATA.filter(a=>airportMap[selectedOrigin]&&airportMap[selectedOrigin].airlines.includes(a.iata));
     if(!airlines.length){resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED desde ${selectedOrigin} que permitan viajar sola.</div>`;return;}
     resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${airlines.length} aerolínea${airlines.length!==1?'s':''} desde ${airportMap[selectedOrigin].city} (${selectedOrigin})</div>
@@ -525,7 +569,6 @@ function runRouteSearch(){
   }
 
   if(!selectedOrigin&&selectedDest){
-    // Only dest — show all airlines arriving there
     const airlines=DATA.filter(a=>airportMap[selectedDest]&&airportMap[selectedDest].airlines.includes(a.iata));
     if(!airlines.length){resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED hacia ${selectedDest} que permitan viajar sola.</div>`;return;}
     resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${airlines.length} aerolínea${airlines.length!==1?'s':''} que llegan a ${airportMap[selectedDest].city} (${selectedDest})</div>
@@ -538,18 +581,19 @@ function runRouteSearch(){
     return;
   }
 
-  // Both origin and dest
+  // Both origin AND dest filled
   {
     const oA=airportMap[selectedOrigin]?airportMap[selectedOrigin].airlines:[];
     const dA=airportMap[selectedDest]?airportMap[selectedDest].airlines:[];
     const common=DATA.filter(a=>oA.includes(a.iata)&&dA.includes(a.iata));
 
     if(flightType==='direct'){
-      if(!common.length){
-        resultsArea.innerHTML=`<div class="route-result-empty">No hay vuelos directos ZED entre ${selectedOrigin} y ${selectedDest}. Probá buscar con escala.</div>`;return;
+      const direct=DATA.filter(a=>isDirect(a.iata,selectedOrigin,selectedDest));
+      if(!direct.length){
+        resultsArea.innerHTML=`<div class="route-result-empty">No hay vuelos directos ZED entre ${selectedOrigin} y ${selectedDest}. Probá con escala.</div>`;return;
       }
-      resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${common.length} aerolínea${common.length!==1?'s':''} directo${common.length!==1?'s':''} ${selectedOrigin}→${selectedDest}</div>
-      <div class="route-result-grid">${common.map(a=>`
+      resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${direct.length} aerolínea${direct.length!==1?'s':''} con vuelo directo ${selectedOrigin}→${selectedDest}</div>
+      <div class="route-result-grid">${direct.map(a=>`
         <div class="route-result-card" onclick="openPanel('${a.iata}')">
           <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
           <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span><span style="font-size:11px;color:var(--text-muted)">→</span><span class="rrc-apt highlight">${selectedDest}</span></div>
@@ -601,23 +645,22 @@ function setFlightType(t){
 }
 
 function findStopoverRoutes(orig,dest){
-  // Find all airports reachable from orig
-  const fromOrig=DATA.filter(a=>airportMap[orig]&&airportMap[orig].airlines.includes(a.iata));
-  const toDest=DATA.filter(a=>airportMap[dest]&&airportMap[dest].airlines.includes(a.iata));
+  // Valid stopover = A1 has direct orig→hub1 AND A2 has direct hub1→dest
+  // Using ROUTES pairs for accuracy
   const results=[];
-  fromOrig.forEach(a1=>{
-    // Get all airports a1 flies to
-    const a1dests=(a1.dests||[]).flatMap(r=>r.c||[]).map(d=>d.c).filter(c=>c!==orig&&c!==dest);
-    a1dests.forEach(hub=>{
-      // Find airlines from hub to dest
-      const a2list=toDest.filter(a2=>a2.iata!==a1.iata&&airportMap[hub]&&airportMap[hub].airlines.includes(a2.iata));
-      a2list.forEach(a2=>{
-        // Avoid duplicates
-        const key=a1.iata+'|'+hub+'|'+a2.iata;
-        if(!results.find(r=>r.key===key)){
-          results.push({key,a1,hub,hubCity:airportMap[hub]?airportMap[hub].city:hub,a2});
+  DATA.forEach(a1=>{
+    if(!a1.hub) return;
+    if(!isDirect(a1.iata,orig,a1.hub)&&orig!==a1.hub) return; // a1 must fly orig→hub
+    DATA.forEach(a2=>{
+      if(a1.iata===a2.iata) return;
+      if(!a2.hub) return;
+      // a2 must fly a1.hub→dest directly
+      if(isDirect(a2.iata,a1.hub,dest)){
+        const key=a1.iata+'|'+a1.hub+'|'+a2.iata;
+        if(!results.find(r=>r.key===key)&&a1.hub!==orig&&a1.hub!==dest){
+          results.push({key,a1,hub:a1.hub,hubCity:airportMap[a1.hub]?airportMap[a1.hub].city:a1.hub,a2});
         }
-      });
+      }
     });
   });
   return results;
