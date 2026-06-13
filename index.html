@@ -364,6 +364,14 @@ const DATA=[
 ];
 
 
+const AIRLINE_COLORS={
+  VY:'#E8420A',AY:'#4C9BE8',OS:'#E84040',KM:'#C8102E',X3:'#003580',
+  ZO:'#1B2B4B',NO:'#1B2B4B',PM:'#2E7D32',S4:'#1565C0',SP:'#0D47A1',
+  HM:'#FF6B35',F8:'#FF3B30',F9:'#FF6B00',G4:'#FF6B35','5T':'#2E7D32',
+  '9M':'#388E3C',WP:'#1B5E20',H2:'#003580',P5:'#FF6B00',VR:'#003399',
+  EY:'#B8860B',NZ:'#00205B',
+};
+
 // Explicit direct route pairs per airline (verified routes)
 const ROUTES={
   VY:["BCN-MAD","BCN-SVQ","BCN-VLC","BCN-BIO","BCN-AGP","BCN-PMI","BCN-IBZ","BCN-ALC","BCN-MAH","BCN-LPA","BCN-TFS","BCN-ACE","BCN-FUE","BCN-SPC","MAD-BCN","MAD-SVQ","MAD-VLC","MAD-AGP","MAD-PMI","MAD-IBZ","MAD-ALC","MAD-LPA","MAD-TFS","MAD-ACE","MAD-FUE","MAD-CDG","MAD-FCO","MAD-AMS","MAD-LGW","MAD-BRU","MAD-DUB","MAD-LIS","MAD-ATH","MAD-MXP","MAD-VCE","MAD-FLR","MAD-MRS","MAD-LYS","MAD-NCE","MAD-TLS","MAD-BOD","MAD-ZRH","MAD-GVA","MAD-CPH","MAD-OSL","MAD-ARN","MAD-HEL","MAD-WAW","MAD-PRG","MAD-BUD","MAD-VIE","MAD-BER","MAD-NAP","BCN-CDG","BCN-FCO","BCN-AMS","BCN-LGW","BCN-BRU","BCN-DUB","BCN-LIS","BCN-ATH","BCN-MXP","BCN-ZRH","BCN-GVA","BCN-CPH","BCN-OSL","BCN-ARN","BCN-HEL","BCN-WAW","BCN-PRG","BCN-BUD","BCN-VIE","BCN-BER","MAD-CMN","MAD-RAK","MAD-AGA","MAD-TUN","MAD-ALG","BCN-CMN","BCN-RAK"],
@@ -420,7 +428,25 @@ function openPanel(iata,highlightCode){
   </div>`;
   if(a.dests&&a.dests.length){
     const total=a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0);
-    html+=`<div class="panel-section"><div class="panel-section-title">Destinos (${total})</div>`;
+    html+=`<div class="panel-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="panel-section-title" style="margin-bottom:0">Destinos (${total})</div>
+        <button onclick="toggleAllDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;padding:2px 6px;">Ver todos</button>
+      </div>
+      <div id="dests-preview">`;
+    // Show first region only by default
+    const firstR=a.dests[0];
+    if(firstR){
+      html+=`<div class="region-label">${firstR.r}</div><div class="dest-grid">`;
+      (firstR.c||[]).slice(0,8).forEach(d=>{
+        const m=highlightCode&&d.c===highlightCode;
+        html+=`<div class="dest-card ${m?'match':''}"><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div></div>`;
+      });
+      if((firstR.c||[]).length>8) html+=`<div style="font-size:11px;color:var(--text-muted);padding:6px 0">+${firstR.c.length-8} más en esta región</div>`;
+      html+=`</div>`;
+    }
+    html+=`</div>
+      <div id="dests-full" style="display:none;">`;
     a.dests.forEach(r=>{
       html+=`<div class="region-label">${r.r}</div><div class="dest-grid">`;
       (r.c||[]).forEach(d=>{
@@ -429,7 +455,7 @@ function openPanel(iata,highlightCode){
       });
       html+=`</div>`;
     });
-    html+=`</div>`;
+    html+=`</div></div>`;
   }
 
   document.getElementById('panel-body').innerHTML=html;
@@ -437,6 +463,20 @@ function openPanel(iata,highlightCode){
   document.getElementById('panel').classList.add('open');
 }
 document.getElementById('panel-close').addEventListener('click',closePanel);
+
+window.toggleAllDests=function(btn){
+  const preview=document.getElementById('dests-preview');
+  const full=document.getElementById('dests-full');
+  if(full.style.display==='none'){
+    full.style.display='block';
+    preview.style.display='none';
+    btn.textContent='Ver menos';
+  } else {
+    full.style.display='none';
+    preview.style.display='block';
+    btn.textContent='Ver todos';
+  }
+};
 document.getElementById('panel-back').addEventListener('click',closePanel);
 document.getElementById('overlay').addEventListener('click',closePanel);
 function updateBackBtn(){
@@ -662,25 +702,73 @@ function setFlightType(t,skipSearch){
 }
 
 function findStopoverRoutes(orig,dest){
-  // Valid stopover = A1 has direct orig→hub1 AND A2 has direct hub1→dest
-  // Using ROUTES pairs for accuracy
-  const results=[];
-  DATA.forEach(a1=>{
-    if(!a1.hub) return;
-    if(!isDirect(a1.iata,orig,a1.hub)&&orig!==a1.hub) return; // a1 must fly orig→hub
-    DATA.forEach(a2=>{
-      if(a1.iata===a2.iata) return;
-      if(!a2.hub) return;
-      // a2 must fly a1.hub→dest directly
-      if(isDirect(a2.iata,a1.hub,dest)){
-        const key=a1.iata+'|'+a1.hub+'|'+a2.iata;
-        if(!results.find(r=>r.key===key)&&a1.hub!==orig&&a1.hub!==dest){
-          results.push({key,a1,hub:a1.hub,hubCity:airportMap[a1.hub]?airportMap[a1.hub].city:a1.hub,a2});
-        }
-      }
+  // Build full graph from ROUTES (bidirectional)
+  const graph={};
+  Object.entries(ROUTES).forEach(([iata,routes])=>{
+    routes.forEach(pair=>{
+      const [o,d]=pair.split('-');
+      if(!graph[o])graph[o]=[];
+      if(!graph[d])graph[d]=[];
+      graph[o].push({to:d,iata});
+      graph[d].push({to:o,iata});
     });
   });
-  return results;
+
+  // BFS to find all paths with 1 or 2 stops, max 2 airline changes
+  const results=[];
+  const seen=new Set();
+
+  // 1-stop paths: orig→hub→dest
+  (graph[orig]||[]).forEach(e1=>{
+    const hub=e1.to;
+    if(hub===dest)return;
+    (graph[hub]||[]).forEach(e2=>{
+      if(e2.to!==dest)return;
+      // Valid: at least one segment, can be same or different airline
+      const key=`${e1.iata}|${hub}|${e2.iata}`;
+      if(seen.has(key))return;
+      seen.add(key);
+      const a1=DATA.find(a=>a.iata===e1.iata);
+      const a2=DATA.find(a=>a.iata===e2.iata);
+      if(!a1||!a2)return;
+      const hubCity=airportMap[hub]?airportMap[hub].city:hub;
+      results.push({key,a1,hub,hubCity,a2,stops:1});
+    });
+  });
+
+  // 2-stop paths: orig→hub1→hub2→dest (only if no 1-stop found)
+  if(results.length===0){
+    (graph[orig]||[]).forEach(e1=>{
+      const hub1=e1.to;
+      if(hub1===dest)return;
+      (graph[hub1]||[]).forEach(e2=>{
+        const hub2=e2.to;
+        if(hub2===orig||hub2===hub1)return;
+        (graph[hub2]||[]).forEach(e3=>{
+          if(e3.to!==dest)return;
+          const key=`${e1.iata}|${hub1}|${e2.iata}|${hub2}|${e3.iata}`;
+          if(seen.has(key))return;
+          seen.add(key);
+          const a1=DATA.find(a=>a.iata===e1.iata);
+          const a2=DATA.find(a=>a.iata===e2.iata);
+          const a3=DATA.find(a=>a.iata===e3.iata);
+          if(!a1||!a2||!a3)return;
+          const h1City=airportMap[hub1]?airportMap[hub1].city:hub1;
+          const h2City=airportMap[hub2]?airportMap[hub2].city:hub2;
+          results.push({key,a1,hub:hub1,hubCity:h1City,hub2,hub2City:h2City,a2,a3,stops:2});
+        });
+      });
+    });
+  }
+
+  // Sort: fewer airline changes first, then fewest stops
+  results.sort((a,b)=>{
+    const changesA=a.stops===1?(a.a1.iata===a.a2.iata?0:1):2;
+    const changesB=b.stops===1?(b.a1.iata===b.a2.iata?0:1):2;
+    return changesA-changesB||a.stops-b.stops;
+  });
+
+  return results.slice(0,30);
 }
 
 
@@ -711,168 +799,468 @@ document.querySelectorAll('.zone-pill').forEach(b=>b.addEventListener('click',()
 }));
 
 // ── MAP ───────────────────────────────────────────────────────────────
-let mapInstance=null;
-let mapInitialized=false;
+let mapInstance=null, mapInitialized=false;
+let mapOriginCode=null, mapDestCode=null;
+let allMapLayers=[], routeLayers=[], markerLayers=[];
+let selectedAirport=null;
 
-// Airport coordinates for hubs + key airports
 const COORDS={
-  // Europe
-  BCN:[41.2971,2.0785],MAD:[40.4719,-3.5626],LIS:[38.7813,-9.1359],LGW:[51.1481,-0.1903],LHR:[51.4775,-0.4614],
-  CDG:[49.0097,2.5479],AMS:[52.3086,4.7639],FRA:[50.0379,8.5622],MUC:[48.3538,11.7861],VIE:[48.1103,16.5697],
-  ZRH:[47.4647,8.5492],GVA:[46.2381,6.1089],FCO:[41.8003,12.2389],MXP:[45.6306,8.7281],MAH:[39.8626,4.2186],
-  PMI:[39.5517,2.7388],IBZ:[38.8729,1.3731],ACE:[28.9455,-13.6052],FUE:[28.4527,-13.8638],LPA:[27.9319,-15.3866],
-  TFS:[28.0445,-16.5725],TFN:[28.4827,-16.3415],SPC:[28.6265,-17.7556],VDE:[27.8149,-17.8871],GMZ:[28.0296,-17.2146],
-  HEL:[60.3172,24.9633],ARN:[59.6519,17.9186],OSL:[60.1939,11.1004],CPH:[55.6181,12.6561],
-  WAW:[52.1657,20.9671],PRG:[50.1008,14.2600],BUD:[47.4298,19.2610],BER:[52.3667,13.5033],
-  ATH:[37.9364,23.9445],IST:[41.2753,28.7519],MLA:[35.8575,14.4775],DUB:[53.4213,-6.2701],
-  BRU:[50.9010,4.4844],PDL:[37.7412,-25.6979],TER:[38.7618,-27.0908],HOR:[38.5198,-28.7159],PIX:[38.5543,-28.4413],
-  SMA:[36.9714,-25.1706],GRW:[39.0922,-28.0298],SJZ:[38.6655,-28.1758],FLW:[39.4553,-31.1314],CVU:[39.6714,-31.1136],
-  OPO:[41.2481,-8.6814],SEZ:[-4.6743,55.5218],PRI:[-4.3192,55.6914],
+  BCN:[41.2971,2.0785],MAD:[40.4719,-3.5626],LIS:[38.7813,-9.1359],
+  LGW:[51.1481,-0.1903],LHR:[51.4775,-0.4614],CDG:[49.0097,2.5479],
+  AMS:[52.3086,4.7639],FRA:[50.0379,8.5622],MUC:[48.3538,11.7861],
+  VIE:[48.1103,16.5697],ZRH:[47.4647,8.5492],GVA:[46.2381,6.1089],
+  FCO:[41.8003,12.2389],MXP:[45.6306,8.7281],MAH:[39.8626,4.2186],
+  PMI:[39.5517,2.7388],IBZ:[38.8729,1.3731],ACE:[28.9455,-13.6052],
+  FUE:[28.4527,-13.8638],LPA:[27.9319,-15.3866],TFS:[28.0445,-16.5725],
+  TFN:[28.4827,-16.3415],SPC:[28.6265,-17.7556],VDE:[27.8149,-17.8871],
+  GMZ:[28.0296,-17.2146],HEL:[60.3172,24.9633],ARN:[59.6519,17.9186],
+  OSL:[60.1939,11.1004],CPH:[55.6181,12.6561],WAW:[52.1657,20.9671],
+  PRG:[50.1008,14.2600],BUD:[47.4298,19.2610],BER:[52.3667,13.5033],
+  ATH:[37.9364,23.9445],IST:[41.2753,28.7519],MLA:[35.8575,14.4775],
+  DUB:[53.4213,-6.2701],BRU:[50.9010,4.4844],PDL:[37.7412,-25.6979],
+  TER:[38.7618,-27.0908],HOR:[38.5198,-28.7159],PIX:[38.5543,-28.4413],
+  SMA:[36.9714,-25.1706],GRW:[39.0922,-28.0298],SJZ:[38.6655,-28.1758],
+  FLW:[39.4553,-31.1314],CVU:[39.6714,-31.1136],OPO:[41.2481,-8.6814],
+  SEZ:[-4.6743,55.5218],PRI:[-4.3192,55.6914],NAP:[40.8860,14.2908],
+  VCE:[45.5053,12.3520],FLR:[43.8100,11.2051],MRS:[43.4393,5.2214],
+  LYS:[45.7256,5.0811],NCE:[43.6584,7.2158],TLS:[43.6293,1.3638],
+  BOD:[44.8283,-0.7153],AGP:[36.6749,-4.4991],ALC:[38.2822,-0.5582],
+  SVQ:[37.4180,-5.8931],VLC:[39.4893,-0.4816],BIO:[43.3011,-2.9106],
   // North America
-  JFK:[40.6413,-73.7781],EWR:[40.6895,-74.1745],LAX:[33.9425,-118.4081],ORD:[41.9742,-87.9073],
-  MIA:[25.7959,-80.2870],BOS:[42.3656,-71.0096],IAD:[38.9531,-77.4565],SFO:[37.6213,-122.3790],
-  SEA:[47.4502,-122.3088],DEN:[39.8561,-104.6737],DFW:[32.8998,-97.0403],ATL:[33.6407,-84.4277],
-  IAH:[29.9902,-95.3368],PHX:[33.4373,-112.0078],MSP:[44.8848,-93.2223],DTW:[42.2124,-83.3534],
-  LAS:[36.0840,-115.1537],MCO:[28.4312,-81.3081],SFB:[28.7776,-81.2375],PIE:[27.9102,-82.6874],
-  PGD:[26.9202,-81.9901],AZA:[33.3078,-111.6553],FLL:[26.0726,-80.1527],TPA:[27.9755,-82.5332],
-  YYZ:[43.6772,-79.6306],YVR:[49.1947,-123.1792],YYC:[51.1315,-114.0106],YOW:[45.3225,-75.6692],
-  YEG:[53.3097,-113.5797],YUL:[45.4657,-73.7455],YZF:[62.4628,-114.4406],YFB:[63.7564,-68.5558],
-  YHY:[60.8397,-115.7825],YXY:[60.7096,-135.0670],YRB:[74.7156,-94.9694],YCB:[69.1081,-105.1383],
-  YXL:[50.1139,-91.9053],YQT:[48.3722,-89.3239],YRL:[51.0669,-93.7931],YFH:[51.5592,-88.5492],
-  YXS:[53.8894,-122.6797],YKA:[50.7022,-120.4444],YXJ:[56.2381,-120.7403],YQQ:[49.7108,-124.8872],
+  JFK:[40.6413,-73.7781],EWR:[40.6895,-74.1745],LAX:[33.9425,-118.4081],
+  ORD:[41.9742,-87.9073],MIA:[25.7959,-80.2870],BOS:[42.3656,-71.0096],
+  IAD:[38.9531,-77.4565],SFO:[37.6213,-122.3790],SEA:[47.4502,-122.3088],
+  DEN:[39.8561,-104.6737],DFW:[32.8998,-97.0403],ATL:[33.6407,-84.4277],
+  IAH:[29.9902,-95.3368],PHX:[33.4373,-112.0078],MSP:[44.8848,-93.2223],
+  LAS:[36.0840,-115.1537],MCO:[28.4312,-81.3081],SFB:[28.7776,-81.2375],
+  PIE:[27.9102,-82.6874],PGD:[26.9202,-81.9901],AZA:[33.3078,-111.6553],
+  FLL:[26.0726,-80.1527],TPA:[27.9755,-82.5332],YYZ:[43.6772,-79.6306],
+  YVR:[49.1947,-123.1792],YYC:[51.1315,-114.0106],YOW:[45.3225,-75.6692],
+  YEG:[53.3097,-113.5797],YUL:[45.4657,-73.7455],YZF:[62.4628,-114.4406],
+  YFB:[63.7564,-68.5558],YHY:[60.8397,-115.7825],YXY:[60.7096,-135.0670],
+  YRB:[74.7156,-94.9694],YCB:[69.1081,-105.1383],YXL:[50.1139,-91.9053],
+  YQT:[48.3722,-89.3239],YRL:[51.0669,-93.7931],YFH:[51.5592,-88.5492],
+  YXS:[53.8894,-122.6797],YKA:[50.7022,-120.4444],YXJ:[56.2381,-120.7403],
+  YQQ:[49.7108,-124.8872],YHZ:[44.8808,-63.5086],YWG:[49.9100,-97.2398],
+  YYJ:[48.6469,-123.4256],YXE:[52.1708,-106.6997],YQR:[50.4319,-104.6661],
+  YXX:[49.0253,-122.3611],YLW:[49.9561,-119.3778],NAS:[25.0390,-77.4662],
+  MBJ:[18.5037,-77.9134],SJD:[23.1518,-109.7210],PVR:[20.6801,-105.2544],
+  CUN:[21.0365,-86.8771],SJU:[18.4394,-66.0018],CMH:[39.9998,-82.8919],
+  CVG:[39.0488,-84.6678],IND:[39.7173,-86.2944],GRR:[42.8808,-85.5228],
+  TYS:[35.8110,-83.9940],CHA:[35.0353,-85.2035],LEX:[38.0365,-84.6059],
+  BHM:[33.5629,-86.7535],SAV:[32.1276,-81.2021],MYR:[33.6797,-78.9283],
+  RIC:[37.5052,-77.3197],ILM:[34.2706,-77.9026],GSP:[34.8957,-82.2189],
+  EUG:[44.1246,-123.2119],GEG:[47.6199,-117.5338],BOI:[43.5644,-116.2228],
+  MSO:[46.9163,-114.0906],BIL:[45.8077,-108.5428],FAR:[46.9207,-96.8158],
+  FSD:[43.5820,-96.7419],DSM:[41.5340,-93.6631],OMA:[41.3032,-95.8940],
+  ICT:[37.6499,-97.4331],TUL:[36.1984,-95.8881],OKC:[35.3931,-97.6007],
+  PIT:[40.4914,-80.2329],CLE:[41.4058,-81.8540],MKE:[42.9472,-87.8966],
+  STL:[38.7487,-90.3700],MSY:[29.9934,-90.2580],SAT:[29.5337,-98.4698],
+  ABQ:[35.0402,-106.6090],PHL:[39.8719,-75.2411],SAN:[32.7336,-117.1897],
+  RDU:[35.8776,-78.7875],MCI:[39.2976,-94.7139],BNA:[36.1245,-86.6782],
+  AUS:[30.1975,-97.6664],HOU:[29.6454,-95.2789],PDX:[45.5887,-122.5975],
   // Latin America
-  SCL:[-33.3930,-70.7858],EZE:[-34.8222,-58.5358],GRU:[-23.4356,-46.4731],BOG:[4.7016,-74.1469],
-  LIM:[-12.0219,-77.1143],UIO:[-0.1292,-78.3576],GYE:[-2.1574,-79.8836],MDE:[6.1675,-75.4231],
-  CTG:[10.4424,-75.5130],CLO:[3.5432,-76.3816],BAQ:[10.8896,-74.7808],VVI:[-17.6448,-63.1354],
-  PTY:[9.0717,-79.3835],SDQ:[18.4297,-69.6689],HAV:[22.9892,-82.4091],CUN:[21.0365,-86.8771],
-  SJO:[9.9939,-84.2088],SAL:[13.4409,-89.0557],GUA:[14.5833,-90.5275],CCS:[10.6031,-66.9913],
-  PUJ:[18.5674,-68.3634],ADZ:[12.5836,-81.7112],PEI:[4.8127,-75.7395],BGA:[7.1268,-73.1848],
-  FOR:[-3.7762,-38.5326],REC:[-8.1265,-34.9236],NAS:[25.0390,-77.4662],MBJ:[18.5037,-77.9134],
-  SJD:[23.1518,-109.7210],PVR:[20.6801,-105.2544],MZT:[23.1614,-106.2661],SJU:[18.4394,-66.0018],
+  SCL:[-33.3930,-70.7858],EZE:[-34.8222,-58.5358],GRU:[-23.4356,-46.4731],
+  BOG:[4.7016,-74.1469],LIM:[-12.0219,-77.1143],UIO:[-0.1292,-78.3576],
+  GYE:[-2.1574,-79.8836],MDE:[6.1675,-75.4231],CTG:[10.4424,-75.5130],
+  CLO:[3.5432,-76.3816],BAQ:[10.8896,-74.7808],VVI:[-17.6448,-63.1354],
+  PTY:[9.0717,-79.3835],SDQ:[18.4297,-69.6689],HAV:[22.9892,-82.4091],
+  SJO:[9.9939,-84.2088],SAL:[13.4409,-89.0557],GUA:[14.5833,-90.5275],
+  CCS:[10.6031,-66.9913],PUJ:[18.5674,-68.3634],ADZ:[12.5836,-81.7112],
+  PEI:[4.8127,-75.7395],BGA:[7.1268,-73.1848],FOR:[-3.7762,-38.5326],
+  REC:[-8.1265,-34.9236],IQQ:[-20.5352,-70.1812],ANF:[-23.4445,-70.4450],
+  LSC:[-29.9162,-71.1995],CCP:[-36.7726,-72.4243],PMC:[-41.4388,-73.0942],
+  PUQ:[-53.0026,-70.8546],ZCO:[-38.7668,-72.6370],CJC:[-22.4982,-68.9036],
+  ARI:[-18.3485,-70.3387],CPO:[-27.2972,-70.7792],ZAL:[-39.6500,-73.0861],
   // Middle East / Africa
-  AUH:[24.4330,54.6511],DXB:[25.2532,55.3657],DOH:[25.2609,51.6138],KWI:[29.2267,47.9689],
-  BEY:[33.8209,35.4883],AMM:[31.7226,35.9932],TLV:[32.0114,34.8867],RUH:[24.9578,46.6989],
-  JED:[21.6796,39.1565],MCT:[23.5933,58.2844],CAI:[30.1219,31.4056],JNB:[-26.1392,28.2460],
-  NBO:[-1.3192,36.9275],LOS:[6.5774,3.3212],ADD:[8.9779,38.7993],DAR:[-6.8781,39.2026],
+  AUH:[24.4330,54.6511],DXB:[25.2532,55.3657],DOH:[25.2609,51.6138],
+  KWI:[29.2267,47.9689],BEY:[33.8209,35.4883],AMM:[31.7226,35.9932],
+  TLV:[32.0114,34.8867],RUH:[24.9578,46.6989],JED:[21.6796,39.1565],
+  MCT:[23.5933,58.2844],CAI:[30.1219,31.4056],JNB:[-26.1392,28.2460],
+  NBO:[-1.3192,36.9275],LOS:[6.5774,3.3212],ADD:[8.9779,38.7993],
   CMN:[33.3675,-7.5898],DSS:[14.6704,-17.0726],MRU:[-20.4302,57.6836],
+  RAI:[14.9245,-23.4936],SID:[16.7442,-22.9494],VXE:[16.8333,-24.9833],
+  BVC:[16.1364,-22.8889],OPO:[41.2481,-8.6814],PVD:[41.7268,-71.4284],
+  OAK:[37.7213,-122.2208],
   // Asia Pacific
-  NRT:[35.7653,140.3856],HND:[35.5494,139.7798],KIX:[34.4347,135.2440],ICN:[37.4602,126.4407],
-  PEK:[40.0799,116.6031],PVG:[31.1443,121.8083],HKG:[22.3080,113.9185],SIN:[1.3644,103.9915],
-  BKK:[13.6811,100.7470],KUL:[2.7456,101.7099],CGK:[-6.1275,106.6537],MNL:[14.5086,121.0194],
+  NRT:[35.7653,140.3856],HND:[35.5494,139.7798],KIX:[34.4347,135.2440],
+  ICN:[37.4602,126.4407],PEK:[40.0799,116.6031],PVG:[31.1443,121.8083],
+  HKG:[22.3080,113.9185],SIN:[1.3644,103.9915],BKK:[13.6811,100.7470],
+  KUL:[2.7456,101.7099],CGK:[-6.1275,106.6537],MNL:[14.5086,121.0194],
   DEL:[28.5562,77.1000],BOM:[19.0896,72.8656],CMB:[7.1808,79.8841],
   SYD:[-33.9399,151.1753],MEL:[-37.6690,144.8410],BNE:[-27.3842,153.1175],
   PER:[-31.9385,115.9672],ADL:[-34.9452,138.5304],CBR:[-35.3069,149.1950],
   AKL:[-37.0082,174.7850],WLG:[-41.3272,174.8051],CHC:[-43.4894,172.5322],
   ZQN:[-45.0211,168.7392],NAN:[-17.7554,177.4431],PPT:[-17.5534,-149.6067],
-  HNL:[21.3187,-157.9224],DPS:[-8.7482,115.1671],
+  HNL:[21.3187,-157.9224],DPS:[-8.7482,115.1671],YYT:[47.6186,-52.7519],
+  YHZ2:[44.8808,-63.5086],
 };
 
-function latLng(code){return COORDS[code]?COORDS[code]:null;}
+function llOf(code){return COORDS[code]||null;}
 
 function initMap(){
   if(mapInitialized)return;
   mapInitialized=true;
-  
-  // Load Leaflet
   const link=document.createElement('link');
   link.rel='stylesheet';link.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
   document.head.appendChild(link);
-  
   const script=document.createElement('script');
   script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
   script.onload=()=>{
-    mapInstance=L.map('map-container',{zoomControl:true}).setView([20,10],2);
+    mapInstance=L.map('map-container',{zoomControl:true,maxZoom:12,minZoom:2}).setView([30,10],2);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
       attribution:'© OpenStreetMap © CartoDB',maxZoom:19
     }).addTo(mapInstance);
-    drawAllConnections();
+    buildBaseMap();
     attachMapSearch();
+    attachMapDropdown('map-origin','map-origin-dd',code=>{
+      mapOriginCode=code;
+      document.getElementById('map-origin').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
+      updateMapFromInputs();
+    });
+    attachMapDropdown('map-dest','map-dest-dd',code=>{
+      mapDestCode=code;
+      document.getElementById('map-dest').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
+      updateMapFromInputs();
+    });
+    document.getElementById('map-swap').addEventListener('click',()=>{
+      const tmp=mapOriginCode;mapOriginCode=mapDestCode;mapDestCode=tmp;
+      const ti=document.getElementById('map-origin').value;
+      document.getElementById('map-origin').value=document.getElementById('map-dest').value;
+      document.getElementById('map-dest').value=ti;
+      updateMapFromInputs();
+    });
   };
   document.head.appendChild(script);
 }
 
-let connectionLines=[];
-let routeLines=[];
-let markers=[];
-
-function clearRouteLayer(){
-  routeLines.forEach(l=>{try{mapInstance.removeLayer(l);}catch(e){}});
-  routeLines=[];
-}
-
-function drawAllConnections(){
-  if(!mapInstance)return;
-  // Draw all direct routes as thin blue arcs
+// Build airport markers for all airports with coords
+function buildBaseMap(){
+  // Draw all route lines faintly
   Object.entries(ROUTES).forEach(([iata,routes])=>{
+    const color=AIRLINE_COLORS[iata]||'#999';
     routes.forEach(pair=>{
       const [o,d]=pair.split('-');
-      const oc=latLng(o),dc=latLng(d);
+      const oc=llOf(o),dc=llOf(d);
       if(!oc||!dc)return;
-      const line=L.polyline([oc,dc],{color:'#185FA5',weight:1,opacity:0.15}).addTo(mapInstance);
-      connectionLines.push(line);
+      const line=L.polyline([oc,dc],{color,weight:1,opacity:0.12,className:'base-line'}).addTo(mapInstance);
+      allMapLayers.push(line);
     });
   });
-  // Draw hub markers
-  DATA.forEach(a=>{
-    if(!a.hub)return;
-    const c=latLng(a.hub);
-    if(!c)return;
-    const m=L.circleMarker(c,{radius:4,fillColor:'#E8420A',color:'#fff',weight:1.5,fillOpacity:0.8})
-      .bindTooltip(`${a.hub} — ${a.name} (hub)`,{permanent:false})
-      .addTo(mapInstance);
-    markers.push(m);
+
+  // Draw airport markers
+  const airportsWithRoutes=new Set();
+  Object.values(ROUTES).forEach(routes=>routes.forEach(p=>{
+    const [o,d]=p.split('-');
+    airportsWithRoutes.add(o);airportsWithRoutes.add(d);
+  }));
+
+  airportsWithRoutes.forEach(code=>{
+    const c=llOf(code);if(!c)return;
+    const isHub=DATA.some(a=>a.hub===code);
+    const m=L.circleMarker(c,{
+      radius:isHub?6:4,
+      fillColor:isHub?'#E8420A':'#666',
+      color:'#fff',weight:1.5,
+      fillOpacity:isHub?0.9:0.5,
+      zIndexOffset:isHub?100:0
+    }).addTo(mapInstance);
+    m.on('click',()=>onAirportClick(code));
+    m.on('mouseover',()=>{
+      m.setStyle({fillOpacity:1,radius:isHub?8:6});
+      m.bindTooltip(`<b>${code}</b>${airportMap[code]?' — '+airportMap[code].city:''}`,{sticky:true}).openTooltip();
+    });
+    m.on('mouseout',()=>{
+      m.setStyle({fillOpacity:isHub?0.9:0.5,radius:isHub?6:4});
+      m.unbindTooltip();
+    });
+    allMapLayers.push(m);
   });
 }
 
-// BFS shortest path (fewest stops)
-function findShortestPath(orig,dest){
-  // Build graph from ROUTES
-  const graph={};
+function clearRoutes(){
+  routeLayers.forEach(l=>{try{mapInstance.removeLayer(l);}catch(e){}});
+  routeLayers=[];
+}
+
+function clearMap(){
+  clearRoutes();
+  mapOriginCode=null;mapDestCode=null;selectedAirport=null;
+  document.getElementById('map-origin').value='';
+  document.getElementById('map-dest').value='';
+  document.getElementById('map-mode-badge').textContent='Click en un aeropuerto para explorar';
+  closeSidePanel();
+  // Reset all lines to faint
+  allMapLayers.forEach(l=>{if(l.setStyle)l.setStyle({opacity:0.12,fillOpacity:l.options.fillColor==='#E8420A'?0.9:0.5});});
+}
+
+function closeSidePanel(){
+  const side=document.getElementById('map-side');
+  side.style.display='none';
+}
+
+function onAirportClick(code){
+  selectedAirport=code;
+  if(mapOriginCode&&!mapDestCode){
+    mapDestCode=code;
+    document.getElementById('map-dest').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
+    updateMapFromInputs();
+  } else if(!mapOriginCode&&mapDestCode){
+    mapOriginCode=code;
+    document.getElementById('map-origin').value=`${airportMap[code]?airportMap[code].city:code} (${code})`;
+    updateMapFromInputs();
+  } else if(!mapOriginCode&&!mapDestCode){
+    showAirportRoutes(code);
+  } else {
+    showAirportRoutes(code);
+  }
+}
+
+function showAirportRoutes(code){
+  clearRoutes();
+  const city=airportMap[code]?airportMap[code].city:code;
+  document.getElementById('map-mode-badge').textContent=`Rutas desde/hacia ${code}`;
+
+  // Find all routes through this airport
+  const routesFrom=[];
+  const routesTo=[];
   Object.entries(ROUTES).forEach(([iata,routes])=>{
+    const airline=DATA.find(a=>a.iata===iata);
+    if(!airline)return;
     routes.forEach(pair=>{
       const [o,d]=pair.split('-');
-      if(!graph[o])graph[o]=[];
-      if(!graph[d])graph[d]=[];
-      if(!graph[o].find(x=>x.to===d))graph[o].push({to:d,airline:iata});
-      if(!graph[d].find(x=>x.to===o))graph[d].push({to:o,airline:iata});
+      if(o===code){
+        const dc=llOf(d);
+        if(dc)routesFrom.push({iata,airline,from:code,to:d,toCoords:dc});
+      }
+      if(d===code){
+        const oc=llOf(o);
+        if(oc)routesTo.push({iata,airline,from:o,to:code,fromCoords:oc});
+      }
     });
   });
-  
-  if(!graph[orig])return null;
-  const queue=[{node:orig,path:[{airport:orig}],airlines:[]}];
-  const visited=new Set([orig]);
-  
-  while(queue.length){
-    const {node,path,airlines}=queue.shift();
-    if(node===dest)return{path,airlines};
-    if(path.length>6)continue; // max 5 stops
-    const neighbors=graph[node]||[];
-    for(const {to,airline} of neighbors){
-      if(!visited.has(to)){
-        visited.add(to);
-        queue.push({
-          node:to,
-          path:[...path,{airport:to}],
-          airlines:[...airlines,airline]
-        });
-      }
-    }
+
+  // Draw lines
+  const allRoutes=[...routesFrom,...routesTo];
+  const destSet=new Set();
+  allRoutes.forEach(r=>{
+    const color=AIRLINE_COLORS[r.iata]||'#999';
+    const oc=llOf(code);
+    const other=r.from===code?llOf(r.to):llOf(r.from);
+    if(!oc||!other)return;
+    const line=L.polyline([oc,other],{color,weight:2.5,opacity:0.7}).addTo(mapInstance);
+    line.on('mouseover',()=>line.setStyle({weight:4,opacity:1}));
+    line.on('mouseout',()=>line.setStyle({weight:2.5,opacity:0.7}));
+    routeLayers.push(line);
+    destSet.add(r.from===code?r.to:r.from);
+  });
+
+  // Highlight selected airport
+  const c=llOf(code);
+  if(c){
+    const m=L.circleMarker(c,{radius:10,fillColor:'#E8420A',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
+      .bindTooltip(`<b>${code}</b> — ${city}`,{permanent:true,direction:'top',offset:[0,-10]})
+      .addTo(mapInstance);
+    routeLayers.push(m);
   }
-  return null;
+
+  // Show side panel
+  const side=document.getElementById('map-side');
+  side.style.display='flex';
+  document.getElementById('map-side-title').textContent=`${code} — ${city}`;
+
+  // Group by airline
+  const byAirline={};
+  allRoutes.forEach(r=>{
+    if(!byAirline[r.iata])byAirline[r.iata]={airline:r.airline,routes:[]};
+    const dest=r.from===code?r.to:r.from;
+    if(!byAirline[r.iata].routes.includes(dest))byAirline[r.iata].routes.push(dest);
+  });
+
+  let html='<div style="padding:10px 14px;">';
+  html+=`<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">${destSet.size} destinos · ${Object.keys(byAirline).length} aerolíneas</div>`;
+  Object.entries(byAirline).forEach(([iata,{airline,routes}])=>{
+    const color=AIRLINE_COLORS[iata]||'#999';
+    html+=`<div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer;" onclick="highlightAirlineRoutes('${iata}','${code}')">
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};background:${color}22;padding:2px 6px;border-radius:4px">${iata}</span>
+        <span style="font-size:12px;font-weight:500">${airline.name}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;padding-left:4px;">
+        ${routes.map(r=>`<span style="font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;cursor:pointer;" onclick="setMapDest('${r}','${code}')">${r}</span>`).join('')}
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('map-side-content').innerHTML=html;
 }
 
-let mapOriginCode=null,mapDestCode=null;
+function highlightAirlineRoutes(iata,hubCode){
+  clearRoutes();
+  const color=AIRLINE_COLORS[iata]||'#999';
+  const routes=ROUTES[iata]||[];
+  const oc=llOf(hubCode);
+
+  routes.forEach(pair=>{
+    const [o,d]=pair.split('-');
+    if(o!==hubCode&&d!==hubCode)return;
+    const other=o===hubCode?d:o;
+    const dc=llOf(other);
+    if(!oc||!dc)return;
+    const line=L.polyline([oc,dc],{color,weight:3,opacity:0.9}).addTo(mapInstance);
+    line.on('click',()=>setMapDest(other,hubCode));
+    routeLayers.push(line);
+    const m2=L.circleMarker(dc,{radius:5,fillColor:color,color:'#fff',weight:1.5,fillOpacity:0.9})
+      .bindTooltip(other,{sticky:true}).addTo(mapInstance);
+    m2.on('click',()=>setMapDest(other,hubCode));
+    routeLayers.push(m2);
+  });
+
+  const m=L.circleMarker(oc,{radius:9,fillColor:color,color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
+    .bindTooltip(`<b>${hubCode}</b>`,{permanent:true,direction:'top',offset:[0,-10]}).addTo(mapInstance);
+  routeLayers.push(m);
+}
+
+function setMapDest(dest,origin){
+  mapOriginCode=origin;mapDestCode=dest;
+  document.getElementById('map-origin').value=`${airportMap[origin]?airportMap[origin].city:origin} (${origin})`;
+  document.getElementById('map-dest').value=`${airportMap[dest]?airportMap[dest].city:dest} (${dest})`;
+  updateMapFromInputs();
+}
+
+function updateMapFromInputs(){
+  clearRoutes();
+  closeSidePanel();
+  if(!mapOriginCode&&!mapDestCode)return;
+
+  if(mapOriginCode&&!mapDestCode){
+    showAirportRoutes(mapOriginCode);
+    document.getElementById('map-mode-badge').textContent=`Saliendo desde ${mapOriginCode}`;
+    return;
+  }
+  if(!mapOriginCode&&mapDestCode){
+    showAirportRoutes(mapDestCode);
+    document.getElementById('map-mode-badge').textContent=`Llegando a ${mapDestCode}`;
+    return;
+  }
+
+  // Both — find direct + stopover
+  const direct=DATA.filter(a=>isDirect(a.iata,mapOriginCode,mapDestCode));
+  const stopovers=findStopoverRoutes(mapOriginCode,mapDestCode);
+
+  const oc=llOf(mapOriginCode),dc=llOf(mapDestCode);
+  let badge='';
+
+  if(direct.length){
+    badge+=`${direct.length} directos`;
+    direct.forEach(a=>{
+      const color=AIRLINE_COLORS[a.iata]||'#E8420A';
+      if(oc&&dc){
+        const line=L.polyline([oc,dc],{color,weight:4,opacity:0.9}).addTo(mapInstance);
+        routeLayers.push(line);
+      }
+    });
+  }
+
+  if(stopovers.length){
+    if(badge)badge+=' · ';
+    badge+=`${stopovers.length} con escala`;
+    stopovers.forEach(r=>{
+      const hc=llOf(r.hub);
+      const c1=AIRLINE_COLORS[r.a1.iata]||'#999';
+      const c2=AIRLINE_COLORS[r.a2.iata]||'#999';
+      if(oc&&hc){
+        const l1=L.polyline([oc,hc],{color:c1,weight:2.5,opacity:0.6,dashArray:'6,4'}).addTo(mapInstance);
+        routeLayers.push(l1);
+      }
+      if(hc&&dc){
+        const l2=L.polyline([hc,dc],{color:c2,weight:2.5,opacity:0.6,dashArray:'6,4'}).addTo(mapInstance);
+        routeLayers.push(l2);
+      }
+      if(hc){
+        const mh=L.circleMarker(hc,{radius:5,fillColor:'#F9A67A',color:'#fff',weight:1.5,fillOpacity:0.9})
+          .bindTooltip(`Escala: ${r.hub}`,{sticky:true}).addTo(mapInstance);
+        routeLayers.push(mh);
+      }
+    });
+  }
+
+  if(!direct.length&&!stopovers.length){
+    badge='Sin rutas ZED disponibles';
+  }
+
+  // Origin/dest markers
+  if(oc){
+    const m=L.circleMarker(oc,{radius:10,fillColor:'#1A6B3C',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
+      .bindTooltip(`<b>${mapOriginCode}</b>`,{permanent:true,direction:'top',offset:[0,-10]}).addTo(mapInstance);
+    routeLayers.push(m);
+  }
+  if(dc){
+    const m=L.circleMarker(dc,{radius:10,fillColor:'#E8420A',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500})
+      .bindTooltip(`<b>${mapDestCode}</b>`,{permanent:true,direction:'top',offset:[0,-10]}).addTo(mapInstance);
+    routeLayers.push(m);
+  }
+
+  document.getElementById('map-mode-badge').textContent=`${mapOriginCode} → ${mapDestCode} · ${badge}`;
+
+  // Show side panel with results
+  const side=document.getElementById('map-side');
+  side.style.display='flex';
+  document.getElementById('map-side-title').textContent=`${mapOriginCode} → ${mapDestCode}`;
+
+  let html='<div style="padding:10px 14px;">';
+  if(direct.length){
+    html+=`<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Directos (${direct.length})</div>`;
+    direct.forEach(a=>{
+      const color=AIRLINE_COLORS[a.iata]||'#999';
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2);border-radius:6px;margin-bottom:6px;cursor:pointer;" onclick="openPanel('${a.iata}')">
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color}">${a.iata}</span>
+        <span style="font-size:12px;font-weight:500;flex:1">${a.name}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">${mapOriginCode}→${mapDestCode}</span>
+      </div>`;
+    });
+  }
+  if(stopovers.length){
+    html+=`<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:12px 0 8px">Con escala (${stopovers.length})</div>`;
+    stopovers.slice(0,15).forEach(r=>{
+      const c1=AIRLINE_COLORS[r.a1.iata]||'#999';
+      const c2=AIRLINE_COLORS[r.a2.iata]||'#999';
+      html+=`<div style="background:var(--surface-2);border-radius:6px;padding:10px;margin-bottom:8px;">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:4px;">
+          <span style="font-weight:700">${mapOriginCode}</span>
+          <span style="color:var(--text-muted)">→</span>
+          <span style="color:var(--amber);font-weight:600">${r.hub}</span>
+          <span style="color:var(--text-muted)">→</span>
+          <span style="font-weight:700">${mapDestCode}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-direction:column;">
+          <div style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openPanel('${r.a1.iata}')">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c1};width:24px">${r.a1.iata}</span>
+            <span style="font-size:11px;flex:1">${r.a1.name}</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted)">${mapOriginCode}→${r.hub}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="openPanel('${r.a2.iata}')">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${c2};width:24px">${r.a2.iata}</span>
+            <span style="font-size:11px;flex:1">${r.a2.name}</span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text-muted)">${r.hub}→${mapDestCode}</span>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+  if(!direct.length&&!stopovers.length){
+    html+='<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No se encontraron rutas ZED entre estos aeropuertos.</div>';
+  }
+  html+='</div>';
+  document.getElementById('map-side-content').innerHTML=html;
+
+  // Fit bounds
+  const coords=[oc,dc,...stopovers.map(r=>llOf(r.hub))].filter(Boolean);
+  if(coords.length>1)mapInstance.fitBounds(coords,{padding:[40,40]});
+}
 
 function attachMapSearch(){
-  attachMapDropdown('map-origin','map-origin-dd',code=>{mapOriginCode=code;});
-  attachMapDropdown('map-dest','map-dest-dd',code=>{mapDestCode=code;});
-  document.getElementById('map-swap').addEventListener('click',()=>{
-    const tmp=mapOriginCode;mapOriginCode=mapDestCode;mapDestCode=tmp;
-    const ti=document.getElementById('map-origin').value;
-    document.getElementById('map-origin').value=document.getElementById('map-dest').value;
-    document.getElementById('map-dest').value=ti;
-    if(mapOriginCode&&mapDestCode)findBestRoute();
-  });
+  // handled in initMap via attachMapDropdown
 }
 
 function attachMapDropdown(inputId,ddId,onSelect){
@@ -882,110 +1270,73 @@ function attachMapDropdown(inputId,ddId,onSelect){
   input.addEventListener('input',()=>{
     const q=input.value.toLowerCase();
     if(q.length<1){dd.classList.remove('open');return;}
-    const matches=allCodes.filter(c=>c.toLowerCase().includes(q)||airportMap[c].city.toLowerCase().includes(q)).slice(0,10);
+    const matches=Object.keys(COORDS).filter(c=>{
+      const city=airportMap[c]?airportMap[c].city:'';
+      return c.toLowerCase().includes(q)||city.toLowerCase().includes(q);
+    }).slice(0,10);
     if(!matches.length){dd.classList.remove('open');return;}
-    dd.innerHTML=matches.map(c=>`<div class="airport-option" data-code="${c}"><span class="opt-code">${c}</span><span class="opt-city">${airportMap[c].city}</span></div>`).join('');
+    dd.innerHTML=matches.map(c=>`<div class="airport-option" data-code="${c}"><span class="opt-code">${c}</span><span class="opt-city">${airportMap[c]?airportMap[c].city:c}</span></div>`).join('');
     dd.classList.add('open');
     dd.querySelectorAll('.airport-option').forEach(opt=>{
       opt.addEventListener('click',()=>{
         onSelect(opt.dataset.code);
-        input.value=`${airportMap[opt.dataset.code].city} (${opt.dataset.code})`;
         dd.classList.remove('open');
       });
     });
   });
-  document.addEventListener('click',e=>{if(!e.target.closest('#'+inputId)&&!e.target.closest('#'+ddId))dd.classList.remove('open');});
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#'+inputId)&&!e.target.closest('#'+ddId))dd.classList.remove('open');
+  });
 }
 
-function findBestRoute(){
-  if(!mapOriginCode||!mapDestCode){
-    document.getElementById('map-result-bar').style.display='none';
-    return;
-  }
-  clearRouteLayer();
-  const result=findShortestPath(mapOriginCode,mapDestCode);
-  const bar=document.getElementById('map-result-bar');
-  bar.style.display='block';
-  
-  if(!result){
-    bar.innerHTML=`<span style="color:var(--red)">No se encontró ruta ZED entre ${mapOriginCode} y ${mapDestCode} con las aerolíneas disponibles.</span>`;
-    return;
-  }
-  
-  const {path,airlines}=result;
-  const stops=path.length-2;
-  
-  // Build route display
-  let routeHtml='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">';
-  path.forEach((step,i)=>{
-    const c=latLng(step.airport);
-    if(c){
-      const m=L.circleMarker(c,{radius:6,fillColor:i===0||i===path.length-1?'#E8420A':'#F9A67A',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:1000})
-        .bindTooltip(step.airport,{permanent:true,direction:'top',offset:[0,-6]})
-        .addTo(mapInstance);
-      routeLines.push(m);
-    }
-    routeHtml+=`<span style="background:${i===0||i===path.length-1?'var(--accent)':'var(--amber-bg)'};color:${i===0||i===path.length-1?'#fff':'var(--amber)'};border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:12px;font-weight:600">${step.airport}</span>`;
-    if(i<path.length-1){
-      const al=airlines[i];
-      const aData=DATA.find(x=>x.iata===al);
-      routeHtml+=`<span style="font-size:11px;color:var(--text-muted)">→ <b style="color:var(--text-secondary)">${al}</b> →</span>`;
-      // Draw route segment
-      const oc=latLng(step.airport),dc=latLng(path[i+1].airport);
-      if(oc&&dc){
-        const l=L.polyline([oc,dc],{color:'#E8420A',weight:3,opacity:0.9}).addTo(mapInstance);
-        routeLines.push(l);
-      }
-    }
-  });
-  routeHtml+='</div>';
-  routeHtml+=`<div style="margin-top:4px;font-size:11px;color:var(--text-muted)">${stops===0?'Vuelo directo':stops===1?'1 escala':`${stops} escalas`} · ${path.length-1} segmento${path.length-1!==1?'s':''}</div>`;
-  bar.innerHTML=routeHtml;
-  
-  // Fit map to route
-  const routeCoords=path.map(s=>latLng(s.airport)).filter(Boolean);
-  if(routeCoords.length>1) mapInstance.fitBounds(routeCoords,{padding:[40,40]});
-}
+window.setMapDest=setMapDest;
+window.highlightAirlineRoutes=highlightAirlineRoutes;
+window.clearMap=clearMap;
+window.closeSidePanel=closeSidePanel;
 
 // ── Init ──────────────────────────────────────────────────────────────
+renderSolo();
+renderRouteInputs();// ── Init ──────────────────────────────────────────────────────────────
 renderSolo();
 renderRouteInputs();
 </script>
 <!-- TAB MAP -->
-<div class="tab-content" id="tab-map" style="height:calc(100vh - 120px);display:none;flex-direction:column;">
-  <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:200px;">
-      <div style="display:flex;gap:8px;align-items:center;">
-        <div class="search-wrap" style="flex:1;max-width:280px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="map-origin" placeholder="Origen (ciudad o código)…" autocomplete="off"/>
-          <div class="airport-dropdown" id="map-origin-dd"></div>
-        </div>
-        <button id="map-swap" title="Intercambiar" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-        </button>
-        <div class="search-wrap" style="flex:1;max-width:280px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="map-dest" placeholder="Destino (ciudad o código)…" autocomplete="off"/>
-          <div class="airport-dropdown" id="map-dest-dd"></div>
-        </div>
-        <button onclick="findBestRoute()" style="padding:7px 16px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;">Buscar ruta</button>
+<div class="tab-content" id="tab-map" style="height:calc(100vh - 90px);display:none;flex-direction:column;">
+  <!-- Map toolbar -->
+  <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;z-index:10;">
+    <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap;">
+      <div style="position:relative;flex:1;min-width:140px;max-width:240px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="map-origin" placeholder="Origen…" autocomplete="off" style="width:100%;padding:7px 9px 7px 30px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:var(--sans);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        <div class="airport-dropdown" id="map-origin-dd"></div>
       </div>
+      <button id="map-swap" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;" title="Intercambiar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+      </button>
+      <div style="position:relative;flex:1;min-width:140px;max-width:240px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="map-dest" placeholder="Destino…" autocomplete="off" style="width:100%;padding:7px 9px 7px 30px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:var(--sans);font-size:13px;outline:none;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+        <div class="airport-dropdown" id="map-dest-dd"></div>
+      </div>
+      <button onclick="clearMap()" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--sans);font-size:12px;cursor:pointer;color:var(--text-secondary);white-space:nowrap;">Limpiar</button>
     </div>
-    <div id="map-result-bar" style="width:100%;font-size:12px;color:var(--text-secondary);display:none;"></div>
+    <div id="map-mode-badge" style="font-size:11px;color:var(--text-muted);white-space:nowrap;">Click en un aeropuerto para explorar</div>
   </div>
-  <div style="flex:1;position:relative;">
-    <div id="map-container" style="width:100%;height:100%;"></div>
-    <div id="map-legend" style="position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;z-index:1000;">
-      <div style="font-weight:600;margin-bottom:6px;color:var(--text-primary)">Leyenda</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:24px;height:3px;background:#E8420A;display:inline-block;border-radius:2px;"></span> Ruta óptima</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="width:24px;height:2px;background:#185FA5;display:inline-block;border-radius:2px;opacity:.5"></span> Conexiones disponibles</div>
-      <div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:#E8420A;border-radius:50%;display:inline-block;"></span> Hub aerolínea</div>
+  <!-- Map + side panel -->
+  <div style="flex:1;display:flex;overflow:hidden;">
+    <div id="map-container" style="flex:1;"></div>
+    <!-- Side results panel -->
+    <div id="map-side" style="width:300px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;display:none;flex-direction:column;">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div id="map-side-title" style="font-size:13px;font-weight:600;color:var(--text-primary);"></div>
+        <button onclick="closeSidePanel()" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;">×</button>
+      </div>
+      <div id="map-side-content" style="flex:1;overflow-y:auto;"></div>
     </div>
   </div>
 </div>
 
-<!-- Suggest modal -->
+<!-- Suggest modal --><!-- Suggest modal -->
 <div id="suggest-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,25,23,.5);z-index:400;align-items:center;justify-content:center;">
   <div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);width:100%;max-width:440px;margin:20px;overflow:hidden;">
     <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
