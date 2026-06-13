@@ -152,10 +152,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
     Sugerí una aerolínea
   </button>
 </header>
-<div class="verified-bar">
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-  Solo aerolíneas verificadas en myIDTravel — junio 2026. Verificar siempre antes de emitir.
-</div>
+
 
 <div class="tabs">
   <button class="tab active" data-tab="solo">✓ Viajan solas</button>
@@ -192,10 +189,16 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
     <h2>Buscar ruta</h2>
     <p>Encontrá qué aerolíneas podés usar entre dos puntos — solo muestra las que permiten viajar sola.</p>
 
-    <div class="route-modes">
-      <button class="mode-btn active" data-mode="from">Salir desde…</button>
-      <button class="mode-btn" data-mode="to">Llegar a…</button>
-      <button class="mode-btn" data-mode="between">Entre dos aeropuertos</button>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+      <div class="route-modes" style="margin-bottom:0;">
+        <button class="mode-btn active" data-mode="from">Salir desde…</button>
+        <button class="mode-btn" data-mode="to">Llegar a…</button>
+        <button class="mode-btn" data-mode="between">Entre dos aeropuertos</button>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);">
+        <button id="flight-direct" onclick="setFlightType('direct')" style="padding:7px 14px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;">Directa</button>
+        <button id="flight-stopover" onclick="setFlightType('stopover')" style="padding:7px 14px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;">Con escala</button>
+      </div>
     </div>
 
     <div id="route-inputs-area"></div>
@@ -368,8 +371,6 @@ function openPanel(iata,highlightCode){
     <div class="panel-section-title">Acuerdo ZED</div>
     <div class="info-block">
       <div class="info-row"><span class="info-key">Estado</span><span class="info-val" style="color:var(--green)">✓ Viaja sola</span></div>
-      <div class="info-row"><span class="info-key">Ruta verificada</span><span class="info-val" style="font-family:var(--mono);font-weight:400">${a.ruta}</span></div>
-      ${a.note?`<div class="info-row"><span class="info-key">Nota</span><span class="info-val" style="font-weight:400;color:var(--text-secondary)">${a.note}</span></div>`:''}
     </div>
   </div>`;
   if(a.dests&&a.dests.length){
@@ -526,15 +527,50 @@ function runRouteSearch(){
     const oA=airportMap[selectedOrigin]?airportMap[selectedOrigin].airlines:[];
     const dA=airportMap[selectedDest]?airportMap[selectedDest].airlines:[];
     const common=DATA.filter(a=>oA.includes(a.iata)&&dA.includes(a.iata));
-    if(!common.length){
-      resultsArea.innerHTML=`<div class="route-result-empty">No hay aerolíneas ZED que operen entre ${selectedOrigin} y ${selectedDest} y permitan viajar sola.</div>`;return;
+
+    if(flightType==='direct'){
+      if(!common.length){
+        resultsArea.innerHTML=`<div class="route-result-empty">No hay vuelos directos ZED entre ${selectedOrigin} y ${selectedDest}. Probá buscar con escala.</div>`;return;
+      }
+      resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${common.length} aerolínea${common.length!==1?'s':''} directo${common.length!==1?'s':''} ${selectedOrigin}→${selectedDest}</div>
+      <div class="route-result-grid">${common.map(a=>`
+        <div class="route-result-card" onclick="openPanel('${a.iata}')">
+          <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
+          <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span><span style="font-size:11px;color:var(--text-muted)">→</span><span class="rrc-apt highlight">${selectedDest}</span></div>
+        </div>`).join('')}</div>`;
+    } else {
+      // Stopover mode
+      const stopovers=findStopoverRoutes(selectedOrigin,selectedDest);
+      const allResults=[...common.map(a=>({type:'direct',a1:a})),...stopovers];
+      if(!allResults.length){
+        resultsArea.innerHTML=`<div class="route-result-empty">No se encontraron rutas ZED entre ${selectedOrigin} y ${selectedDest}, ni directas ni con escala.</div>`;return;
+      }
+      const directHtml=common.length?`
+        <div class="route-section-subtitle" style="margin-bottom:10px">Directos (${common.length})</div>
+        <div class="route-result-grid" style="margin-bottom:20px">${common.map(a=>`
+          <div class="route-result-card" onclick="openPanel('${a.iata}')">
+            <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
+            <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span><span style="font-size:11px;color:var(--text-muted)">→</span><span class="rrc-apt highlight">${selectedDest}</span></div>
+          </div>`).join('')}</div>`:'';
+      const stopHtml=stopovers.length?`
+        <div class="route-section-subtitle" style="margin-bottom:10px">Con escala (${stopovers.length} combinaciones)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">${stopovers.slice(0,20).map(r=>`
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;" onclick="openPanel('${r.a1.iata}')" title="Click para ver ${r.a1.name}">
+            <span class="rrc-apt highlight">${selectedOrigin}</span>
+            <span style="font-size:11px;color:var(--text-muted)">→</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;"><span class="rrc-iata" style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${r.a1.iata}</span></span>
+            <span style="font-size:11px;color:var(--text-muted)">→</span>
+            <span class="rrc-apt" style="background:var(--amber-bg);color:var(--amber)">${r.hub}</span>
+            <span style="font-size:10px;color:var(--text-muted)">${r.hubCity}</span>
+            <span style="font-size:11px;color:var(--text-muted)">→</span>
+            <span style="display:inline-flex;align-items:center;gap:4px;"><span class="rrc-iata" style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent)">${r.a2.iata}</span></span>
+            <span style="font-size:11px;color:var(--text-muted)">→</span>
+            <span class="rrc-apt highlight">${selectedDest}</span>
+          </div>`).join('')
+        }${stopovers.length>20?`<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">... y ${stopovers.length-20} combinaciones más</div>`:''}
+        </div>`:'';
+      resultsArea.innerHTML=directHtml+stopHtml;
     }
-    resultsArea.innerHTML=`<div class="route-section-subtitle" style="margin-bottom:12px">${common.length} aerolínea${common.length!==1?'s':''} entre ${selectedOrigin} y ${selectedDest}</div>
-    <div class="route-result-grid">${common.map(a=>`
-      <div class="route-result-card" onclick="openPanel('${a.iata}')">
-        <div class="rrc-airline"><span class="rrc-iata">${a.iata}</span><span class="rrc-name">${a.name}</span></div>
-        <div class="rrc-airports"><span class="rrc-apt highlight">${selectedOrigin}</span><span style="font-size:11px;color:var(--text-muted)">→</span><span class="rrc-apt highlight">${selectedDest}</span></div>
-      </div>`).join('')}</div>`;
   }
 }
 
@@ -546,6 +582,39 @@ document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=
   renderRouteInputs();
   document.getElementById('route-results-area').innerHTML='';
 }));
+
+let flightType='direct';
+function setFlightType(t){
+  flightType=t;
+  document.getElementById('flight-direct').style.background=t==='direct'?'var(--accent)':'transparent';
+  document.getElementById('flight-direct').style.color=t==='direct'?'#fff':'var(--text-secondary)';
+  document.getElementById('flight-stopover').style.background=t==='stopover'?'var(--accent)':'transparent';
+  document.getElementById('flight-stopover').style.color=t==='stopover'?'#fff':'var(--text-secondary)';
+  if(selectedOrigin||selectedDest) runRouteSearch();
+}
+
+function findStopoverRoutes(orig,dest){
+  // Find all airports reachable from orig
+  const fromOrig=DATA.filter(a=>airportMap[orig]&&airportMap[orig].airlines.includes(a.iata));
+  const toDest=DATA.filter(a=>airportMap[dest]&&airportMap[dest].airlines.includes(a.iata));
+  const results=[];
+  fromOrig.forEach(a1=>{
+    // Get all airports a1 flies to
+    const a1dests=(a1.dests||[]).flatMap(r=>r.c||[]).map(d=>d.c).filter(c=>c!==orig&&c!==dest);
+    a1dests.forEach(hub=>{
+      // Find airlines from hub to dest
+      const a2list=toDest.filter(a2=>a2.iata!==a1.iata&&airportMap[hub]&&airportMap[hub].airlines.includes(a2.iata));
+      a2list.forEach(a2=>{
+        // Avoid duplicates
+        const key=a1.iata+'|'+hub+'|'+a2.iata;
+        if(!results.find(r=>r.key===key)){
+          results.push({key,a1,hub,hubCity:airportMap[hub]?airportMap[hub].city:hub,a2});
+        }
+      });
+    });
+  });
+  return results;
+}
 
 // ── TAB 3: All airlines ───────────────────────────────────────────────
 let activeZone='all',airlineQ='';
