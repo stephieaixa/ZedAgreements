@@ -5,585 +5,324 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZED Agreements — Vueling · Beneficiarios</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #F7F6F2;
-    --surface: #FFFFFF;
-    --surface-2: #F0EFE9;
-    --border: #E2E0D8;
-    --border-strong: #C8C5BA;
-    --text-primary: #1A1917;
-    --text-secondary: #6B6860;
-    --text-muted: #9E9C96;
-    --accent: #E8420A;
-    --accent-light: #FDF0EC;
-    --green: #1A6B3C;
-    --green-bg: #EBF5EF;
-    --amber: #8A5C00;
-    --amber-bg: #FEF6E4;
-    --red: #8B1A1A;
-    --red-bg: #FDEAEA;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Inter', system-ui, sans-serif;
-  }
-
-  body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text-primary);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  /* Header */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 20px 32px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .logo {
-    background: var(--accent);
-    color: #fff;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    padding: 5px 10px;
-    border-radius: 4px;
-    text-transform: uppercase;
-  }
-  header h1 {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-primary);
-  }
-  header span {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-family: var(--mono);
-    margin-left: auto;
-  }
-
-  /* Warning */
-  .warning {
-    background: var(--amber-bg);
-    border-bottom: 1px solid #F0D080;
-    padding: 10px 32px;
-    font-size: 12px;
-    color: var(--amber);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .warning svg { flex-shrink: 0; }
-
-  /* Layout */
-  .layout { display: flex; min-height: calc(100vh - 100px); }
-
-  /* Sidebar */
-  aside {
-    width: 260px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 20px;
-    position: sticky;
-    top: 97px;
-    height: calc(100vh - 97px);
-    overflow-y: auto;
-  }
-  .filter-group { margin-bottom: 24px; }
-  .filter-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    display: block;
-  }
-  .search-wrap { position: relative; }
-  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-  input[type="text"] {
-    width: 100%;
-    padding: 8px 10px 8px 32px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: var(--sans);
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  input[type="text"]:focus { border-color: var(--accent); }
-
-  .zone-btns { display: flex; flex-direction: column; gap: 4px; }
-  .zone-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    width: 100%;
-    text-align: left;
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--text-secondary);
-    transition: background 0.12s, color 0.12s;
-  }
-  .zone-btn:hover { background: var(--surface-2); color: var(--text-primary); }
-  .zone-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
-  .zone-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .zone-btn .count { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
-  .zone-btn.active .count { color: var(--accent); }
-
-  .status-btns { display: flex; flex-direction: column; gap: 4px; }
-  .status-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    width: 100%;
-    text-align: left;
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--text-secondary);
-    transition: background 0.12s, color 0.12s;
-  }
-  .status-btn:hover { background: var(--surface-2); color: var(--text-primary); }
-  .status-btn.active { background: var(--surface-2); color: var(--text-primary); font-weight: 500; }
-
-  /* Stats */
-  .stats-row {
-    padding: 16px 32px;
-    display: flex;
-    gap: 12px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-  .stat {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-  .stat strong { font-weight: 600; color: var(--text-primary); font-family: var(--mono); font-size: 15px; }
-  .stat-div { width: 1px; height: 16px; background: var(--border); }
-
-  /* Main */
-  main { flex: 1; padding: 28px 32px; }
-
-  .zone-section { margin-bottom: 36px; }
-  .zone-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .zone-title h2 { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .zone-title .zone-num {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-  .zone-title .zone-airline-count {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  /* Table */
-  .table-wrap { overflow-x: auto; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  thead th {
-    text-align: left;
-    padding: 8px 12px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    background: var(--surface-2);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    transition: background 0.1s;
-  }
-  tbody tr:hover { background: var(--bg); }
-  td { padding: 10px 12px; vertical-align: middle; }
-  .td-iata {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    width: 56px;
-  }
-  .td-name { font-weight: 500; color: var(--text-primary); }
-  .td-status { width: 180px; }
-  .td-note { color: var(--text-secondary); font-size: 12px; max-width: 220px; }
-
-  /* Status badges */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 99px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  .badge-ok { background: var(--green-bg); color: var(--green); }
-  .badge-cond { background: var(--amber-bg); color: var(--amber); }
-  .badge-no { background: var(--red-bg); color: var(--red); }
-
-  /* Empty */
-  .empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-  }
-  .empty p { font-size: 14px; margin-top: 8px; }
-
-  /* Legend */
-  .legend {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
-
-  /* Scrollbar */
-  aside::-webkit-scrollbar { width: 4px; }
-  aside::-webkit-scrollbar-track { background: transparent; }
-  aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  @media (max-width: 768px) {
-    aside { display: none; }
-    main { padding: 20px 16px; }
-    .stats-row { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
-    header { padding: 14px 16px; }
-    .warning { padding: 10px 16px; }
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F7F6F2; --surface: #FFFFFF; --surface-2: #F0EFE9;
+  --border: #E2E0D8; --border-strong: #C8C5BA;
+  --text-primary: #1A1917; --text-secondary: #6B6860; --text-muted: #9E9C96;
+  --accent: #E8420A; --accent-light: #FDF0EC;
+  --green: #1A6B3C; --green-bg: #EBF5EF;
+  --amber: #8A5C00; --amber-bg: #FEF6E4;
+  --red: #8B1A1A; --red-bg: #FDEAEA;
+  --mono: 'JetBrains Mono', monospace; --sans: 'Inter', system-ui, sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+body { font-family: var(--sans); background: var(--bg); color: var(--text-primary); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 28px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 200; }
+.logo { background: var(--accent); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; padding: 5px 10px; border-radius: 4px; }
+header h1 { font-size: 14px; font-weight: 500; }
+header .ref { font-size: 12px; color: var(--text-muted); font-family: var(--mono); margin-left: auto; }
+.warning { background: var(--amber-bg); border-bottom: 1px solid #F0D080; padding: 9px 28px; font-size: 12px; color: var(--amber); display: flex; align-items: center; gap: 8px; }
+.layout { display: flex; }
+aside { width: 240px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 16px; position: sticky; top: 93px; height: calc(100vh - 93px); overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+.filter-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px; }
+.search-wrap { position: relative; }
+.search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+input[type="text"] { width: 100%; padding: 7px 9px 7px 30px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text-primary); font-family: var(--sans); font-size: 13px; outline: none; transition: border-color 0.15s; }
+input[type="text"]:focus { border-color: var(--accent); }
+.sidebar-btns { display: flex; flex-direction: column; gap: 3px; }
+.sidebar-btn { display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 6px; cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; font-family: var(--sans); font-size: 13px; color: var(--text-secondary); transition: background 0.1s, color 0.1s; }
+.sidebar-btn:hover { background: var(--surface-2); color: var(--text-primary); }
+.sidebar-btn.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+.sidebar-btn .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sidebar-btn .cnt { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.sidebar-btn.active .cnt { color: var(--accent); }
+.stats-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 28px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.stat { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.stat strong { font-weight: 600; color: var(--text-primary); font-family: var(--mono); font-size: 15px; }
+.sdiv { width: 1px; height: 14px; background: var(--border); }
+.dest-bar { background: var(--surface-2); border-bottom: 1px solid var(--border); padding: 10px 28px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dest-bar label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.dest-bar .search-wrap { flex: 1; max-width: 340px; }
+.dest-bar input { background: var(--surface); }
+.dest-tag { font-size: 12px; background: var(--accent-light); color: var(--accent); border-radius: 99px; padding: 3px 10px; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+.dest-tag button { border: none; background: none; color: var(--accent); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+.dest-hint { font-size: 12px; color: var(--text-muted); }
+main { flex: 1; padding: 24px 28px; min-width: 0; }
+.zone-section { margin-bottom: 32px; }
+.zone-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.zone-num { font-family: var(--mono); font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 4px; }
+.zone-title h2 { font-size: 14px; font-weight: 600; }
+.zone-title .zcnt { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--text-muted); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 7px 11px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); background: var(--surface-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid var(--border); background: var(--surface); transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: #FDF5F2; }
+tbody tr.highlighted { background: #FDF0EC; }
+td { padding: 9px 11px; vertical-align: middle; }
+.td-iata { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text-secondary); width: 52px; }
+.td-name { font-weight: 500; }
+.td-status { width: 170px; }
+.td-dest { width: 150px; }
+.td-note { color: var(--text-secondary); font-size: 12px; }
+.dest-count { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-secondary); }
+.dest-count strong { color: var(--text-primary); font-weight: 500; }
+.click-hint { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.badge-ok { background: var(--green-bg); color: var(--green); }
+.badge-cond { background: var(--amber-bg); color: var(--amber); }
+.badge-no { background: var(--red-bg); color: var(--red); }
+.badge-dest { background: var(--accent-light); color: var(--accent); }
+.empty { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+.empty p { margin-top: 8px; font-size: 14px; }
+.legend { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-secondary); }
+.panel-overlay { display: none; position: fixed; inset: 0; background: rgba(26,25,23,0.4); z-index: 300; }
+.panel-overlay.open { display: block; }
+.panel { position: fixed; right: 0; top: 0; bottom: 0; width: 480px; background: var(--surface); border-left: 1px solid var(--border); z-index: 301; display: flex; flex-direction: column; overflow: hidden; transform: translateX(100%); transition: transform 0.22s ease; }
+.panel.open { transform: translateX(0); }
+.panel-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+.panel-head-info { flex: 1; min-width: 0; }
+.panel-iata { font-family: var(--mono); font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.panel-name { font-size: 17px; font-weight: 600; }
+.panel-close { border: none; background: var(--surface-2); border-radius: 6px; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0; transition: background 0.1s; }
+.panel-close:hover { background: var(--border); }
+.panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.panel-section { margin-bottom: 24px; }
+.panel-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+.info-block { background: var(--surface-2); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.info-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.info-key { color: var(--text-muted); width: 130px; flex-shrink: 0; font-size: 12px; }
+.info-val { color: var(--text-primary); font-weight: 500; }
+.dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.dest-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+.dest-card.match { background: var(--accent-light); border-color: #F0A080; }
+.dest-city { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; }
+.dest-code { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.dest-card.match .dest-code { color: var(--accent); }
+.panel-note-sm { font-size: 12px; color: var(--text-secondary); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; line-height: 1.6; }
+aside::-webkit-scrollbar, .panel-body::-webkit-scrollbar { width: 4px; }
+aside::-webkit-scrollbar-thumb, .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+@media (max-width: 768px) {
+  aside { display: none; }
+  main { padding: 16px; }
+  .stats-bar, .dest-bar { padding: 10px 16px; }
+  header { padding: 12px 16px; }
+  .panel { width: 100%; }
+}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">ZED</div>
   <h1>Acuerdos Vueling · Beneficiarios sin acompañante</h1>
-  <span>Ref. agosto 2025</span>
+  <span class="ref">Ref. agosto 2025</span>
 </header>
-
 <div class="warning">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-  Datos orientativos — siempre verificar en el ZED/MIBA Directory oficial de IATA antes de emitir cualquier ticket.
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  Datos orientativos — verificar siempre en el ZED/MIBA Directory oficial de IATA antes de emitir.
 </div>
-
 <div class="layout">
   <aside>
-    <div class="filter-group">
-      <label class="filter-label">Buscar</label>
+    <div>
+      <label class="filter-label">Buscar aerolínea</label>
       <div class="search-wrap">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="search" placeholder="Aerolínea o código IATA…" />
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-airline" placeholder="Nombre o código IATA…" />
       </div>
     </div>
-
-    <div class="filter-group">
+    <div>
       <span class="filter-label">Zona IATA</span>
-      <div class="zone-btns">
-        <button class="zone-btn active" data-zone="all">
-          <span class="zone-dot" style="background:#9E9C96"></span>
-          Todas las zonas
-          <span class="count" id="cnt-all">—</span>
-        </button>
-        <button class="zone-btn" data-zone="1">
-          <span class="zone-dot" style="background:#185FA5"></span>
-          Zona 1 · Europa
-          <span class="count" id="cnt-1">—</span>
-        </button>
-        <button class="zone-btn" data-zone="2">
-          <span class="zone-dot" style="background:#1A6B3C"></span>
-          Zona 2 · N. América
-          <span class="count" id="cnt-2">—</span>
-        </button>
-        <button class="zone-btn" data-zone="3">
-          <span class="zone-dot" style="background:#8A5C00"></span>
-          Zona 3 · Latinoamérica
-          <span class="count" id="cnt-3">—</span>
-        </button>
-        <button class="zone-btn" data-zone="4">
-          <span class="zone-dot" style="background:#7F77DD"></span>
-          Zona 4 · M. Oriente / África
-          <span class="count" id="cnt-4">—</span>
-        </button>
-        <button class="zone-btn" data-zone="5">
-          <span class="zone-dot" style="background:#D85A30"></span>
-          Zona 5 · Asia / Pacífico
-          <span class="count" id="cnt-5">—</span>
-        </button>
-        <button class="zone-btn" data-zone="6">
-          <span class="zone-dot" style="background:#D4537E"></span>
-          Zona 6 · Oceanía
-          <span class="count" id="cnt-6">—</span>
-        </button>
+      <div class="sidebar-btns">
+        <button class="sidebar-btn active" data-zone="all"><span class="dot" style="background:#9E9C96"></span>Todas<span class="cnt" id="cnt-all">—</span></button>
+        <button class="sidebar-btn" data-zone="1"><span class="dot" style="background:#185FA5"></span>Zona 1 · Europa<span class="cnt" id="cnt-1">—</span></button>
+        <button class="sidebar-btn" data-zone="2"><span class="dot" style="background:#1A6B3C"></span>Zona 2 · N. América<span class="cnt" id="cnt-2">—</span></button>
+        <button class="sidebar-btn" data-zone="3"><span class="dot" style="background:#8A5C00"></span>Zona 3 · Latinoamérica<span class="cnt" id="cnt-3">—</span></button>
+        <button class="sidebar-btn" data-zone="4"><span class="dot" style="background:#534AB7"></span>Zona 4 · M. Oriente / África<span class="cnt" id="cnt-4">—</span></button>
+        <button class="sidebar-btn" data-zone="5"><span class="dot" style="background:#993C1D"></span>Zona 5 · Asia / Pacífico<span class="cnt" id="cnt-5">—</span></button>
+        <button class="sidebar-btn" data-zone="6"><span class="dot" style="background:#993556"></span>Zona 6 · Oceanía<span class="cnt" id="cnt-6">—</span></button>
       </div>
     </div>
-
-    <div class="filter-group">
-      <span class="filter-label">Estado</span>
-      <div class="status-btns">
-        <button class="status-btn active" data-status="all">Todos</button>
-        <button class="status-btn" data-status="yes">✓ Sin acompañante</button>
-        <button class="status-btn" data-status="cond">~ Con condiciones</button>
-        <button class="status-btn" data-status="no">✗ Requiere empleado</button>
+    <div>
+      <span class="filter-label">Estado beneficiario</span>
+      <div class="sidebar-btns">
+        <button class="sidebar-btn active" data-status="all">Todos</button>
+        <button class="sidebar-btn" data-status="yes">✓ Sin acompañante</button>
+        <button class="sidebar-btn" data-status="cond">~ Con condiciones</button>
+        <button class="sidebar-btn" data-status="no">✗ Requiere empleado</button>
       </div>
     </div>
   </aside>
-
-  <div style="flex:1; display:flex; flex-direction:column;">
-    <div class="stats-row">
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;">
+    <div class="stats-bar">
       <div class="stat"><strong id="s-total">0</strong> aerolíneas</div>
-      <div class="stat-div"></div>
+      <div class="sdiv"></div>
       <div class="stat"><strong id="s-ok">0</strong> sin acompañante</div>
-      <div class="stat-div"></div>
+      <div class="sdiv"></div>
       <div class="stat"><strong id="s-cond">0</strong> con condiciones</div>
-      <div class="stat-div"></div>
+      <div class="sdiv"></div>
       <div class="stat"><strong id="s-no">0</strong> requieren empleado</div>
+    </div>
+    <div class="dest-bar">
+      <label>Buscar por destino:</label>
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-dest" placeholder="Ciudad o aeropuerto (ej: Buenos Aires, EZE, Tokyo…)" />
+      </div>
+      <span id="dest-tag-wrap" style="display:none"></span>
+      <span class="dest-hint" id="dest-hint"></span>
     </div>
     <main id="main"></main>
   </div>
 </div>
-
+<div class="panel-overlay" id="overlay"></div>
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <div class="panel-head-info">
+      <div class="panel-iata" id="p-iata"></div>
+      <div class="panel-name" id="p-name"></div>
+    </div>
+    <button class="panel-close" id="panel-close" aria-label="Cerrar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
 <script>
-const ZONES = {
-  1: { name: "Europa", color: "#185FA5", dot: "#185FA5" },
-  2: { name: "Norte América", color: "#1A6B3C", dot: "#1A6B3C" },
-  3: { name: "Latinoamérica", color: "#8A5C00", dot: "#8A5C00" },
-  4: { name: "Medio Oriente / África", color: "#534AB7", dot: "#7F77DD" },
-  5: { name: "Asia / Pacífico", color: "#993C1D", dot: "#D85A30" },
-  6: { name: "Oceanía", color: "#993556", dot: "#D4537E" },
-};
-
-const DATA = [
-  // Zona 1 — Europa
-  { name:"Iberia", iata:"IB", zone:1, status:"yes", note:"Grupo IAG – acuerdo directo con Vueling" },
-  { name:"Iberia Express", iata:"I2", zone:1, status:"yes", note:"Grupo IAG" },
-  { name:"British Airways", iata:"BA", zone:1, status:"yes", note:"Grupo IAG" },
-  { name:"Air France", iata:"AF", zone:1, status:"yes", note:"" },
-  { name:"KLM", iata:"KL", zone:1, status:"yes", note:"" },
-  { name:"Lufthansa", iata:"LH", zone:1, status:"yes", note:"" },
-  { name:"Swiss International", iata:"LX", zone:1, status:"yes", note:"" },
-  { name:"Austrian Airlines", iata:"OS", zone:1, status:"yes", note:"" },
-  { name:"Brussels Airlines", iata:"SN", zone:1, status:"yes", note:"" },
-  { name:"TAP Air Portugal", iata:"TP", zone:1, status:"yes", note:"" },
-  { name:"Finnair", iata:"AY", zone:1, status:"yes", note:"" },
-  { name:"SAS Scandinavian", iata:"SK", zone:1, status:"yes", note:"" },
-  { name:"Aegean Airlines", iata:"A3", zone:1, status:"yes", note:"" },
-  { name:"LOT Polish Airlines", iata:"LO", zone:1, status:"yes", note:"" },
-  { name:"Czech Airlines", iata:"OK", zone:1, status:"yes", note:"" },
-  { name:"Aer Lingus", iata:"EI", zone:1, status:"yes", note:"" },
-  { name:"Air Europa", iata:"UX", zone:1, status:"yes", note:"" },
-  { name:"Binter Canarias", iata:"NT", zone:1, status:"yes", note:"" },
-  { name:"Transavia", iata:"HV", zone:1, status:"yes", note:"" },
-  { name:"easyJet", iata:"U2", zone:1, status:"yes", note:"" },
-  { name:"Norwegian Air", iata:"DY", zone:1, status:"cond", note:"Solo cónyuge/pareja registrada" },
-  { name:"Ryanair", iata:"FR", zone:1, status:"cond", note:"Acuerdo limitado, verificar vigencia" },
-  { name:"Wizz Air", iata:"W6", zone:1, status:"cond", note:"Verificar acuerdo vigente" },
-  { name:"Volotea", iata:"V7", zone:1, status:"cond", note:"Verificar acuerdo con Vueling" },
-  { name:"Alitalia / ITA Airways", iata:"AZ", zone:1, status:"no", note:"Requiere empleado a bordo" },
-  // Zona 2 — Norte América
-  { name:"American Airlines", iata:"AA", zone:2, status:"yes", note:"Oneworld" },
-  { name:"United Airlines", iata:"UA", zone:2, status:"yes", note:"" },
-  { name:"Delta Air Lines", iata:"DL", zone:2, status:"yes", note:"" },
-  { name:"Air Canada", iata:"AC", zone:2, status:"yes", note:"" },
-  { name:"Alaska Airlines", iata:"AS", zone:2, status:"yes", note:"" },
-  { name:"WestJet", iata:"WS", zone:2, status:"cond", note:"Sujeto a disponibilidad específica" },
-  { name:"JetBlue", iata:"B6", zone:2, status:"cond", note:"Verificar vigencia del acuerdo" },
-  // Zona 3 — Latinoamérica
-  { name:"Aerolíneas Argentinas", iata:"AR", zone:3, status:"yes", note:"" },
-  { name:"LATAM Airlines", iata:"LA", zone:3, status:"yes", note:"" },
-  { name:"Avianca", iata:"AV", zone:3, status:"yes", note:"" },
-  { name:"Copa Airlines", iata:"CM", zone:3, status:"yes", note:"" },
-  { name:"SKY Airline", iata:"H2", zone:3, status:"yes", note:"" },
-  { name:"Azul Brazilian Airlines", iata:"AD", zone:3, status:"cond", note:"Verificar acuerdo vigente" },
-  { name:"GOL Linhas Aéreas", iata:"G3", zone:3, status:"cond", note:"Acuerdo limitado" },
-  { name:"VivaAerobus", iata:"VB", zone:3, status:"cond", note:"Verificar vigencia" },
-  { name:"Interjet", iata:"4O", zone:3, status:"no", note:"Acuerdo suspendido / inactivo" },
-  // Zona 4 — Medio Oriente / África
-  { name:"Emirates", iata:"EK", zone:4, status:"yes", note:"" },
-  { name:"Qatar Airways", iata:"QR", zone:4, status:"yes", note:"Oneworld" },
-  { name:"Etihad Airways", iata:"EY", zone:4, status:"yes", note:"" },
-  { name:"Turkish Airlines", iata:"TK", zone:4, status:"yes", note:"" },
-  { name:"Royal Air Maroc", iata:"AT", zone:4, status:"yes", note:"" },
-  { name:"Ethiopian Airlines", iata:"ET", zone:4, status:"yes", note:"" },
-  { name:"Kenya Airways", iata:"KQ", zone:4, status:"cond", note:"Verificar acuerdo bilateral" },
-  { name:"EgyptAir", iata:"MS", zone:4, status:"cond", note:"Sujeto a disponibilidad" },
-  { name:"flydubai", iata:"FZ", zone:4, status:"cond", note:"Acuerdo reciente, verificar" },
-  // Zona 5 — Asia / Pacífico
-  { name:"Singapore Airlines", iata:"SQ", zone:5, status:"yes", note:"" },
-  { name:"Cathay Pacific", iata:"CX", zone:5, status:"yes", note:"Oneworld" },
-  { name:"Japan Airlines", iata:"JL", zone:5, status:"yes", note:"Oneworld" },
-  { name:"ANA All Nippon", iata:"NH", zone:5, status:"yes", note:"" },
-  { name:"Korean Air", iata:"KE", zone:5, status:"yes", note:"" },
-  { name:"Malaysia Airlines", iata:"MH", zone:5, status:"yes", note:"Oneworld" },
-  { name:"China Southern", iata:"CZ", zone:5, status:"cond", note:"Verificar acuerdo vigente" },
-  { name:"Air India", iata:"AI", zone:5, status:"cond", note:"Condiciones variables" },
-  { name:"Thai Airways", iata:"TG", zone:5, status:"cond", note:"Verificar vigencia" },
-  // Zona 6 — Oceanía
-  { name:"Qantas", iata:"QF", zone:6, status:"yes", note:"Oneworld" },
-  { name:"Air New Zealand", iata:"NZ", zone:6, status:"yes", note:"" },
-  { name:"Virgin Australia", iata:"VA", zone:6, status:"cond", note:"Verificar acuerdo bilateral" },
+const ZONES={1:{name:"Europa",color:"#185FA5",bg:"#E6F1FB"},2:{name:"Norte América",color:"#1A6B3C",bg:"#EAF3DE"},3:{name:"Latinoamérica",color:"#8A5C00",bg:"#FEF6E4"},4:{name:"Medio Oriente / África",color:"#534AB7",bg:"#EEEDFE"},5:{name:"Asia / Pacífico",color:"#993C1D",bg:"#FAECE7"},6:{name:"Oceanía",color:"#993556",bg:"#FBEAF0"}};
+const DATA=[
+{name:"Iberia",iata:"IB",zone:1,status:"yes",note:"Grupo IAG – acuerdo directo",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Sevilla",code:"SVQ"},{city:"Valencia",code:"VLC"},{city:"Bilbao",code:"BIO"},{city:"Málaga",code:"AGP"},{city:"Gran Canaria",code:"LPA"},{city:"Tenerife Sur",code:"TFS"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Buenos Aires",code:"EZE"},{city:"México DF",code:"MEX"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"São Paulo",code:"GRU"},{city:"Miami",code:"MIA"},{city:"Nueva York",code:"JFK"},{city:"Chicago",code:"ORD"},{city:"Los Ángeles",code:"LAX"},{city:"Tokyo",code:"NRT"},{city:"Shanghai",code:"PVG"},{city:"Dubai",code:"DXB"}]},
+{name:"Iberia Express",iata:"I2",zone:1,status:"yes",note:"Grupo IAG",alliance:"Oneworld",cls:"Y",dests:[{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Sevilla",code:"SVQ"},{city:"Valencia",code:"VLC"},{city:"Bilbao",code:"BIO"},{city:"Málaga",code:"AGP"},{city:"Palma",code:"PMI"},{city:"Gran Canaria",code:"LPA"},{city:"Tenerife",code:"TFS"},{city:"Ibiza",code:"IBZ"},{city:"Alicante",code:"ALC"},{city:"Londres",code:"LGW"},{city:"París",code:"CDG"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Ámsterdam",code:"AMS"}]},
+{name:"British Airways",iata:"BA",zone:1,status:"yes",note:"Grupo IAG",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Londres Heathrow",code:"LHR"},{city:"Londres Gatwick",code:"LGW"},{city:"Manchester",code:"MAN"},{city:"Edimburgo",code:"EDI"},{city:"Glasgow",code:"GLA"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"Boston",code:"BOS"},{city:"Dubai",code:"DXB"},{city:"Tokyo",code:"HND"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Sydney",code:"SYD"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Johannesburgo",code:"JNB"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Frankfurt",code:"FRA"}]},
+{name:"Air France",iata:"AF",zone:1,status:"yes",note:"",alliance:"SkyTeam",cls:"Y/C/F",dests:[{city:"París CDG",code:"CDG"},{city:"París Orly",code:"ORY"},{city:"Lyon",code:"LYS"},{city:"Niza",code:"NCE"},{city:"Marsella",code:"MRS"},{city:"Toulouse",code:"TLS"},{city:"Burdeos",code:"BOD"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Miami",code:"MIA"},{city:"Montreal",code:"YUL"},{city:"Ciudad de México",code:"MEX"},{city:"Buenos Aires",code:"EZE"},{city:"Bogotá",code:"BOG"},{city:"Tokyo",code:"NRT"},{city:"Shanghai",code:"PVG"},{city:"Pekín",code:"PEK"},{city:"Singapur",code:"SIN"},{city:"Dubai",code:"DXB"},{city:"Nairobi",code:"NBO"},{city:"Dakar",code:"DSS"}]},
+{name:"KLM",iata:"KL",zone:1,status:"yes",note:"",alliance:"SkyTeam",cls:"Y/C",dests:[{city:"Ámsterdam",code:"AMS"},{city:"Rotterdam",code:"RTM"},{city:"Eindhoven",code:"EIN"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Houston",code:"IAH"},{city:"Toronto",code:"YYZ"},{city:"México DF",code:"MEX"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Lima",code:"LIM"},{city:"Tokyo",code:"NRT"},{city:"Pekín",code:"PEK"},{city:"Singapur",code:"SIN"},{city:"Kuala Lumpur",code:"KUL"},{city:"Nairobi",code:"NBO"},{city:"Johannesburgo",code:"JNB"},{city:"Dubai",code:"DXB"},{city:"Mumbai",code:"BOM"}]},
+{name:"Lufthansa",iata:"LH",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Frankfurt",code:"FRA"},{city:"Múnich",code:"MUC"},{city:"Hamburgo",code:"HAM"},{city:"Berlín",code:"BER"},{city:"Düsseldorf",code:"DUS"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"São Paulo",code:"GRU"},{city:"Buenos Aires",code:"EZE"},{city:"Bogotá",code:"BOG"},{city:"Tokyo",code:"NRT"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Singapur",code:"SIN"},{city:"Hong Kong",code:"HKG"},{city:"Dubai",code:"DXB"},{city:"Johannesburgo",code:"JNB"}]},
+{name:"Swiss International",iata:"LX",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Zúrich",code:"ZRH"},{city:"Ginebra",code:"GVA"},{city:"Basilea",code:"BSL"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"São Paulo",code:"GRU"},{city:"Tokyo",code:"NRT"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Dubai",code:"DXB"}]},
+{name:"Austrian Airlines",iata:"OS",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Viena",code:"VIE"},{city:"Innsbruck",code:"INN"},{city:"Salzburgo",code:"SZG"},{city:"Nueva York",code:"JFK"},{city:"Washington",code:"IAD"},{city:"Chicago",code:"ORD"},{city:"Toronto",code:"YYZ"},{city:"Tokyo",code:"NRT"},{city:"Shanghai",code:"PVG"},{city:"Pekín",code:"PEK"},{city:"Dubai",code:"DXB"}]},
+{name:"TAP Air Portugal",iata:"TP",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Lisboa",code:"LIS"},{city:"Oporto",code:"OPO"},{city:"Funchal",code:"FNC"},{city:"Ponta Delgada",code:"PDL"},{city:"Nueva York",code:"JFK"},{city:"Boston",code:"BOS"},{city:"Miami",code:"MIA"},{city:"Washington",code:"IAD"},{city:"São Paulo",code:"GRU"},{city:"Río de Janeiro",code:"GIG"},{city:"Buenos Aires",code:"EZE"},{city:"Luanda",code:"LAD"},{city:"Maputo",code:"MPM"}]},
+{name:"Finnair",iata:"AY",zone:1,status:"yes",note:"",alliance:"Oneworld",cls:"Y/C",dests:[{city:"Helsinki",code:"HEL"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Delhi",code:"DEL"}]},
+{name:"SAS Scandinavian",iata:"SK",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Copenhague",code:"CPH"},{city:"Oslo",code:"OSL"},{city:"Estocolmo",code:"ARN"},{city:"Gotemburgo",code:"GOT"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"Tokyo",code:"NRT"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Bangkok",code:"BKK"},{city:"Dubai",code:"DXB"}]},
+{name:"Aegean Airlines",iata:"A3",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Atenas",code:"ATH"},{city:"Tesalónica",code:"SKG"},{city:"Heraklion",code:"HER"},{city:"Rodas",code:"RHO"},{city:"Santorini",code:"JTR"},{city:"Mykonos",code:"JMK"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Roma",code:"FCO"},{city:"Nicosia",code:"LCA"},{city:"Dubai",code:"DXB"}]},
+{name:"Air Europa",iata:"UX",zone:1,status:"yes",note:"",alliance:"SkyTeam",cls:"Y/C",dests:[{city:"Madrid",code:"MAD"},{city:"Palma",code:"PMI"},{city:"Ibiza",code:"IBZ"},{city:"Menorca",code:"MAH"},{city:"Gran Canaria",code:"LPA"},{city:"Tenerife",code:"TFS"},{city:"Lanzarote",code:"ACE"},{city:"Fuerteventura",code:"FUE"},{city:"Buenos Aires",code:"EZE"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Santiago",code:"SCL"},{city:"Caracas",code:"CCS"},{city:"La Habana",code:"HAV"},{city:"Santo Domingo",code:"SDQ"},{city:"Cancún",code:"CUN"},{city:"Miami",code:"MIA"},{city:"Nueva York",code:"JFK"}]},
+{name:"LOT Polish Airlines",iata:"LO",zone:1,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Varsovia",code:"WAW"},{city:"Cracovia",code:"KRK"},{city:"Gdansk",code:"GDN"},{city:"Nueva York",code:"JFK"},{city:"Chicago",code:"ORD"},{city:"Los Ángeles",code:"LAX"},{city:"Toronto",code:"YYZ"},{city:"Tokyo",code:"NRT"},{city:"Pekín",code:"PEK"},{city:"Dubai",code:"DXB"}]},
+{name:"Aer Lingus",iata:"EI",zone:1,status:"yes",note:"",alliance:"Oneworld",cls:"Y/C",dests:[{city:"Dublín",code:"DUB"},{city:"Cork",code:"ORK"},{city:"Shannon",code:"SNN"},{city:"Nueva York",code:"JFK"},{city:"Boston",code:"BOS"},{city:"Chicago",code:"ORD"},{city:"Los Ángeles",code:"LAX"},{city:"Miami",code:"MIA"},{city:"Washington",code:"IAD"},{city:"Toronto",code:"YYZ"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"}]},
+{name:"easyJet",iata:"U2",zone:1,status:"yes",note:"",alliance:"—",cls:"Y",dests:[{city:"Londres Gatwick",code:"LGW"},{city:"Londres Luton",code:"LTN"},{city:"Bristol",code:"BRS"},{city:"Manchester",code:"MAN"},{city:"Edimburgo",code:"EDI"},{city:"París CDG",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Lisboa",code:"LIS"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Berlín",code:"BER"},{city:"Ginebra",code:"GVA"},{city:"Palma",code:"PMI"},{city:"Ibiza",code:"IBZ"},{city:"Tenerife",code:"TFS"},{city:"Lanzarote",code:"ACE"},{city:"Fuerteventura",code:"FUE"},{city:"Atenas",code:"ATH"},{city:"Mykonos",code:"JMK"},{city:"Santorini",code:"JTR"}]},
+{name:"Transavia",iata:"HV",zone:1,status:"yes",note:"",alliance:"—",cls:"Y",dests:[{city:"Ámsterdam",code:"AMS"},{city:"Rotterdam",code:"RTM"},{city:"Eindhoven",code:"EIN"},{city:"París Orly",code:"ORY"},{city:"Lyon",code:"LYS"},{city:"Nantes",code:"NTE"},{city:"Palma",code:"PMI"},{city:"Ibiza",code:"IBZ"},{city:"Tenerife",code:"TFS"},{city:"Fuerteventura",code:"FUE"},{city:"Lanzarote",code:"ACE"},{city:"Málaga",code:"AGP"},{city:"Alicante",code:"ALC"},{city:"Marrakech",code:"RAK"},{city:"Agadir",code:"AGA"},{city:"Atenas",code:"ATH"},{city:"Heraklion",code:"HER"}]},
+{name:"Binter Canarias",iata:"NT",zone:1,status:"yes",note:"",alliance:"—",cls:"Y",dests:[{city:"Gran Canaria",code:"LPA"},{city:"Tenerife Norte",code:"TFN"},{city:"Tenerife Sur",code:"TFS"},{city:"Lanzarote",code:"ACE"},{city:"Fuerteventura",code:"FUE"},{city:"La Palma",code:"SPC"},{city:"La Gomera",code:"GMZ"},{city:"El Hierro",code:"VDE"},{city:"Madeira",code:"FNC"},{city:"Dakar",code:"DSS"}]},
+{name:"Norwegian Air",iata:"DY",zone:1,status:"cond",note:"Solo cónyuge/pareja registrada",alliance:"—",cls:"Y",dests:[{city:"Oslo",code:"OSL"},{city:"Bergen",code:"BGO"},{city:"Stavanger",code:"SVG"},{city:"Copenhague",code:"CPH"},{city:"Estocolmo",code:"ARN"},{city:"Helsinki",code:"HEL"},{city:"Londres Gatwick",code:"LGW"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Miami",code:"MIA"},{city:"Boston",code:"BOS"},{city:"Bangkok",code:"BKK"},{city:"Phuket",code:"HKT"}]},
+{name:"Ryanair",iata:"FR",zone:1,status:"cond",note:"Acuerdo limitado, verificar vigencia",alliance:"—",cls:"Y",dests:[{city:"Dublín",code:"DUB"},{city:"Londres Stansted",code:"STN"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Roma Ciampino",code:"CIA"},{city:"Milán Bérgamo",code:"BGY"},{city:"Varsovia",code:"WAW"},{city:"Berlín",code:"BER"},{city:"Bruselas Charleroi",code:"CRL"},{city:"Ámsterdam",code:"AMS"},{city:"Lisboa",code:"LIS"},{city:"Sevilla",code:"SVQ"},{city:"Málaga",code:"AGP"},{city:"Palma",code:"PMI"},{city:"Ibiza",code:"IBZ"},{city:"Tenerife",code:"TFS"},{city:"Lanzarote",code:"ACE"},{city:"Fuerteventura",code:"FUE"},{city:"Alicante",code:"ALC"},{city:"Valencia",code:"VLC"},{city:"Atenas",code:"ATH"}]},
+{name:"Alitalia / ITA Airways",iata:"AZ",zone:1,status:"no",note:"Requiere empleado a bordo",alliance:"—",cls:"Y/C",dests:[{city:"Roma Fiumicino",code:"FCO"},{city:"Milán Linate",code:"LIN"},{city:"Milán Malpensa",code:"MXP"},{city:"Catania",code:"CTA"},{city:"Palermo",code:"PMO"},{city:"Nápoles",code:"NAP"},{city:"Nueva York",code:"JFK"},{city:"Miami",code:"MIA"},{city:"Los Ángeles",code:"LAX"},{city:"Tokyo",code:"NRT"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"}]},
+{name:"American Airlines",iata:"AA",zone:2,status:"yes",note:"",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Nueva York JFK",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Miami",code:"MIA"},{city:"Dallas",code:"DFW"},{city:"Chicago",code:"ORD"},{city:"Boston",code:"BOS"},{city:"Washington",code:"DCA"},{city:"San Francisco",code:"SFO"},{city:"Seattle",code:"SEA"},{city:"Phoenix",code:"PHX"},{city:"Atlanta",code:"ATL"},{city:"Denver",code:"DEN"},{city:"Houston",code:"IAH"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Bogotá",code:"BOG"},{city:"México DF",code:"MEX"},{city:"Cancún",code:"CUN"},{city:"Tokyo",code:"NRT"},{city:"Hong Kong",code:"HKG"},{city:"Shanghai",code:"PVG"}]},
+{name:"United Airlines",iata:"UA",zone:2,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Nueva York Newark",code:"EWR"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"San Francisco",code:"SFO"},{city:"Denver",code:"DEN"},{city:"Houston",code:"IAH"},{city:"Washington Dulles",code:"IAD"},{city:"Seattle",code:"SEA"},{city:"Miami",code:"MIA"},{city:"Boston",code:"BOS"},{city:"Atlanta",code:"ATL"},{city:"Dallas",code:"DFW"},{city:"Londres",code:"LHR"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"París",code:"CDG"},{city:"Madrid",code:"MAD"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Bogotá",code:"BOG"},{city:"México DF",code:"MEX"},{city:"Tokyo",code:"NRT"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Sydney",code:"SYD"}]},
+{name:"Delta Air Lines",iata:"DL",zone:2,status:"yes",note:"",alliance:"SkyTeam",cls:"Y/C/F",dests:[{city:"Atlanta",code:"ATL"},{city:"Nueva York JFK",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Seattle",code:"SEA"},{city:"Boston",code:"BOS"},{city:"Minneapolis",code:"MSP"},{city:"Detroit",code:"DTW"},{city:"Salt Lake City",code:"SLC"},{city:"Miami",code:"MIA"},{city:"Orlando",code:"MCO"},{city:"Chicago",code:"ORD"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Frankfurt",code:"FRA"},{city:"Roma",code:"FCO"},{city:"Madrid",code:"MAD"},{city:"São Paulo",code:"GRU"},{city:"Buenos Aires",code:"EZE"},{city:"México DF",code:"MEX"},{city:"Bogotá",code:"BOG"},{city:"Tokyo",code:"NRT"},{city:"Seoul",code:"ICN"},{city:"Shanghai",code:"PVG"},{city:"Sydney",code:"SYD"}]},
+{name:"Air Canada",iata:"AC",zone:2,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Toronto",code:"YYZ"},{city:"Montreal",code:"YUL"},{city:"Vancouver",code:"YVR"},{city:"Calgary",code:"YYC"},{city:"Ottawa",code:"YOW"},{city:"Edmonton",code:"YEG"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"Boston",code:"BOS"},{city:"Londres",code:"LHR"},{city:"Frankfurt",code:"FRA"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Dublín",code:"DUB"},{city:"Tokyo",code:"NRT"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Sydney",code:"SYD"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"México DF",code:"MEX"}]},
+{name:"Alaska Airlines",iata:"AS",zone:2,status:"yes",note:"",alliance:"Oneworld",cls:"Y/C",dests:[{city:"Seattle",code:"SEA"},{city:"Portland",code:"PDX"},{city:"San Francisco",code:"SFO"},{city:"Los Ángeles",code:"LAX"},{city:"Anchorage",code:"ANC"},{city:"Las Vegas",code:"LAS"},{city:"Phoenix",code:"PHX"},{city:"Denver",code:"DEN"},{city:"Chicago",code:"ORD"},{city:"Nueva York",code:"JFK"},{city:"Boston",code:"BOS"},{city:"Miami",code:"MIA"},{city:"Cancún",code:"CUN"},{city:"México DF",code:"MEX"},{city:"Puerto Vallarta",code:"PVR"},{city:"San José CR",code:"SJO"},{city:"Guadalajara",code:"GDL"}]},
+{name:"WestJet",iata:"WS",zone:2,status:"cond",note:"Sujeto a disponibilidad específica",alliance:"—",cls:"Y/C",dests:[{city:"Calgary",code:"YYC"},{city:"Vancouver",code:"YVR"},{city:"Toronto",code:"YYZ"},{city:"Edmonton",code:"YEG"},{city:"Winnipeg",code:"YWG"},{city:"Montreal",code:"YUL"},{city:"Ottawa",code:"YOW"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Las Vegas",code:"LAS"},{city:"Cancún",code:"CUN"},{city:"Jamaica",code:"MBJ"},{city:"Londres",code:"LGW"},{city:"Glasgow",code:"GLA"},{city:"Dublín",code:"DUB"}]},
+{name:"JetBlue",iata:"B6",zone:2,status:"cond",note:"Verificar vigencia del acuerdo",alliance:"—",cls:"Y/C",dests:[{city:"Nueva York JFK",code:"JFK"},{city:"Boston",code:"BOS"},{city:"Fort Lauderdale",code:"FLL"},{city:"Los Ángeles",code:"LAX"},{city:"Orlando",code:"MCO"},{city:"Washington",code:"IAD"},{city:"San Francisco",code:"SFO"},{city:"Cancún",code:"CUN"},{city:"Punta Cana",code:"PUJ"},{city:"La Habana",code:"HAV"},{city:"Santo Domingo",code:"SDQ"},{city:"San Juan",code:"SJU"},{city:"Londres Gatwick",code:"LGW"},{city:"Ámsterdam",code:"AMS"},{city:"París",code:"CDG"},{city:"Madrid",code:"MAD"},{city:"Lisboa",code:"LIS"}]},
+{name:"Aerolíneas Argentinas",iata:"AR",zone:3,status:"yes",note:"",alliance:"SkyTeam",cls:"Y/C",dests:[{city:"Buenos Aires Ezeiza",code:"EZE"},{city:"Buenos Aires Aeroparque",code:"AEP"},{city:"Córdoba",code:"COR"},{city:"Rosario",code:"ROS"},{city:"Mendoza",code:"MDZ"},{city:"Bariloche",code:"BRC"},{city:"Mar del Plata",code:"MDQ"},{city:"Salta",code:"SLA"},{city:"Tucumán",code:"TUC"},{city:"Neuquén",code:"NQN"},{city:"Madrid",code:"MAD"},{city:"Roma",code:"FCO"},{city:"París",code:"CDG"},{city:"Miami",code:"MIA"},{city:"Nueva York",code:"JFK"},{city:"Santiago",code:"SCL"},{city:"Montevideo",code:"MVD"},{city:"São Paulo",code:"GRU"},{city:"Río de Janeiro",code:"GIG"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Cancún",code:"CUN"},{city:"La Habana",code:"HAV"},{city:"Caracas",code:"CCS"},{city:"Asunción",code:"ASU"},{city:"Sydney",code:"SYD"}]},
+{name:"LATAM Airlines",iata:"LA",zone:3,status:"yes",note:"",alliance:"Oneworld",cls:"Y/C",dests:[{city:"Santiago",code:"SCL"},{city:"Lima",code:"LIM"},{city:"Bogotá",code:"BOG"},{city:"São Paulo",code:"GRU"},{city:"Río de Janeiro",code:"GIG"},{city:"Buenos Aires",code:"EZE"},{city:"Montevideo",code:"MVD"},{city:"Asunción",code:"ASU"},{city:"La Paz",code:"LPB"},{city:"Santa Cruz",code:"VVI"},{city:"Quito",code:"UIO"},{city:"Guayaquil",code:"GYE"},{city:"Medellín",code:"MDE"},{city:"Caracas",code:"CCS"},{city:"Madrid",code:"MAD"},{city:"Miami",code:"MIA"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Sydney",code:"SYD"},{city:"Auckland",code:"AKL"},{city:"Ciudad de México",code:"MEX"},{city:"Cancún",code:"CUN"}]},
+{name:"Avianca",iata:"AV",zone:3,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Bogotá",code:"BOG"},{city:"Medellín",code:"MDE"},{city:"Cali",code:"CLO"},{city:"Cartagena",code:"CTG"},{city:"Barranquilla",code:"BAQ"},{city:"Lima",code:"LIM"},{city:"Quito",code:"UIO"},{city:"Buenos Aires",code:"EZE"},{city:"Santiago",code:"SCL"},{city:"Caracas",code:"CCS"},{city:"La Paz",code:"LPB"},{city:"São Paulo",code:"GRU"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Miami",code:"MIA"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Washington",code:"IAD"},{city:"Ciudad de México",code:"MEX"},{city:"Cancún",code:"CUN"},{city:"San José CR",code:"SJO"},{city:"San Salvador",code:"SAL"},{city:"Guatemala",code:"GUA"},{city:"San Juan",code:"SJU"},{city:"Toronto",code:"YYZ"}]},
+{name:"Copa Airlines",iata:"CM",zone:3,status:"yes",note:"Hub Ciudad de Panamá",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Panamá",code:"PTY"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Santiago",code:"SCL"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Río de Janeiro",code:"GIG"},{city:"Montevideo",code:"MVD"},{city:"Quito",code:"UIO"},{city:"Guayaquil",code:"GYE"},{city:"Caracas",code:"CCS"},{city:"La Paz",code:"LPB"},{city:"Santa Cruz",code:"VVI"},{city:"Asunción",code:"ASU"},{city:"Ciudad de México",code:"MEX"},{city:"Cancún",code:"CUN"},{city:"San José CR",code:"SJO"},{city:"San Salvador",code:"SAL"},{city:"Guatemala",code:"GUA"},{city:"Tegucigalpa",code:"TGU"},{city:"Managua",code:"MGA"},{city:"La Habana",code:"HAV"},{city:"Santo Domingo",code:"SDQ"},{city:"San Juan",code:"SJU"},{city:"Miami",code:"MIA"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Washington",code:"IAD"},{city:"Toronto",code:"YYZ"},{city:"Madrid",code:"MAD"}]},
+{name:"SKY Airline",iata:"H2",zone:3,status:"yes",note:"",alliance:"—",cls:"Y",dests:[{city:"Santiago",code:"SCL"},{city:"Iquique",code:"IQQ"},{city:"Antofagasta",code:"ANF"},{city:"La Serena",code:"LSC"},{city:"Concepción",code:"CCP"},{city:"Puerto Montt",code:"PMC"},{city:"Punta Arenas",code:"PUQ"},{city:"Lima",code:"LIM"},{city:"Bogotá",code:"BOG"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Santa Cruz",code:"VVI"}]},
+{name:"Azul Brazilian Airlines",iata:"AD",zone:3,status:"cond",note:"Verificar acuerdo vigente",alliance:"—",cls:"Y/C",dests:[{city:"Campinas",code:"VCP"},{city:"São Paulo",code:"GRU"},{city:"Río de Janeiro",code:"GIG"},{city:"Belo Horizonte",code:"CNF"},{city:"Recife",code:"REC"},{city:"Fortaleza",code:"FOR"},{city:"Salvador",code:"SSA"},{city:"Belém",code:"BEL"},{city:"Manaus",code:"MAO"},{city:"Curitiba",code:"CWB"},{city:"Porto Alegre",code:"POA"},{city:"Orlando",code:"MCO"},{city:"Fort Lauderdale",code:"FLL"},{city:"Lisboa",code:"LIS"},{city:"Porto",code:"OPO"}]},
+{name:"GOL Linhas Aéreas",iata:"G3",zone:3,status:"cond",note:"Acuerdo limitado",alliance:"—",cls:"Y",dests:[{city:"São Paulo Guarulhos",code:"GRU"},{city:"São Paulo Congonhas",code:"CGH"},{city:"Río de Janeiro",code:"GIG"},{city:"Brasilia",code:"BSB"},{city:"Belo Horizonte",code:"CNF"},{city:"Salvador",code:"SSA"},{city:"Recife",code:"REC"},{city:"Fortaleza",code:"FOR"},{city:"Porto Alegre",code:"POA"},{city:"Curitiba",code:"CWB"},{city:"Buenos Aires",code:"EZE"},{city:"Santiago",code:"SCL"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Cancún",code:"CUN"},{city:"Orlando",code:"MCO"}]},
+{name:"Emirates",iata:"EK",zone:4,status:"yes",note:"",alliance:"—",cls:"Y/C/F",dests:[{city:"Dubai",code:"DXB"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Roma",code:"FCO"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Milán",code:"MXP"},{city:"Zúrich",code:"ZRH"},{city:"Ginebra",code:"GVA"},{city:"Moscú",code:"SVO"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"San Francisco",code:"SFO"},{city:"Houston",code:"IAH"},{city:"Dallas",code:"DFW"},{city:"Miami",code:"MIA"},{city:"Toronto",code:"YYZ"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Santiago",code:"SCL"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Seoul",code:"ICN"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Nairobi",code:"NBO"},{city:"Johannesburgo",code:"JNB"},{city:"El Cairo",code:"CAI"},{city:"Casablanca",code:"CMN"},{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Auckland",code:"AKL"}]},
+{name:"Qatar Airways",iata:"QR",zone:4,status:"yes",note:"Oneworld",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Doha",code:"DOH"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Zúrich",code:"ZRH"},{city:"Ginebra",code:"GVA"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"Houston",code:"IAH"},{city:"Dallas",code:"DFW"},{city:"Washington",code:"IAD"},{city:"Boston",code:"BOS"},{city:"Buenos Aires",code:"EZE"},{city:"São Paulo",code:"GRU"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Santiago",code:"SCL"},{city:"Tokyo",code:"NRT"},{city:"Seoul",code:"ICN"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Nairobi",code:"NBO"},{city:"Johannesburgo",code:"JNB"},{city:"Lagos",code:"LOS"},{city:"El Cairo",code:"CAI"},{city:"Casablanca",code:"CMN"},{city:"Sydney",code:"SYD"},{city:"Auckland",code:"AKL"},{city:"Melbourne",code:"MEL"}]},
+{name:"Turkish Airlines",iata:"TK",zone:4,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Estambul",code:"IST"},{city:"Ankara",code:"ESB"},{city:"Izmir",code:"ADB"},{city:"Antalya",code:"AYT"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Chicago",code:"ORD"},{city:"Miami",code:"MIA"},{city:"Houston",code:"IAH"},{city:"Boston",code:"BOS"},{city:"Toronto",code:"YYZ"},{city:"São Paulo",code:"GRU"},{city:"Buenos Aires",code:"EZE"},{city:"Bogotá",code:"BOG"},{city:"Lima",code:"LIM"},{city:"Tokyo",code:"NRT"},{city:"Seoul",code:"ICN"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Nairobi",code:"NBO"},{city:"Johannesburgo",code:"JNB"},{city:"Lagos",code:"LOS"},{city:"El Cairo",code:"CAI"},{city:"Casablanca",code:"CMN"},{city:"Accra",code:"ACC"},{city:"Dakar",code:"DSS"},{city:"Sydney",code:"SYD"}]},
+{name:"Ethiopian Airlines",iata:"ET",zone:4,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Addis Abeba",code:"ADD"},{city:"Nairobi",code:"NBO"},{city:"Lagos",code:"LOS"},{city:"Johannesburgo",code:"JNB"},{city:"El Cairo",code:"CAI"},{city:"Casablanca",code:"CMN"},{city:"Accra",code:"ACC"},{city:"Dakar",code:"DSS"},{city:"Kigali",code:"KGL"},{city:"Dar es Salaam",code:"DAR"},{city:"Entebbe",code:"EBB"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Roma",code:"FCO"},{city:"Bruselas",code:"BRU"},{city:"Ámsterdam",code:"AMS"},{city:"Dubai",code:"DXB"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"Washington",code:"IAD"},{city:"Chicago",code:"ORD"},{city:"Toronto",code:"YYZ"},{city:"São Paulo",code:"GRU"},{city:"Buenos Aires",code:"EZE"},{city:"Bogotá",code:"BOG"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Bangkok",code:"BKK"},{city:"Singapur",code:"SIN"},{city:"Delhi",code:"DEL"},{city:"Mumbai",code:"BOM"}]},
+{name:"Royal Air Maroc",iata:"AT",zone:4,status:"yes",note:"",alliance:"Oneworld",cls:"Y/C",dests:[{city:"Casablanca",code:"CMN"},{city:"Marrakech",code:"RAK"},{city:"Agadir",code:"AGA"},{city:"Fez",code:"FEZ"},{city:"Tánger",code:"TNG"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"París",code:"CDG"},{city:"Lyon",code:"LYS"},{city:"Marsella",code:"MRS"},{city:"Londres",code:"LHR"},{city:"Ámsterdam",code:"AMS"},{city:"Frankfurt",code:"FRA"},{city:"Bruselas",code:"BRU"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Ginebra",code:"GVA"},{city:"Zúrich",code:"ZRH"},{city:"Nueva York",code:"JFK"},{city:"Washington",code:"IAD"},{city:"Montreal",code:"YUL"},{city:"São Paulo",code:"GRU"},{city:"Buenos Aires",code:"EZE"},{city:"Dakar",code:"DSS"},{city:"Accra",code:"ACC"},{city:"Lagos",code:"LOS"},{city:"Nairobi",code:"NBO"},{city:"Dubai",code:"DXB"}]},
+{name:"Kenya Airways",iata:"KQ",zone:4,status:"cond",note:"Verificar acuerdo bilateral",alliance:"SkyTeam",cls:"Y/C",dests:[{city:"Nairobi",code:"NBO"},{city:"Lagos",code:"LOS"},{city:"Johannesburgo",code:"JNB"},{city:"Accra",code:"ACC"},{city:"Dakar",code:"DSS"},{city:"Kigali",code:"KGL"},{city:"Dar es Salaam",code:"DAR"},{city:"Entebbe",code:"EBB"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Dubai",code:"DXB"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Guangzhou",code:"CAN"}]},
+{name:"Singapore Airlines",iata:"SQ",zone:5,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Singapur",code:"SIN"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Zúrich",code:"ZRH"},{city:"Milán",code:"MXP"},{city:"Barcelona",code:"BCN"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Houston",code:"IAH"},{city:"Chicago",code:"ORD"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Seoul",code:"ICN"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Bangkok",code:"BKK"},{city:"Kuala Lumpur",code:"KUL"},{city:"Jakarta",code:"CGK"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Auckland",code:"AKL"},{city:"Johannesburgo",code:"JNB"},{city:"Dubai",code:"DXB"}]},
+{name:"Cathay Pacific",iata:"CX",zone:5,status:"yes",note:"Oneworld",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Hong Kong",code:"HKG"},{city:"Londres",code:"LHR"},{city:"Ámsterdam",code:"AMS"},{city:"Frankfurt",code:"FRA"},{city:"París",code:"CDG"},{city:"Madrid",code:"MAD"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Zúrich",code:"ZRH"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Chicago",code:"ORD"},{city:"Boston",code:"BOS"},{city:"Vancouver",code:"YVR"},{city:"Toronto",code:"YYZ"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Seoul",code:"ICN"},{city:"Shanghai",code:"PVG"},{city:"Pekín",code:"PEK"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Kuala Lumpur",code:"KUL"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Auckland",code:"AKL"},{city:"Johannesburgo",code:"JNB"}]},
+{name:"Japan Airlines",iata:"JL",zone:5,status:"yes",note:"Oneworld",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Tokyo Narita",code:"NRT"},{city:"Tokyo Haneda",code:"HND"},{city:"Osaka",code:"KIX"},{city:"Nagoya",code:"NGO"},{city:"Sapporo",code:"CTS"},{city:"Fukuoka",code:"FUK"},{city:"Okinawa",code:"OKA"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Chicago",code:"ORD"},{city:"Boston",code:"BOS"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Helsinki",code:"HEL"},{city:"Seoul",code:"ICN"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Delhi",code:"DEL"},{city:"Kuala Lumpur",code:"KUL"},{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Auckland",code:"AKL"},{city:"Honolulú",code:"HNL"},{city:"Guam",code:"GUM"}]},
+{name:"Korean Air",iata:"KE",zone:5,status:"yes",note:"",alliance:"SkyTeam",cls:"Y/C/F",dests:[{city:"Seoul Incheon",code:"ICN"},{city:"Busan",code:"PUS"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Chicago",code:"ORD"},{city:"Atlanta",code:"ATL"},{city:"Dallas",code:"DFW"},{city:"Seattle",code:"SEA"},{city:"Vancouver",code:"YVR"},{city:"Toronto",code:"YYZ"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Frankfurt",code:"FRA"},{city:"Ámsterdam",code:"AMS"},{city:"Roma",code:"FCO"},{city:"Madrid",code:"MAD"},{city:"Barcelona",code:"BCN"},{city:"Milán",code:"MXP"},{city:"Zúrich",code:"ZRH"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Shanghai",code:"PVG"},{city:"Pekín",code:"PEK"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Kuala Lumpur",code:"KUL"},{city:"Jakarta",code:"CGK"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Sydney",code:"SYD"},{city:"Auckland",code:"AKL"},{city:"Honolulú",code:"HNL"}]},
+{name:"Malaysia Airlines",iata:"MH",zone:5,status:"yes",note:"Oneworld",alliance:"Oneworld",cls:"Y/C",dests:[{city:"Kuala Lumpur",code:"KUL"},{city:"Penang",code:"PEN"},{city:"Kota Kinabalu",code:"BKI"},{city:"Kuching",code:"KCH"},{city:"Londres",code:"LHR"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Frankfurt",code:"FRA"},{city:"Roma",code:"FCO"},{city:"Milán",code:"MXP"},{city:"Melbourne",code:"MEL"},{city:"Sydney",code:"SYD"},{city:"Auckland",code:"AKL"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Seoul",code:"ICN"},{city:"Pekín",code:"PEK"},{city:"Shanghai",code:"PVG"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Jakarta",code:"CGK"},{city:"Manila",code:"MNL"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Dubai",code:"DXB"}]},
+{name:"ANA All Nippon",iata:"NH",zone:5,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C/F",dests:[{city:"Tokyo Narita",code:"NRT"},{city:"Tokyo Haneda",code:"HND"},{city:"Osaka",code:"KIX"},{city:"Nagoya",code:"NGO"},{city:"Sapporo",code:"CTS"},{city:"Fukuoka",code:"FUK"},{city:"Nueva York",code:"JFK"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Chicago",code:"ORD"},{city:"Washington",code:"IAD"},{city:"Houston",code:"IAH"},{city:"Londres",code:"LHR"},{city:"Frankfurt",code:"FRA"},{city:"París",code:"CDG"},{city:"Ámsterdam",code:"AMS"},{city:"Bruselas",code:"BRU"},{city:"Múnich",code:"MUC"},{city:"Zúrich",code:"ZRH"},{city:"Milán",code:"MXP"},{city:"Viena",code:"VIE"},{city:"Seoul",code:"ICN"},{city:"Shanghai",code:"PVG"},{city:"Pekín",code:"PEK"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Kuala Lumpur",code:"KUL"},{city:"Jakarta",code:"CGK"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Honolulú",code:"HNL"},{city:"Guam",code:"GUM"}]},
+{name:"Qantas",iata:"QF",zone:6,status:"yes",note:"Oneworld",alliance:"Oneworld",cls:"Y/C/F",dests:[{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Brisbane",code:"BNE"},{city:"Perth",code:"PER"},{city:"Adelaide",code:"ADL"},{city:"Auckland",code:"AKL"},{city:"Christchurch",code:"CHC"},{city:"Londres",code:"LHR"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Dallas",code:"DFW"},{city:"Nueva York",code:"JFK"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Seoul",code:"ICN"},{city:"Shanghai",code:"PVG"},{city:"Pekín",code:"PEK"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"},{city:"Bangkok",code:"BKK"},{city:"Kuala Lumpur",code:"KUL"},{city:"Jakarta",code:"CGK"},{city:"Manila",code:"MNL"},{city:"Mumbai",code:"BOM"},{city:"Delhi",code:"DEL"},{city:"Dubai",code:"DXB"},{city:"Johannesburgo",code:"JNB"},{city:"Honolulú",code:"HNL"},{city:"Vancouver",code:"YVR"},{city:"Buenos Aires",code:"EZE"},{city:"Santiago",code:"SCL"}]},
+{name:"Air New Zealand",iata:"NZ",zone:6,status:"yes",note:"",alliance:"Star Alliance",cls:"Y/C",dests:[{city:"Auckland",code:"AKL"},{city:"Wellington",code:"WLG"},{city:"Christchurch",code:"CHC"},{city:"Queenstown",code:"ZQN"},{city:"Dunedin",code:"DUD"},{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Brisbane",code:"BNE"},{city:"Perth",code:"PER"},{city:"Los Ángeles",code:"LAX"},{city:"San Francisco",code:"SFO"},{city:"Londres",code:"LHR"},{city:"Singapur",code:"SIN"},{city:"Tokyo",code:"NRT"},{city:"Osaka",code:"KIX"},{city:"Hong Kong",code:"HKG"},{city:"Shanghai",code:"PVG"},{city:"Honolulú",code:"HNL"},{city:"Papeete",code:"PPT"},{city:"Buenos Aires",code:"EZE"},{city:"Santiago",code:"SCL"}]},
+{name:"Virgin Australia",iata:"VA",zone:6,status:"cond",note:"Verificar acuerdo bilateral",alliance:"—",cls:"Y/C",dests:[{city:"Sydney",code:"SYD"},{city:"Melbourne",code:"MEL"},{city:"Brisbane",code:"BNE"},{city:"Perth",code:"PER"},{city:"Adelaide",code:"ADL"},{city:"Gold Coast",code:"OOL"},{city:"Cairns",code:"CNS"},{city:"Auckland",code:"AKL"},{city:"Nadi",code:"NAN"},{city:"Denpasar",code:"DPS"},{city:"Los Ángeles",code:"LAX"},{city:"Tokyo",code:"HND"},{city:"Hong Kong",code:"HKG"},{city:"Singapur",code:"SIN"}]},
 ];
 
-let activeZone = "all";
-let activeStatus = "all";
-let searchVal = "";
+let activeZone="all",activeStatus="all",airlineQ="",destQ="",destActive="";
 
-function getBadge(s) {
-  if (s === "yes") return `<span class="badge badge-ok"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Sin acompañante</span>`;
-  if (s === "cond") return `<span class="badge badge-cond"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Con condiciones</span>`;
-  return `<span class="badge badge-no"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Requiere empleado</span>`;
+function badge(s){
+  const icons={yes:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',cond:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',no:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'};
+  const labels={yes:"Sin acompañante",cond:"Con condiciones",no:"Requiere empleado"};
+  const cls={yes:"badge-ok",cond:"badge-cond",no:"badge-no"};
+  return `<span class="badge ${cls[s]}">${icons[s]}${labels[s]}</span>`;
 }
 
-function render() {
-  const q = searchVal.toLowerCase();
-  const filtered = DATA.filter(a => {
-    const mZ = activeZone === "all" || String(a.zone) === activeZone;
-    const mS = activeStatus === "all" || a.status === activeStatus;
-    const mQ = !q || a.name.toLowerCase().includes(q) || a.iata.toLowerCase().includes(q);
-    return mZ && mS && mQ;
+function destMatch(a,q){return q&&a.dests.some(d=>d.city.toLowerCase().includes(q)||d.code.toLowerCase().includes(q));}
+
+function render(){
+  const aq=airlineQ.toLowerCase(),dq=destActive.toLowerCase();
+  const pool=DATA.filter(a=>{
+    return (activeZone==="all"||String(a.zone)===activeZone)&&
+           (activeStatus==="all"||a.status===activeStatus)&&
+           (!aq||a.name.toLowerCase().includes(aq)||a.iata.toLowerCase().includes(aq))&&
+           (!dq||destMatch(a,dq));
   });
+  document.getElementById("s-total").textContent=pool.length;
+  document.getElementById("s-ok").textContent=pool.filter(a=>a.status==="yes").length;
+  document.getElementById("s-cond").textContent=pool.filter(a=>a.status==="cond").length;
+  document.getElementById("s-no").textContent=pool.filter(a=>a.status==="no").length;
+  const fc=DATA.filter(a=>(activeStatus==="all"||a.status===activeStatus)&&(!aq||a.name.toLowerCase().includes(aq)||a.iata.toLowerCase().includes(aq))&&(!dq||destMatch(a,dq)));
+  document.getElementById("cnt-all").textContent=fc.length;
+  [1,2,3,4,5,6].forEach(z=>{const el=document.getElementById("cnt-"+z);if(el)el.textContent=fc.filter(a=>a.zone===z).length;});
+  document.getElementById("dest-hint").textContent=dq?`Aerolíneas que vuelan a "${destActive}"`:""
+  const tw=document.getElementById("dest-tag-wrap");
+  if(dq){tw.style.display="inline-flex";tw.innerHTML=`<span class="dest-tag">${destActive} <button onclick="clearDest()" aria-label="Quitar filtro">×</button></span>`;}else tw.style.display="none";
+  const byZ={};pool.forEach(a=>{if(!byZ[a.zone])byZ[a.zone]=[];byZ[a.zone].push(a);});
+  const main=document.getElementById("main");
+  if(!pool.length){main.innerHTML='<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>No se encontraron aerolíneas con estos filtros.</p></div>';return;}
+  main.innerHTML=Object.keys(byZ).sort((a,b)=>a-b).map(z=>{
+    const zn=parseInt(z),info=ZONES[zn],rows=byZ[z];
+    return`<div class="zone-section"><div class="zone-title"><span class="zone-num" style="background:${info.bg};color:${info.color}">Zona ${z}</span><h2>${info.name}</h2><span class="zcnt">${rows.length} aerolínea${rows.length!==1?"s":""}</span></div><div class="table-wrap"><table><thead><tr><th>IATA</th><th>Aerolínea</th><th>Beneficiario</th><th>Destinos</th><th>Notas</th></tr></thead><tbody>${rows.map(a=>{
+      const mc=dq?a.dests.filter(d=>d.city.toLowerCase().includes(dq)||d.code.toLowerCase().includes(dq)).length:0;
+      const hl=dq&&mc>0;
+      return`<tr class="${hl?"highlighted":""}" onclick="openPanel('${a.iata}')" title="Ver destinos de ${a.name}"><td class="td-iata">${a.iata}</td><td class="td-name">${a.name}</td><td class="td-status">${badge(a.status)}</td><td class="td-dest"><div class="dest-count">${hl?`<span class="badge badge-dest">${mc} coincidencia${mc!==1?"s":""}</span>`:`<strong>${a.dests.length}</strong><span>destinos</span>`}</div><div class="click-hint">Ver detalle →</div></td><td class="td-note">${a.note||'<span style="color:#C8C5BA">—</span>'}</td></tr>`;
+    }).join("")}</tbody></table></div></div>`;
+  }).join("")+`<div class="legend"><div class="legend-item">${badge("yes")} Beneficiario viaja solo</div><div class="legend-item">${badge("cond")} Restricciones específicas</div><div class="legend-item">${badge("no")} Empleado debe estar a bordo</div><span style="margin-left:auto;font-size:12px;color:var(--text-muted)">Clic en una fila → ver destinos</span></div>`;
+}
 
-  // Stats
-  document.getElementById("s-total").textContent = filtered.length;
-  document.getElementById("s-ok").textContent = filtered.filter(a=>a.status==="yes").length;
-  document.getElementById("s-cond").textContent = filtered.filter(a=>a.status==="cond").length;
-  document.getElementById("s-no").textContent = filtered.filter(a=>a.status==="no").length;
-
-  // Zone counts (filtered by status+search, regardless of zone filter)
-  const forCounts = DATA.filter(a => {
-    const mS = activeStatus === "all" || a.status === activeStatus;
-    const mQ = !q || a.name.toLowerCase().includes(q) || a.iata.toLowerCase().includes(q);
-    return mS && mQ;
-  });
-  document.getElementById("cnt-all").textContent = forCounts.length;
-  [1,2,3,4,5,6].forEach(z => {
-    const el = document.getElementById("cnt-"+z);
-    if (el) el.textContent = forCounts.filter(a=>a.zone===z).length;
-  });
-
-  const main = document.getElementById("main");
-  if (filtered.length === 0) {
-    main.innerHTML = `<div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>No se encontraron aerolíneas con estos filtros.</p></div>`;
-    return;
-  }
-
-  const byZone = {};
-  filtered.forEach(a => { if (!byZone[a.zone]) byZone[a.zone]=[]; byZone[a.zone].push(a); });
-
-  const zoneColors = { 1:"#185FA5",2:"#1A6B3C",3:"#8A5C00",4:"#534AB7",5:"#993C1D",6:"#993556" };
-  const zoneBg    = { 1:"#E6F1FB",2:"#EAF3DE",3:"#FEF6E4",4:"#EEEDFE",5:"#FAECE7",6:"#FBEAF0" };
-
-  main.innerHTML = Object.keys(byZone).sort((a,b)=>a-b).map(z => {
-    const zn = parseInt(z);
-    const info = ZONES[zn];
-    const rows = byZone[z];
-    return `
-      <div class="zone-section">
-        <div class="zone-title">
-          <span class="zone-num" style="background:${zoneBg[zn]};color:${zoneColors[zn]};font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;">Zona ${z}</span>
-          <h2>${info.name}</h2>
-          <span class="zone-airline-count">${rows.length} aerolínea${rows.length!==1?'s':''}</span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>IATA</th>
-                <th>Aerolínea</th>
-                <th>Estado beneficiario</th>
-                <th>Notas</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.map(a=>`
-                <tr>
-                  <td class="td-iata">${a.iata}</td>
-                  <td class="td-name">${a.name}</td>
-                  <td class="td-status">${getBadge(a.status)}</td>
-                  <td class="td-note">${a.note || '<span style="color:#C8C5BA">—</span>'}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
+function openPanel(iata){
+  const a=DATA.find(x=>x.iata===iata);if(!a)return;
+  const dq=destActive.toLowerCase();
+  document.getElementById("p-iata").textContent=`${a.iata} · Zona ${a.zone} · ${a.alliance}`;
+  document.getElementById("p-name").textContent=a.name;
+  const mc=dq?a.dests.filter(d=>d.city.toLowerCase().includes(dq)||d.code.toLowerCase().includes(dq)).length:0;
+  document.getElementById("panel-body").innerHTML=`
+    <div class="panel-section">
+      <div class="panel-section-title">Acuerdo ZED</div>
+      <div class="info-block">
+        <div class="info-row"><span class="info-key">Estado</span><span class="info-val">${badge(a.status)}</span></div>
+        <div class="info-row"><span class="info-key">Alianza</span><span class="info-val">${a.alliance}</span></div>
+        <div class="info-row"><span class="info-key">Clases ZED</span><span class="info-val" style="font-family:var(--mono)">${a.cls}</span></div>
+        ${a.note?`<div class="info-row"><span class="info-key">Nota</span><span class="info-val" style="font-weight:400;color:var(--text-secondary)">${a.note}</span></div>`:""}
       </div>
-    `;
-  }).join("") + `
-    <div class="legend">
-      <div class="legend-item"><span class="badge badge-ok" style="font-size:11px">Sin acompañante</span> El beneficiario puede viajar solo en vuelos ZED</div>
-      <div class="legend-item"><span class="badge badge-cond" style="font-size:11px">Con condiciones</span> Acuerdo vigente pero con restricciones específicas</div>
-      <div class="legend-item"><span class="badge badge-no" style="font-size:11px">Requiere empleado</span> El tripulante debe estar a bordo</div>
     </div>
-  `;
+    <div class="panel-section">
+      <div class="panel-section-title">${a.dests.length} destinos ZED${dq&&mc?` · ${mc} coinciden con "${destActive}"`:""}</div>
+      <div class="dest-grid">${a.dests.map(d=>{const m=dq&&(d.city.toLowerCase().includes(dq)||d.code.toLowerCase().includes(dq));return`<div class="dest-card ${m?"match":""}"><div class="dest-city">${d.city}</div><div class="dest-code">${d.code}</div></div>`;}).join("")}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Aviso</div>
+      <div class="panel-note-sm">Destinos habituales donde suele aplicar el acuerdo ZED. Confirmar disponibilidad en el ZED/MIBA Directory de IATA o con beneficios de Vueling antes de emitir.</div>
+    </div>`;
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("panel").classList.add("open");
 }
 
-document.getElementById("search").addEventListener("input", e => { searchVal = e.target.value; render(); });
-
-document.querySelectorAll(".zone-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".zone-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    activeZone = btn.dataset.zone;
-    render();
-  });
-});
-
-document.querySelectorAll(".status-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".status-btn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    activeStatus = btn.dataset.status;
-    render();
-  });
-});
-
+window.clearDest=function(){destActive="";destQ="";document.getElementById("search-dest").value="";render();};
+document.getElementById("panel-close").addEventListener("click",()=>{document.getElementById("overlay").classList.remove("open");document.getElementById("panel").classList.remove("open");});
+document.getElementById("overlay").addEventListener("click",()=>{document.getElementById("overlay").classList.remove("open");document.getElementById("panel").classList.remove("open");});
+document.getElementById("search-airline").addEventListener("input",e=>{airlineQ=e.target.value;render();});
+let dt;
+document.getElementById("search-dest").addEventListener("input",e=>{destQ=e.target.value;clearTimeout(dt);if(destQ.length>=2){dt=setTimeout(()=>{destActive=destQ;render();},380);}else if(!destQ){destActive="";render();}});
+document.getElementById("search-dest").addEventListener("keydown",e=>{if(e.key==="Enter"){clearTimeout(dt);destActive=destQ;render();}});
+document.querySelectorAll(".sidebar-btn[data-zone]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".sidebar-btn[data-zone]").forEach(x=>x.classList.remove("active"));b.classList.add("active");activeZone=b.dataset.zone;render();}));
+document.querySelectorAll(".sidebar-btn[data-status]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".sidebar-btn[data-status]").forEach(x=>x.classList.remove("active"));b.classList.add("active");activeStatus=b.dataset.status;render();}));
 render();
 </script>
 </body>
