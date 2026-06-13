@@ -147,6 +147,10 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
   <div class="logo">ZED</div>
   <h1>ZED Vueling · Beneficiarios</h1>
   <span class="ref">Verificado junio 2026</span>
+  <button onclick="openSuggest()" style="margin-left:12px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--sans);font-size:12px;cursor:pointer;color:var(--text-secondary);display:flex;align-items:center;gap:6px;transition:all .15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Sugerí una aerolínea
+  </button>
 </header>
 <div class="verified-bar">
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -161,11 +165,25 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb{background:v
 
 <!-- TAB 1: Viajan solas -->
 <div class="tab-content active" id="tab-solo">
-  <div class="solo-header">
-    <h2>Aerolíneas verificadas — beneficiaria viaja sola</h2>
-    <span class="solo-count" id="solo-count">0 aerolíneas</span>
+  <div style="display:flex;">
+    <aside style="width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:20px 16px;position:sticky;top:83px;height:calc(100vh - 83px);overflow-y:auto;display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;display:block;margin-bottom:8px;">Zona IATA</span>
+      <button class="sidebar-btn active" data-solo-zone="all"><span class="dot" style="background:#9E9C96"></span>Todas<span class="cnt" id="scnt-all">—</span></button>
+      <button class="sidebar-btn" data-solo-zone="1"><span class="dot" style="background:#185FA5"></span>Zona 1 · Europa<span class="cnt" id="scnt-1">—</span></button>
+      <button class="sidebar-btn" data-solo-zone="2"><span class="dot" style="background:#1A6B3C"></span>Zona 2 · N. América<span class="cnt" id="scnt-2">—</span></button>
+      <button class="sidebar-btn" data-solo-zone="3"><span class="dot" style="background:#8A5C00"></span>Zona 3 · Latinoamérica<span class="cnt" id="scnt-3">—</span></button>
+      <button class="sidebar-btn" data-solo-zone="4"><span class="dot" style="background:#534AB7"></span>Zona 4 · M. Oriente / África<span class="cnt" id="scnt-4">—</span></button>
+      <button class="sidebar-btn" data-solo-zone="5"><span class="dot" style="background:#993C1D"></span>Zona 5 · Asia / Pacífico<span class="cnt" id="scnt-5">—</span></button>
+      <button class="sidebar-btn" data-solo-zone="6"><span class="dot" style="background:#993556"></span>Zona 6 · Oceanía<span class="cnt" id="scnt-6">—</span></button>
+    </aside>
+    <div style="flex:1;min-width:0;">
+      <div class="solo-header">
+        <h2>Aerolíneas verificadas — beneficiaria viaja sola</h2>
+        <span class="solo-count" id="solo-count">0 aerolíneas</span>
+      </div>
+      <div class="solo-grid" id="solo-grid"></div>
+    </div>
   </div>
-  <div class="solo-grid" id="solo-grid"></div>
 </div>
 
 <!-- TAB 2: Buscar ruta -->
@@ -377,11 +395,14 @@ document.getElementById('overlay').addEventListener('click',closePanel);
 function closePanel(){document.getElementById('overlay').classList.remove('open');document.getElementById('panel').classList.remove('open');}
 
 // ── TAB 1: Solo grid ─────────────────────────────────────────────────
+let soloZone='all';
 function renderSolo(){
-  const grid=document.getElementById('solo-grid');
   const zoneColors={1:'#185FA5',2:'#1A6B3C',3:'#8A5C00',4:'#534AB7',5:'#993C1D',6:'#993556'};
-  document.getElementById('solo-count').textContent=DATA.length+' aerolíneas';
-  grid.innerHTML=DATA.map(a=>`
+  const pool=DATA.filter(a=>soloZone==='all'||String(a.zone)===soloZone);
+  document.getElementById('solo-count').textContent=pool.length+' aerol\u00ednea'+(pool.length!==1?'s':'');
+  document.getElementById('scnt-all').textContent=DATA.length;
+  [1,2,3,4,5,6].forEach(z=>{const el=document.getElementById('scnt-'+z);if(el)el.textContent=DATA.filter(a=>a.zone===z).length;});
+  document.getElementById('solo-grid').innerHTML=pool.map(a=>`
     <div class="solo-card" onclick="openPanel('${a.iata}')">
       <div class="solo-card-iata">${a.iata}</div>
       <div class="solo-card-name">${a.name}</div>
@@ -389,6 +410,10 @@ function renderSolo(){
       ${a.dests?`<div class="solo-card-dests">${a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0)} destinos</div>`:''}
     </div>`).join('');
 }
+document.querySelectorAll('.sidebar-btn[data-solo-zone]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.sidebar-btn[data-solo-zone]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');soloZone=b.dataset.soloZone;renderSolo();
+}));
 
 // ── TAB 2: Route finder ───────────────────────────────────────────────
 let routeMode='from';
@@ -404,9 +429,24 @@ function renderRouteInputs(){
   } else {
     area.innerHTML=`<div class="route-inputs">
       <label>Origen</label>${airportSearchHTML('origin')}
-      <span style="color:var(--text-muted);font-size:18px">→</span>
+      <button id="swap-btn" title="Intercambiar origen y destino" style="flex-shrink:0;border:1px solid var(--border);background:var(--surface);border-radius:6px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all .15s;" onmouseover="this.style.background='var(--surface-2)';this.style.color='var(--accent)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--text-secondary)'">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+      </button>
       <label>Destino</label>${airportSearchHTML('dest')}
     </div>`;
+    document.getElementById('swap-btn').addEventListener('click',()=>{
+      const tmp=selectedOrigin;
+      selectedOrigin=selectedDest;
+      selectedDest=tmp;
+      const iO=document.getElementById('input-origin');
+      const iD=document.getElementById('input-dest');
+      if(iO&&iD){
+        const tmpVal=iO.value;
+        iO.value=iD.value;
+        iD.value=tmpVal;
+      }
+      if(selectedOrigin||selectedDest) runRouteSearch();
+    });
   }
   attachDropdowns();
 }
@@ -559,6 +599,67 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
 renderSolo();
 renderRouteInputs();
 renderAll();
+</script>
+<!-- Suggest modal -->
+<div id="suggest-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,25,23,.5);z-index:400;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:12px;border:1px solid var(--border);width:100%;max-width:440px;margin:20px;overflow:hidden;">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--text-primary)">Sugerí una aerolínea</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">¿Encontraste una que permite viajar sola? Avisanos.</div>
+      </div>
+      <button onclick="closeSuggest()" style="border:none;background:var(--surface-2);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px;">Aerolínea</label>
+        <input id="sug-airline" type="text" placeholder="Nombre o código IATA (ej: Wizz Air, W6)" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;background:var(--bg);color:var(--text-primary);" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px;">Ruta verificada</label>
+        <input id="sug-ruta" type="text" placeholder="Ej: MAD-DXB" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;outline:none;background:var(--bg);color:var(--text-primary);" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px;">Notas adicionales</label>
+        <textarea id="sug-nota" placeholder="Cualquier info extra que pueda ayudar..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;outline:none;background:var(--bg);color:var(--text-primary);resize:vertical;min-height:80px;line-height:1.5;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <div id="sug-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-bg);padding:8px 12px;border-radius:6px;">Por favor completá al menos el nombre de la aerolínea.</div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeSuggest()" style="padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:transparent;font-family:var(--sans);font-size:13px;cursor:pointer;color:var(--text-secondary);">Cancelar</button>
+      <button onclick="sendSuggest()" style="padding:8px 18px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;">Enviar sugerencia</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openSuggest(){
+  const el=document.getElementById('suggest-overlay');
+  el.style.display='flex';
+  document.getElementById('sug-airline').value='';
+  document.getElementById('sug-ruta').value='';
+  document.getElementById('sug-nota').value='';
+  document.getElementById('sug-error').style.display='none';
+}
+function closeSuggest(){document.getElementById('suggest-overlay').style.display='none';}
+function sendSuggest(){
+  const airline=document.getElementById('sug-airline').value.trim();
+  const ruta=document.getElementById('sug-ruta').value.trim();
+  const nota=document.getElementById('sug-nota').value.trim();
+  if(!airline){document.getElementById('sug-error').style.display='block';return;}
+  const subject=encodeURIComponent('ZED Vueling — Sugerencia: '+airline);
+  const body=encodeURIComponent(
+    'Aerolínea: '+airline+'\n'+
+    'Ruta verificada: '+(ruta||'No especificada')+'\n'+
+    'Notas: '+(nota||'—')+'\n\n'+
+    '(Enviado desde el directorio ZED Vueling)'
+  );
+  window.location.href='mailto:aixa@tat.rocks?subject='+subject+'&body='+body;
+  closeSuggest();
+}
+document.getElementById('suggest-overlay').addEventListener('click',function(e){if(e.target===this)closeSuggest();});
 </script>
 </body>
 </html>
