@@ -17,7 +17,7 @@
   --gray:#444441;--gray-bg:#F0EFE9;
   --mono:'JetBrains Mono',monospace;--sans:'Inter',system-ui,sans-serif;
 }
-body{font-family:var(--sans);background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;overflow-x:hidden;}
+html,body{scroll-behavior:auto;}body{font-family:var(--sans);background:var(--bg);color:var(--text-primary);font-size:14px;line-height:1.5;overflow-x:hidden;margin:0;padding:0;}
 /* Header */
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200;flex-wrap:wrap;}
 .logo{background:var(--accent);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.08em;padding:5px 10px;border-radius:4px;flex-shrink:0;}
@@ -220,7 +220,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
 </div>
 
 <!-- TAB: VIAJAN SOLAS -->
-<div class="tab-content active" id="tab-solo">
+<div class="tab-content active" id="tab-solo" style="display:flex;">
   <div class="with-sidebar">
     <aside id="solo-aside">
       <div>
@@ -1543,6 +1543,8 @@ window.clearMapSelections=clearMapSelections;
 window.onMapAirportClick=onMapAirportClick;
 
 // ── Init ──────────────────────────────────────────────────────────
+window.scrollTo(0,0);
+document.documentElement.scrollTop=0;
 renderSolo();
 initRouteInputs();
 </script>
