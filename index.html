@@ -123,7 +123,7 @@ input.asearch:focus{border-color:var(--accent);}
 .mz-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .map-body{flex:1;display:flex;overflow:hidden;}
 #map-container{flex:1;}
-.map-side{width:300px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;display:none;flex-direction:column;}
+.map-side{width:300px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);overflow:hidden;display:none;flex-direction:column;overscroll-behavior:contain;}
 .map-side.open{display:flex;}
 .map-side-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 /* Map legend */
@@ -132,6 +132,9 @@ input.asearch:focus{border-color:var(--accent);}
 .legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--text-secondary);}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .legend-line{width:24px;height:3px;border-radius:2px;flex-shrink:0;}
+#map-side-content{overscroll-behavior:contain;touch-action:pan-y;}
+.map-body{isolation:isolate;}
+#map-container{touch-action:none;}
 /* Panel */
 .panel-overlay{display:none;position:fixed;inset:0;background:rgba(26,25,23,.4);z-index:300;}
 .panel-overlay.open{display:block;}
@@ -318,7 +321,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         </div>
       </div>
     </div>
-    <div class="map-body" style="position:relative;">
+    <div class="map-body" style="position:relative;overflow:hidden;">
       <div id="map-container" style="flex:1;width:100%;height:100%;"></div>
       <div class="map-legend">
         <div class="map-legend-title">Leyenda</div>
@@ -328,12 +331,12 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         <div class="legend-row"><div class="legend-line" style="background:#E8420A;"></div>Ruta seleccionada</div>
         <div class="legend-row"><div class="legend-line" style="background:#185FA5;opacity:.4;"></div>Rutas disponibles</div>
       </div>
-      <div class="map-side" id="map-side">
+      <div class="map-side" id="map-side" style="overflow:hidden;">
         <div class="map-side-head">
           <div id="map-side-title" style="font-size:13px;font-weight:600;"></div>
           <button onclick="document.getElementById('map-side').classList.remove('open')" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;">×</button>
         </div>
-        <div id="map-side-content" style="padding:10px 14px;overflow-y:auto;flex:1;"></div>
+        <div id="map-side-content" style="padding:10px 14px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
       </div>
     </div>
   </div>
@@ -395,7 +398,7 @@ const DATA=[
 {name:"Vueling",iata:"VY",zone:1,hub:"BCN",dests:[
   {r:"España",c:[{y:"Madrid",c:"MAD"},{y:"Barcelona",c:"BCN"},{y:"Sevilla",c:"SVQ"},{y:"Valencia",c:"VLC"},{y:"Bilbao",c:"BIO"},{y:"Málaga",c:"AGP"},{y:"Palma",c:"PMI"},{y:"Ibiza",c:"IBZ"},{y:"Alicante",c:"ALC"},{y:"Menorca",c:"MAH"},{y:"Gran Canaria",c:"LPA"},{y:"Tenerife Sur",c:"TFS"},{y:"Lanzarote",c:"ACE"},{y:"Fuerteventura",c:"FUE"},{y:"La Palma",c:"SPC"}]},
   {r:"Europa",c:[{y:"París CDG",c:"CDG"},{y:"Roma FCO",c:"FCO"},{y:"Ámsterdam",c:"AMS"},{y:"Londres LGW",c:"LGW"},{y:"Bruselas",c:"BRU"},{y:"Dublín",c:"DUB"},{y:"Lisboa",c:"LIS"},{y:"Atenas",c:"ATH"},{y:"Nápoles",c:"NAP"},{y:"Milán MXP",c:"MXP"},{y:"Venecia",c:"VCE"},{y:"Florencia",c:"FLR"},{y:"Marsella",c:"MRS"},{y:"Lyon",c:"LYS"},{y:"Niza",c:"NCE"},{y:"Toulouse",c:"TLS"},{y:"Burdeos",c:"BOD"},{y:"Zúrich",c:"ZRH"},{y:"Ginebra",c:"GVA"},{y:"Copenhague",c:"CPH"},{y:"Oslo",c:"OSL"},{y:"Estocolmo",c:"ARN"},{y:"Helsinki",c:"HEL"},{y:"Varsovia",c:"WAW"},{y:"Praga",c:"PRG"},{y:"Budapest",c:"BUD"},{y:"Viena",c:"VIE"},{y:"Berlín",c:"BER"},{y:"Tenerife Norte",c:"TFN"}]},
-  {r:"Norte de África",c:[{y:"Casablanca",c:"CMN"},{y:"Marrakech",c:"RAK"},{y:"Agadir",c:"AGA"},{y:"Túnez",c:"TUN"},{y:"Argel",c:"ALG"}]}
+  {r:"Italia",c:[{y:"Catania",c:"CTA"},{y:"Palermo",c:"PMO"},{y:"Nápoles",c:"NAP"},{y:"Venecia",c:"VCE"},{y:"Bari",c:"BRI"},{y:"Cagliari",c:"CAG"},{y:"Pisa",c:"PSA"},{y:"Bolonia",c:"BLQ"},{y:"Verona",c:"VRN"}]},{r:"Norte de África",c:[{y:"Casablanca",c:"CMN"},{y:"Marrakech",c:"RAK"},{y:"Agadir",c:"AGA"},{y:"Túnez",c:"TUN"},{y:"Argel",c:"ALG"}]}
 ]},
 {name:"Finnair",iata:"AY",zone:1,hub:"HEL",dests:[
   {r:"Europa",c:[{y:"Helsinki",c:"HEL"},{y:"Estocolmo",c:"ARN"},{y:"Oslo",c:"OSL"},{y:"Copenhague",c:"CPH"},{y:"Londres LHR",c:"LHR"},{y:"París CDG",c:"CDG"},{y:"Frankfurt",c:"FRA"},{y:"Ámsterdam",c:"AMS"},{y:"Zúrich",c:"ZRH"},{y:"Berlín",c:"BER"},{y:"Roma FCO",c:"FCO"},{y:"Milán MXP",c:"MXP"},{y:"Madrid",c:"MAD"},{y:"Barcelona",c:"BCN"},{y:"Bruselas",c:"BRU"},{y:"Viena",c:"VIE"},{y:"Varsovia",c:"WAW"},{y:"Praga",c:"PRG"},{y:"Budapest",c:"BUD"}]},
@@ -514,7 +517,7 @@ S4:["PDL-TER","PDL-HOR","PDL-PIX","PDL-LIS","PDL-OPO","PDL-LGW","PDL-AMS","PDL-F
 SP:["PDL-TER","PDL-SMA","PDL-GRW","PDL-SJZ","PDL-HOR","PDL-PIX","PDL-FLW","PDL-CVU","TER-HOR","TER-SJZ","TER-GRW","TER-PIX","TER-SMA","HOR-PIX","PDL-LIS","PDL-OPO","TER-LIS"],
 HM:["SEZ-PRI","SEZ-DXB","SEZ-AUH","SEZ-MRU","SEZ-JNB","SEZ-NBO","SEZ-ADD","SEZ-CDG","SEZ-MXP"],
 F8:["YYZ-YVR","YYZ-YYC","YYZ-YEG","YYZ-YWG","YYZ-YOW","YYZ-YHZ","YYZ-YXX","YYZ-YLW","YYZ-YYJ","YYZ-YXE","YYZ-YQR","YYZ-CUN","YYZ-PUJ","YYZ-PVR","YYZ-SJD","YYZ-MBJ","YYZ-NAS","YVR-YYC","YVR-YEG","YVR-YWG","YVR-YOW","YVR-YHZ","YYC-YWG","YYC-YOW","YYC-YHZ"],
-F9:["DEN-LAX","DEN-LAS","DEN-MCO","DEN-PHX","DEN-ATL","DEN-MDW","DEN-DFW","DEN-MIA","DEN-TPA","DEN-CLT","DEN-BNA","DEN-AUS","DEN-HOU","DEN-SFO","DEN-SEA","DEN-PDX","DEN-MSP","DEN-IAD","DEN-BOS","DEN-JFK","DEN-PHL","DEN-SAN","DEN-RDU","DEN-IND","DEN-MCI","DEN-CVG","DEN-CLE","DEN-PIT","DEN-MKE","DEN-STL","DEN-MSY","DEN-SAT","DEN-ABQ","DEN-OMA","DEN-CUN","DEN-PUJ","DEN-SJU","DEN-PVR","DEN-SJD","DEN-MBJ","DEN-NAS","LAX-MCO","LAX-LAS","LAX-PHX","LAX-ATL","LAX-MDW","LAX-DFW","LAX-MIA","LAX-CUN","LAS-MCO","LAS-PHX","LAS-ATL","LAS-MDW","LAS-DFW","LAS-MIA","LAS-CUN"],
+F9:["DEN-LAX","DEN-LAS","DEN-MCO","DEN-PHX","DEN-ATL","DEN-MDW","DEN-DFW","DEN-MIA","DEN-TPA","DEN-CLT","DEN-BNA","DEN-AUS","DEN-HOU","DEN-SFO","DEN-SEA","DEN-PDX","DEN-MSP","DEN-IAD","DEN-BOS","DEN-PHL","DEN-SAN","DEN-RDU","DEN-IND","DEN-MCI","DEN-CVG","DEN-CLE","DEN-PIT","DEN-MKE","DEN-STL","DEN-MSY","DEN-SAT","DEN-ABQ","DEN-OMA","DEN-CUN","DEN-PUJ","DEN-SJU","DEN-PVR","DEN-SJD","DEN-MBJ","DEN-NAS","LAX-MCO","LAX-LAS","LAX-PHX","LAX-ATL","LAX-MDW","LAX-DFW","LAX-MIA","LAX-CUN","LAS-MCO","LAS-PHX","LAS-ATL","LAS-MDW","LAS-DFW","LAS-MIA","LAS-CUN"],
 G4:["SFB-PIT","SFB-CLE","SFB-CMH","SFB-CVG","SFB-IND","SFB-GRR","SFB-TYS","SFB-CHA","SFB-LEX","SFB-BHM","SFB-SAV","SFB-MYR","SFB-RIC","SFB-ILM","SFB-GSP","PIE-PIT","PIE-CLE","PIE-CVG","PIE-IND","PIE-GRR","LAS-EUG","LAS-GEG","LAS-BOI","LAS-MSO","LAS-BIL","LAS-FAR","LAS-FSD","LAS-DSM","LAS-OMA","LAS-ICT","LAS-TUL","LAS-OKC","LAS-PIT","LAS-CLE","LAS-CMH","LAS-IND","AZA-FAR","AZA-FSD","AZA-DSM","AZA-OMA","AZA-ICT","AZA-MCI","SFB-CUN","SFB-PUJ","SFB-NAS","SFB-MBJ","SFB-SJD","SFB-PVR","SFB-SJO","PIE-CUN","PIE-PUJ","LAS-CUN","LAS-SJD","LAS-PVR"],
 "5T":["YOW-YFB","YFB-YYZ","YFB-YUL","YFB-YYT","YEG-YZF","YEG-YHY","YZF-YEV","YZF-YXY","YZF-YHY","YZF-YRB","YZF-YCB","YZF-YGZ","YZF-YFB","YZF-YXN"],
 "9M":["YVR-YXS","YVR-YKA","YVR-YXJ","YVR-YQQ","YYC-YXS","YYC-YKA","YYC-YXJ","YYC-YQQ","YEG-YXJ","YXS-YKA","YXS-YQQ","YXS-YYD","YXT-YPR","YXJ-YYE","YXJ-YDQ"],
@@ -522,7 +525,7 @@ WP:["YQT-YXL","YXL-YFH","YXL-YOG","YXL-YAX","YXL-YHP","YXL-YNO","YXL-YRL","YXL-Y
 H2:["SCL-LIM","SCL-BOG","SCL-EZE","SCL-GRU","SCL-VVI","SCL-MDE","SCL-IQQ","SCL-ANF","SCL-LSC","SCL-CCP","SCL-PMC","SCL-PUQ","SCL-ZCO","SCL-CJC","SCL-ARI","SCL-CPO","SCL-CUN","LIM-BOG","LIM-EZE","LIM-GRU"],
 P5:["BOG-CTG","BOG-MDE","BOG-CLO","BOG-BAQ","BOG-CUC","BOG-ADZ","BOG-PEI","BOG-BGA","BOG-PTY","BOG-LIM","BOG-UIO","BOG-GYE","BOG-SDQ","BOG-HAV","BOG-CUN","BOG-SJO","BOG-SAL","BOG-GUA","BOG-CCS","CTG-MDE","CTG-CLO","MDE-CLO","MDE-PTY"],
 VR:["RAI-SID","RAI-VXE","RAI-BVC","RAI-LIS","RAI-OPO","RAI-AMS","RAI-LGW","RAI-CDG","RAI-MAD","RAI-FCO","RAI-MXP","RAI-BOS","RAI-PVD","RAI-FOR","RAI-REC","RAI-GRU","RAI-DSS","SID-LIS","SID-AMS","SID-LGW","SID-CDG","SID-MAD"],
-EY:["AUH-LHR","AUH-CDG","AUH-FRA","AUH-AMS","AUH-MAD","AUH-BCN","AUH-FCO","AUH-MXP","AUH-ZRH","AUH-GVA","AUH-DUB","AUH-BRU","AUH-ATH","AUH-VIE","AUH-MUC","AUH-NRT","AUH-KIX","AUH-ICN","AUH-PEK","AUH-PVG","AUH-HKG","AUH-SIN","AUH-BKK","AUH-BOM","AUH-DEL","AUH-KHI","AUH-CMB","AUH-KUL","AUH-CGK","AUH-MNL","AUH-JFK","AUH-LAX","AUH-ORD","AUH-IAD","AUH-YYZ","AUH-BOS","AUH-DFW","AUH-IAH","AUH-SFO","AUH-JNB","AUH-NBO","AUH-CAI","AUH-LOS","AUH-SYD","AUH-MEL","AUH-AKL","AUH-BNE","AUH-DXB","AUH-DOH","AUH-KWI","AUH-BEY","AUH-AMM","AUH-TLV","AUH-RUH","AUH-JED","AUH-MCT"],
+EY:["AUH-MLE","AUH-LHR","AUH-CDG","AUH-FRA","AUH-AMS","AUH-MAD","AUH-BCN","AUH-FCO","AUH-MXP","AUH-ZRH","AUH-GVA","AUH-DUB","AUH-BRU","AUH-ATH","AUH-VIE","AUH-MUC","AUH-NRT","AUH-KIX","AUH-ICN","AUH-PEK","AUH-PVG","AUH-HKG","AUH-SIN","AUH-BKK","AUH-BOM","AUH-DEL","AUH-KHI","AUH-CMB","AUH-KUL","AUH-CGK","AUH-MNL","AUH-JFK","AUH-LAX","AUH-ORD","AUH-IAD","AUH-YYZ","AUH-BOS","AUH-DFW","AUH-IAH","AUH-SFO","AUH-JNB","AUH-NBO","AUH-CAI","AUH-LOS","AUH-SYD","AUH-MEL","AUH-AKL","AUH-BNE","AUH-DXB","AUH-DOH","AUH-KWI","AUH-BEY","AUH-AMM","AUH-TLV","AUH-RUH","AUH-JED","AUH-MCT"],
 NZ:["AKL-WLG","AKL-CHC","AKL-ZQN","AKL-DUD","AKL-NSN","AKL-HLZ","AKL-PMR","AKL-ROT","AKL-NPE","AKL-NPL","AKL-TRG","AKL-IVC","AKL-SYD","AKL-MEL","AKL-BNE","AKL-PER","AKL-ADL","AKL-CBR","AKL-OOL","AKL-CNS","AKL-LAX","AKL-SFO","AKL-ORD","AKL-IAH","AKL-YVR","AKL-HNL","AKL-SIN","AKL-HKG","AKL-NRT","AKL-PEK","AKL-PVG","AKL-DPS","AKL-NAN","AKL-PPT","AKL-LHR","WLG-CHC","WLG-ZQN","WLG-NPE","WLG-NSN","CHC-ZQN"]
 };
 
@@ -571,7 +574,7 @@ const COUNTRIES={
   NRT:'Japón',HND:'Japón',KIX:'Japón',ICN:'Corea del Sur',PEK:'China',PVG:'China',HKG:'Hong Kong',SIN:'Singapur',BKK:'Tailandia',HKT:'Tailandia',KUL:'Malasia',CGK:'Indonesia',DPS:'Indonesia',MNL:'Filipinas',DEL:'India',BOM:'India',CMB:'Sri Lanka',
   SYD:'Australia',MEL:'Australia',BNE:'Australia',PER:'Australia',ADL:'Australia',CBR:'Australia',OOL:'Australia',CNS:'Australia',
   AKL:'Nueva Zelanda',WLG:'Nueva Zelanda',CHC:'Nueva Zelanda',ZQN:'Nueva Zelanda',DUD:'Nueva Zelanda',NSN:'Nueva Zelanda',HLZ:'Nueva Zelanda',PMR:'Nueva Zelanda',ROT:'Nueva Zelanda',NPE:'Nueva Zelanda',NPL:'Nueva Zelanda',TRG:'Nueva Zelanda',IVC:'Nueva Zelanda',
-  NAN:'Fiyi',PPT:'Polinesia Francesa',YVR:'Canadá',
+  CTA:'Italia',PMO:'Italia',BRI:'Italia',CAG:'Italia',  PSA:'Italia',BLQ:'Italia',VRN:'Italia',BGY:'Italia',  MLE:'Maldivas',  CPT:'Sudáfrica',MBA:'Kenia',DAR:'Tanzania',  GRX:'España',ZAZ:'España',REU:'España',GRO:'España',  LIR:'Costa Rica',  NAN:'Fiyi',PPT:'Polinesia Francesa',YVR:'Canadá',
 };
 
 const CITY_NAMES={
@@ -606,7 +609,7 @@ const CITY_NAMES={
   SYD:'Sydney',MEL:'Melbourne',BNE:'Brisbane',PER:'Perth',ADL:'Adelaide',CBR:'Canberra',OOL:'Gold Coast',CNS:'Cairns',
   AKL:'Auckland',WLG:'Wellington',CHC:'Christchurch',ZQN:'Queenstown',DUD:'Dunedin',NSN:'Nelson',HLZ:'Hamilton',PMR:'Palmerston North',ROT:'Rotorua',NPE:'Napier',NPL:'New Plymouth',TRG:'Tauranga',IVC:'Invercargill',
   NAN:'Nadi',PPT:'Papeete',HNL:'Honolulú',
-  CMN:'Casablanca',RAK:'Marrakech',AGA:'Agadir',TUN:'Túnez',ALG:'Argel',
+  CTA:'Catania',PMO:'Palermo',BRI:'Bari',CAG:'Cagliari',  PSA:'Pisa',BLQ:'Bolonia',VRN:'Verona',BGY:'Milan Bérgamo',  MLE:'Malé',CPT:'Ciudad del Cabo',MBA:'Mombasa',DAR:'Dar es Salaam',  GRX:'Granada',ZAZ:'Zaragoza',REU:'Reus',GRO:'Girona',  LIR:'Liberia',  CMN:'Casablanca',RAK:'Marrakech',AGA:'Agadir',TUN:'Túnez',ALG:'Argel',
   MLE:'Maldivas',ZNZ:'Zanzibar',YYD:'Smithers',YXT:'Terrace',YPR:'Prince Rupert',YDQ:'Dawson Creek',YYE:'Fort Nelson',YEV:'Inuvik',YGZ:'Grise Fiord',YXN:'Whale Cove',YOG:'Ogoki Post',YAX:'Angling Lake',YHP:'Poplar Hill',YNO:'North Spirit Lake',YPM:'Pikangikum',ZKE:'Kashechewan',YAG:'Fort Frances',ZTM:'Shamattawa',PVD:'Providence',OAK:'Oakland',BOS:'Boston',CLT:'Charlotte',BNA:'Nashville',AUS:'Austin',HOU:'Houston Hobby',PDX:'Portland',PIT:'Pittsburgh',CLE:'Cleveland',MKE:'Milwaukee',STL:'St. Louis',MSY:'Nueva Orleans',SAT:'San Antonio',ABQ:'Albuquerque',PHL:'Filadelfia',SAN:'San Diego',RDU:'Raleigh',MCI:'Kansas City',IND:'Indianapolis',CMH:'Columbus',CVG:'Cincinnati',GRR:'Grand Rapids',TYS:'Knoxville',CHA:'Chattanooga',LEX:'Lexington',FAR:'Fargo',FSD:'Sioux Falls',DSM:'Des Moines',OMA:'Omaha',ICT:'Wichita',TUL:'Tulsa',OKC:'Oklahoma City',BHM:'Birmingham',SAV:'Savannah',MYR:'Myrtle Beach',ILM:'Wilmington NC',GSP:'Greenville',RIC:'Richmond',EUG:'Eugene',GEG:'Spokane',BOI:'Boise',MSO:'Missoula',BIL:'Billings',PVU:'Provo',
 };
 
@@ -665,9 +668,46 @@ function findStopoverRoutes(o,d){return findPaths(o,d,2).filter(r=>r.stops>0);}
 // ═══════════════════════════════════════════════════════════════════
 const allAptCodes=[...new Set([...Object.keys(airportMap),...Object.keys(COUNTRIES)])];
 
+
+const SEARCH_ALIASES={
+  'male':'MLE','malé':'MLE','maldivas':'MLE','maldives':'MLE',
+  'sicilia':'CTA','sicily':'CTA',
+  'reikiavik':'KEF','reykjavik':'KEF',
+  'buenos aires':'EZE',
+  'sao paulo':'GRU','são paulo':'GRU',
+  'cabo verde':'RAI','cape verde':'RAI',
+  'nueva york':'JFK','new york':'JFK',
+  'los angeles':'LAX','los ángeles':'LAX',
+};
+
+const COUNTRY_AIRPORTS={
+  'mexico':['CUN','PVR','SJD','GDL','MZT'],
+  'méxico':['CUN','PVR','SJD','GDL','MZT'],
+  'italia':['FCO','MXP','NAP','VCE','FLR','PMO','CTA','BRI','CAG','PSA','BLQ','VRN','TRN'],
+  'italy':['FCO','MXP','NAP','VCE','FLR','PMO','CTA','BRI','CAG'],
+  'espana':['MAD','BCN','SVQ','VLC','AGP','PMI','IBZ','ALC','LPA','TFS','TFN'],
+  'españa':['MAD','BCN','SVQ','VLC','AGP','PMI','IBZ','ALC','LPA','TFS','TFN'],
+  'colombia':['BOG','MDE','CTG','CLO','BAQ'],
+  'argentina':['EZE'],
+  'chile':['SCL','IQQ','ANF','CCP','PMC','PUQ'],
+  'grecia':['ATH','HER','RHO','KGS','JTR','JMK'],
+  'greece':['ATH','HER','RHO','KGS','JTR','JMK'],
+  'canarias':['LPA','TFS','TFN','ACE','FUE','SPC','VDE','GMZ'],
+  'azores':['PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU'],
+  'acores':['PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU'],
+};
+
 function searchAirports(q,limit=12){
   const ql=q.toLowerCase().trim();
   if(!ql)return[];
+  // Exact alias
+  if(SEARCH_ALIASES[ql])return[SEARCH_ALIASES[ql]];
+  // Country group
+  if(COUNTRY_AIRPORTS[ql])return COUNTRY_AIRPORTS[ql].filter(c=>allAptCodes.includes(c));
+  // Partial country match
+  for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+    if(k.startsWith(ql)&&ql.length>=3)return v.filter(c=>allAptCodes.includes(c));
+  }
   return allAptCodes.filter(c=>{
     const city=cityOf(c).toLowerCase();
     const country=countryOf(c).toLowerCase();
@@ -862,6 +902,12 @@ function setRouteMode(m){
 }
 window.setRouteMode=setRouteMode;
 
+function clearField(id){
+  if(id==='origin'){selOrig=null;const i=document.getElementById('input-origin');if(i)i.value='';}
+  else{selDest=null;const i=document.getElementById('input-dest');if(i)i.value='';}
+  runSearch();
+}
+window.clearField=clearField;
 function setFT(t,skip){
   flightType=t;
   document.querySelectorAll('.ft-btn').forEach((b,i)=>{
@@ -875,10 +921,10 @@ function initRouteInputs(){
   const area=document.getElementById('route-inputs-area');
   area.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <label style="font-size:12px;color:var(--text-secondary);font-weight:500">Origen</label>
-    <div class="apt-wrap" id="wrap-origin"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…"/><div class="apt-dd" id="dd-origin"></div></div>
+    <div class="apt-wrap" id="wrap-origin"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…" style="padding-right:24px"/><div class="apt-dd" id="dd-origin"></div></div>
     <button id="swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></button>
     <label style="font-size:12px;color:var(--text-secondary);font-weight:500">Destino</label>
-    <div class="apt-wrap" id="wrap-dest"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…"/><div class="apt-dd" id="dd-dest"></div></div>
+    <div class="apt-wrap" id="wrap-dest"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…" style="padding-right:24px"/><div class="apt-dd" id="dd-dest"></div></div>
   </div>`;
   attachAptDropdown('input-origin','dd-origin',code=>{
     selOrig=code;document.getElementById('input-origin').value=`${cityOf(code)} (${code})`;runSearch();
@@ -886,7 +932,21 @@ function initRouteInputs(){
   attachAptDropdown('input-dest','dd-dest',code=>{
     selDest=code;document.getElementById('input-dest').value=`${cityOf(code)} (${code})`;runSearch();
   });
+  // Inject clear buttons
+  ['origin','dest'].forEach(id=>{
+    const wrap=document.getElementById('wrap-'+id);
+    if(wrap&&!document.getElementById('clear-'+id)){
+      const btn=document.createElement('button');
+      btn.id='clear-'+id;
+      btn.innerHTML='×';
+      btn.style.cssText='position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1;display:none;padding:2px;z-index:5';
+      btn.addEventListener('click',()=>clearField(id));
+      wrap.style.position='relative';
+      wrap.appendChild(btn);
+    }
+  });
   document.getElementById('swap-btn').addEventListener('click',()=>{
+
     const tmp=selOrig;selOrig=selDest;selDest=tmp;
     const oi=document.getElementById('input-origin'),di=document.getElementById('input-dest');
     const tv=oi.value;oi.value=di.value;di.value=tv;
@@ -1390,6 +1450,22 @@ function showBothRoutes(){
   document.getElementById('map-side-content').innerHTML=html;
 }
 
+function clearMapField(field){
+  if(field==='origin'){
+    mapOrig=null;
+    const i=document.getElementById('map-origin');if(i)i.value='';
+    const cb=document.getElementById('map-clear-origin');if(cb)cb.style.display='none';
+    if(mapDest){mapState='origin';showOriginRoutes(mapDest);}
+    else{clearRouteLines();resetMarkers();document.getElementById('map-side').classList.remove('open');mapState='idle';document.getElementById('map-badge').textContent='Click en un aeropuerto para explorar';}
+  } else {
+    mapDest=null;
+    const i=document.getElementById('map-dest');if(i)i.value='';
+    const cb=document.getElementById('map-clear-dest');if(cb)cb.style.display='none';
+    if(mapOrig){mapState='origin';showOriginRoutes(mapOrig);document.getElementById('map-badge').textContent='Desde '+mapOrig+' — click en destino';}
+    else{clearRouteLines();resetMarkers();document.getElementById('map-side').classList.remove('open');mapState='idle';document.getElementById('map-badge').textContent='Click en un aeropuerto para explorar';}
+  }
+}
+window.clearMapField=clearMapField;
 function clearMapSelections(){
   mapOrig=null;mapDest=null;mapState='idle';
   document.getElementById('map-origin').value='';
@@ -1412,12 +1488,16 @@ function setupMapSearch(){
           e.preventDefault();
           const code=opt.dataset.code;
           input.value=cityOf(code)+' ('+code+')';
+          const mcb=document.getElementById(inputId==='map-origin'?'map-clear-origin':'map-clear-dest');if(mcb)mcb.style.display='inline';
           setCode(code);dd.classList.remove('open');
         });
       });
     });
     input.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
     input.addEventListener('input',e=>{
+      const cbId=inputId==='map-origin'?'map-clear-origin':'map-clear-dest';
+      const cb=document.getElementById(cbId);
+      if(cb)cb.style.display=e.target.value.trim()?'inline':'none';
       if(!e.target.value.trim()){setCode(null);}
     });
   }
