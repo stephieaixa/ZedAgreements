@@ -220,7 +220,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
 </div>
 
 <!-- TAB: VIAJAN SOLAS -->
-<div class="tab-content active" id="tab-solo" style="display:flex;">
+<div class="tab-content active" id="tab-solo">
   <div class="with-sidebar">
     <aside id="solo-aside">
       <div>
@@ -1160,10 +1160,15 @@ window.findMultiRoute=findMultiRoute;
 // ═══════════════════════════════════════════════════════════════════
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(x=>{
+    x.classList.remove('active');
+    x.style.display='none';
+  });
   t.classList.add('active');
   const tc=document.getElementById('tab-'+t.dataset.tab);
   tc.classList.add('active');
+  tc.style.display='flex';
+  tc.style.flexDirection='column';
   if(t.dataset.tab==='map')initMap();
 }));
 
@@ -1545,6 +1550,11 @@ window.onMapAirportClick=onMapAirportClick;
 // ── Init ──────────────────────────────────────────────────────────
 window.scrollTo(0,0);
 document.documentElement.scrollTop=0;
+// Set initial display state for all tabs
+document.querySelectorAll('.tab-content').forEach(tc=>{
+  tc.style.display=tc.classList.contains('active')?'flex':'none';
+  if(tc.classList.contains('active'))tc.style.flexDirection='column';
+});
 renderSolo();
 initRouteInputs();
 </script>
