@@ -295,7 +295,8 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
       <div class="map-toolbar-row">
         <div class="apt-wrap" style="max-width:230px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="apt-input" id="map-origin" placeholder="Origen…" autocomplete="off"/>
+          <input type="text" class="apt-input" id="map-origin" placeholder="Origen…" autocomplete="off" style="padding-right:28px;"/>
+          <button id="map-clear-origin" onclick="clearMapField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;display:none;padding:0;z-index:2;">×</button>
           <div class="apt-dd" id="map-origin-dd"></div>
         </div>
         <button id="map-swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
@@ -303,10 +304,11 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         </button>
         <div class="apt-wrap" style="max-width:230px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="apt-input" id="map-dest" placeholder="Destino…" autocomplete="off"/>
+          <input type="text" class="apt-input" id="map-dest" placeholder="Destino…" autocomplete="off" style="padding-right:28px;"/>
+          <button id="map-clear-dest" onclick="clearMapField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;display:none;padding:0;z-index:2;">×</button>
           <div class="apt-dd" id="map-dest-dd"></div>
         </div>
-        <button onclick="clearMapSelections()" style="padding:6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:var(--sans);font-size:12px;cursor:pointer;color:var(--text-secondary);">Limpiar</button>
+
         <div class="map-badge" id="map-badge">Click en un aeropuerto para explorar</div>
       </div>
       <div class="map-toolbar-row">
