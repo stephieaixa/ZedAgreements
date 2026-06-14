@@ -903,8 +903,15 @@ function setRouteMode(m){
 window.setRouteMode=setRouteMode;
 
 function clearField(id){
-  if(id==='origin'){selOrig=null;const i=document.getElementById('input-origin');if(i)i.value='';}
-  else{selDest=null;const i=document.getElementById('input-dest');if(i)i.value='';}
+  if(id==='origin'){
+    selOrig=null;
+    const i=document.getElementById('input-origin');if(i)i.value='';
+    const c=document.getElementById('clear-origin');if(c)c.style.display='none';
+  } else {
+    selDest=null;
+    const i=document.getElementById('input-dest');if(i)i.value='';
+    const c=document.getElementById('clear-dest');if(c)c.style.display='none';
+  }
   runSearch();
 }
 window.clearField=clearField;
@@ -932,19 +939,7 @@ function initRouteInputs(){
   attachAptDropdown('input-dest','dd-dest',code=>{
     selDest=code;document.getElementById('input-dest').value=`${cityOf(code)} (${code})`;runSearch();
   });
-  // Inject clear buttons
-  ['origin','dest'].forEach(id=>{
-    const wrap=document.getElementById('wrap-'+id);
-    if(wrap&&!document.getElementById('clear-'+id)){
-      const btn=document.createElement('button');
-      btn.id='clear-'+id;
-      btn.innerHTML='×';
-      btn.style.cssText='position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1;display:none;padding:2px;z-index:5';
-      btn.addEventListener('click',()=>clearField(id));
-      wrap.style.position='relative';
-      wrap.appendChild(btn);
-    }
-  });
+  // Clear buttons are in HTML
   document.getElementById('swap-btn').addEventListener('click',()=>{
 
     const tmp=selOrig;selOrig=selDest;selDest=tmp;
