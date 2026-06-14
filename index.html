@@ -1844,36 +1844,87 @@ const ZONE_AIRPORTS={
   '6':new Set(['SYD','MEL','BNE','PER','ADL','CBR','OOL','CNS','AKL','WLG','CHC','ZQN','DUD','NSN','HLZ','PMR','ROT','NPE','NPL','TRG','IVC','NAN','PPT','HNL']),
 };
 
+const ZONE_NAMES={'1':'Europa','2':'Norte América','3':'Latinoamérica','4':'Medio Oriente / África','5':'Asia / Pacífico','6':'Oceanía'};
+
 function applyMapZoneFilter(z){
   if(!mapInstance)return;
   if(z==='all'){
-    // Show everything at base opacity
     baseLineData.forEach(({line})=>line.setStyle({weight:1,opacity:0.12}));
     Object.values(baseMarkers).forEach(m=>{
       const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
       m.setStyle({opacity:1,fillOpacity:isHub?0.9:0.5});
     });
     mapInstance.setView([25,10],2);
-  } else {
-    const zoneSet=ZONE_AIRPORTS[z]||new Set();
-    // Zoom to zone
-    if(ZONE_BOUNDS[z])mapInstance.fitBounds(ZONE_BOUNDS[z],{padding:[30,30]});
-    // Filter lines: show only those with at least one endpoint in this zone
-    baseLineData.forEach(({line,airports})=>{
-      const relevant=airports.some(a=>zoneSet.has(a));
-      line.setStyle({weight:relevant?1.5:0.5,opacity:relevant?0.3:0.04});
-    });
-    // Filter markers: highlight zone airports, dim others
-    Object.entries(baseMarkers).forEach(([code,m])=>{
-      const inZone=zoneSet.has(code);
-      const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
-      m.setStyle({
-        opacity:inZone?1:0.2,
-        fillOpacity:inZone?(isHub?0.95:0.7):0.1,
-        radius:inZone?(isHub?8:5):3,
-      });
-    });
+    // Close side panel when showing all
+    document.getElementById('map-side').classList.remove('open');
+    return;
   }
+
+  const zoneSet=ZONE_AIRPORTS[z]||new Set();
+  if(ZONE_BOUNDS[z])mapInstance.fitBounds(ZONE_BOUNDS[z],{padding:[30,30]});
+
+  // Filter lines
+  baseLineData.forEach(({line,airports})=>{
+    const relevant=airports.some(a=>zoneSet.has(a));
+    line.setStyle({weight:relevant?1.5:0.5,opacity:relevant?0.3:0.04});
+  });
+
+  // Filter markers
+  Object.entries(baseMarkers).forEach(([code,m])=>{
+    const inZone=zoneSet.has(code);
+    const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
+    m.setStyle({
+      opacity:inZone?1:0.2,
+      fillOpacity:inZone?(isHub?0.95:0.7):0.1,
+      radius:inZone?(isHub?8:5):3,
+    });
+  });
+
+  // Build side panel with airlines operating in this zone + their destinations
+  const zoneName=ZONE_NAMES[z]||('Zona '+z);
+  const side=document.getElementById('map-side');
+  side.classList.add('open');
+  document.getElementById('map-side-title').innerHTML=
+    `<span style="font-size:13px;font-weight:600">${zoneName}</span>`;
+
+  // Find airlines that have routes into this zone
+  const airlineZoneDests={};
+  baseLineData.forEach(({airports,iata})=>{
+    const[o,d]=airports;
+    const oInZone=zoneSet.has(o),dInZone=zoneSet.has(d);
+    if(oInZone||dInZone){
+      if(!airlineZoneDests[iata])airlineZoneDests[iata]={into:new Set(),from:new Set()};
+      if(oInZone)airlineZoneDests[iata].from.add(o);
+      if(dInZone)airlineZoneDests[iata].into.add(d);
+    }
+  });
+
+  let html='<div style="padding:10px 14px;">';
+  // Group by airline
+  Object.entries(airlineZoneDests).forEach(([iata,{into,from}])=>{
+    const a=DATA.find(x=>x.iata===iata);if(!a)return;
+    const color=AL_COLORS[iata]||'#999';
+    const zoneApts=[...new Set([...into,...from])].filter(c=>zoneSet.has(c));
+    html+=`<div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;cursor:pointer;padding:4px 0;"
+        onclick="showOriginRoutes('${a.hub}')">
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};background:${color}22;padding:2px 6px;border-radius:3px">${iata}</span>
+        <span style="font-size:12px;font-weight:600;flex:1">${a.name}</span>
+        <span style="font-size:10px;color:var(--text-muted)">ver rutas →</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;padding-left:4px;">
+        ${zoneApts.slice(0,12).map(c=>`<span style="font-family:var(--mono);font-size:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;cursor:pointer;"
+          onclick="onMapAirportClick('${c}')" title="${cityOf(c)}">${c}</span>`).join('')}
+        ${zoneApts.length>12?`<span style="font-size:10px;color:var(--text-muted)">+${zoneApts.length-12} más</span>`:''}
+      </div>
+    </div>`;
+  });
+
+  if(!Object.keys(airlineZoneDests).length){
+    html+='<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No hay rutas ZED en esta zona.</div>';
+  }
+  html+='</div>';
+  document.getElementById('map-side-content').innerHTML=html;
 }
 
 function setupMapZoneBtns(){
