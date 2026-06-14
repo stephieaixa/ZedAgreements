@@ -683,6 +683,7 @@ const SEARCH_ALIASES={
 };
 
 const COUNTRY_AIRPORTS={
+  // Countries
   'mexico':['CUN','PVR','SJD','GDL','MZT'],
   'méxico':['CUN','PVR','SJD','GDL','MZT'],
   'italia':['FCO','MXP','NAP','VCE','FLR','PMO','CTA','BRI','CAG','PSA','BLQ','VRN','TRN'],
@@ -697,7 +698,91 @@ const COUNTRY_AIRPORTS={
   'canarias':['LPA','TFS','TFN','ACE','FUE','SPC','VDE','GMZ'],
   'azores':['PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU'],
   'acores':['PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU'],
+  'alemania':['FRA','MUC','BER','HAM','DUS','STR','HAJ','CGN','LEJ'],
+  'germany':['FRA','MUC','BER','HAM','DUS','STR'],
+  'francia':['CDG','ORY','NCE','LYS','MRS','TLS','BOD'],
+  'france':['CDG','ORY','NCE','LYS','MRS','TLS','BOD'],
+  'reino unido':['LHR','LGW','MAN'],
+  'uk':['LHR','LGW','MAN'],
+  'austria':['VIE'],
+  'malta':['MLA'],
+  'portugal':['LIS','OPO','PDL','TER'],
+  'suiza':['ZRH','GVA'],
+  'switzerland':['ZRH','GVA'],
+  'finlandia':['HEL'],
+  'noruega':['OSL','BGO'],
+  'suecia':['ARN'],
+  'dinamarca':['CPH'],
+  'polonia':['WAW'],
+  'checoslovaquia':['PRG'],'republica checa':['PRG'],
+  'hungria':['BUD'],'hungría':['BUD'],
+  'turquia':['IST','AYT'],'turquía':['IST','AYT'],
+  'grecia':['ATH','HER','RHO','KGS','JTR','JMK'],
+  'emiratos':['AUH','DXB'],'uae':['AUH','DXB'],
+  'australia':['SYD','MEL','BNE','PER','ADL'],
+  'nueva zelanda':['AKL','WLG','CHC','ZQN'],
+  'brasil':['GRU','FOR','REC'],
+  'peru':['LIM'],'perú':['LIM'],
+  'ecuador':['UIO','GYE'],
+  'venezuela':['CCS'],
+  'bolivia':['VVI'],
+  'paraguay':[],'uruguay':[],
+  'canada':['YYZ','YVR','YYC','YOW','YUL'],'canadá':['YYZ','YVR','YYC','YOW','YUL'],
+  'estados unidos':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO'],
+  'usa':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO'],
+  'japon':['NRT','HND','KIX'],'japón':['NRT','HND','KIX'],
+  'singapur':['SIN'],'singapore':['SIN'],
+  'tailandia':['BKK','HKT'],'thailand':['BKK','HKT'],
+  'india':['DEL','BOM'],
+  'china':['PEK','PVG'],
+  'hong kong':['HKG'],
+  'maldivas':['MLE'],'maldives':['MLE'],
+  'seychelles':['SEZ','PRI'],
+  'mauricio':['MRU'],'mauritius':['MRU'],
+  'cabo verde':['RAI','SID','VXE','BVC'],'cape verde':['RAI','SID','VXE','BVC'],
+  'marruecos':['CMN','RAK','AGA'],'morocco':['CMN','RAK','AGA'],
+  'sudafrica':['JNB','CPT'],'south africa':['JNB','CPT'],
+  'kenia':['NBO','MBA'],'kenya':['NBO','MBA'],
+  // Big regions
+  'europa':['MAD','BCN','LIS','LHR','LGW','CDG','AMS','FRA','MUC','VIE','ZRH','GVA','FCO','MXP','PMI','HEL','ARN','OSL','CPH','WAW','PRG','BUD','BER','ATH','IST','MLA','DUB','BRU','NAP','VCE','CTA','PMO','BRI','PDL','TER'],
+  'europe':['MAD','BCN','LIS','LHR','LGW','CDG','AMS','FRA','MUC','VIE','ZRH','GVA','FCO','MXP','PMI','HEL','ARN','OSL','CPH','WAW','PRG','BUD','BER','ATH','IST','MLA','DUB','BRU','NAP','VCE','CTA','PMO','BRI','PDL','TER'],
+  'latinoamerica':['BOG','MDE','CTG','CLO','BAQ','LIM','UIO','GYE','SCL','EZE','GRU','VVI','CCS','SDQ','HAV','PTY','SJO','SAL','GUA','CUN','PVR','SJD'],
+  'latinoamérica':['BOG','MDE','CTG','CLO','BAQ','LIM','UIO','GYE','SCL','EZE','GRU','VVI','CCS','SDQ','HAV','PTY','SJO','SAL','GUA','CUN','PVR','SJD'],
+  'america del norte':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','YYZ','YVR'],
+  'norteamerica':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','YYZ','YVR'],
+  'medio oriente':['AUH','DXB','DOH','KWI','BEY','AMM','TLV','RUH','JED','MCT'],
+  'middle east':['AUH','DXB','DOH','KWI','BEY','AMM','TLV','RUH','JED','MCT'],
+  'asia':['NRT','HND','KIX','ICN','PEK','PVG','HKG','SIN','BKK','KUL','CGK','MNL','DEL','BOM','CMB'],
+  'oceania':['SYD','MEL','BNE','PER','ADL','AKL','WLG','CHC','ZQN'],
+  'oceanía':['SYD','MEL','BNE','PER','ADL','AKL','WLG','CHC','ZQN'],
+  'africa':['JNB','NBO','ADD','LOS','CMN','RAK','DSS','MRU','SEZ'],
+  'áfrica':['JNB','NBO','ADD','LOS','CMN','RAK','DSS','MRU','SEZ'],
+  'caribe':['NAS','MBJ','SJU','PUJ','SDQ','HAV'],
+  'caribbean':['NAS','MBJ','SJU','PUJ','SDQ','HAV'],
+  'centroamerica':['SJO','SAL','GUA','PTY'],'centroamérica':['SJO','SAL','GUA','PTY'],
 };
+
+// Resolve a search term to list of airport codes
+function resolveSearchTerm(term){
+  const tl=term.toLowerCase().trim();
+  // Exact alias
+  if(SEARCH_ALIASES[tl])return[SEARCH_ALIASES[tl]];
+  // Country/region group
+  for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+    if(k===tl&&v.length)return v;
+  }
+  // Partial match on region name
+  for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+    if(k.startsWith(tl)&&tl.length>=3&&v.length)return v;
+  }
+  // Single airport code or city
+  const matches=searchAirports(term,5);
+  return matches;
+}
+
+// Check if a value is a group (multiple airports)
+let selOrigGroup=null; // null or array of codes
+let selDestGroup=null;
 
 function searchAirports(q,limit=12){
   const ql=q.toLowerCase().trim();
@@ -906,11 +991,11 @@ window.setRouteMode=setRouteMode;
 
 function clearField(id){
   if(id==='origin'){
-    selOrig=null;
+    selOrig=null;selOrigGroup=null;
     const i=document.getElementById('input-origin');if(i)i.value='';
     const c=document.getElementById('clear-origin');if(c)c.style.display='none';
   } else {
-    selDest=null;
+    selDest=null;selDestGroup=null;
     const i=document.getElementById('input-dest');if(i)i.value='';
     const c=document.getElementById('clear-dest');if(c)c.style.display='none';
   }
@@ -928,32 +1013,105 @@ window.setFT=setFT;
 
 function initRouteInputs(){
   const area=document.getElementById('route-inputs-area');
-  area.innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-    <label style="font-size:12px;color:var(--text-secondary);font-weight:500">Origen</label>
-    <div class="apt-wrap" id="wrap-origin"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…" style="padding-right:24px"/><div class="apt-dd" id="dd-origin"></div></div>
-    <button id="swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></button>
-    <label style="font-size:12px;color:var(--text-secondary);font-weight:500">Destino</label>
-    <div class="apt-wrap" id="wrap-dest"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…" style="padding-right:24px"/><div class="apt-dd" id="dd-dest"></div></div>
+  area.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <label style="font-size:12px;color:var(--text-secondary);font-weight:500;flex-shrink:0">Origen</label>
+    <div style="position:relative;flex:1;min-width:180px;max-width:300px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
+      <button id="clear-origin" onclick="clearField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;display:none;padding:0;z-index:3;">×</button>
+      <div id="dd-origin" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:150;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
+    </div>
+    <button id="swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+    </button>
+    <label style="font-size:12px;color:var(--text-secondary);font-weight:500;flex-shrink:0">Destino</label>
+    <div style="position:relative;flex:1;min-width:180px;max-width:300px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
+      <button id="clear-dest" onclick="clearField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;display:none;padding:0;z-index:3;">×</button>
+      <div id="dd-dest" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:150;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
+    </div>
   </div>`;
-  attachAptDropdown('input-origin','dd-origin',code=>{
-    selOrig=code;document.getElementById('input-origin').value=`${cityOf(code)} (${code})`;runSearch();
-  });
-  attachAptDropdown('input-dest','dd-dest',code=>{
-    selDest=code;document.getElementById('input-dest').value=`${cityOf(code)} (${code})`;runSearch();
-  });
-  // Clear buttons are in HTML
+  // Swap button
   document.getElementById('swap-btn').addEventListener('click',()=>{
-
-    const tmp=selOrig;selOrig=selDest;selDest=tmp;
-    const oi=document.getElementById('input-origin'),di=document.getElementById('input-dest');
-    const tv=oi.value;oi.value=di.value;di.value=tv;
+    const tmp=selOrig;const tmpG=selOrigGroup;
+    selOrig=selDest;selOrigGroup=selDestGroup;
+    selDest=tmp;selDestGroup=tmpG;
+    const oi=document.getElementById('input-origin');
+    const di=document.getElementById('input-dest');
+    if(oi&&di){const tv=oi.value;oi.value=di.value;di.value=tv;}
+    const co=document.getElementById('clear-origin');
+    const cd=document.getElementById('clear-dest');
+    if(co)co.style.display=selOrig?'block':'none';
+    if(cd)cd.style.display=selDest?'block':'none';
     runSearch();
   });
-  // Clear on empty
+  attachDropdowns();
+}
+
+function attachDropdowns(){
   ['origin','dest'].forEach(id=>{
-    document.getElementById('input-'+id).addEventListener('input',e=>{
-      if(!e.target.value.trim()){if(id==='origin')selOrig=null;else selDest=null;runSearch();}
+    const input=document.getElementById('input-'+id);
+    const dropdown=document.getElementById('dd-'+id);
+    const clearBtn=document.getElementById('clear-'+id);
+    if(!input||!dropdown)return;
+    input.addEventListener('input',()=>{
+      const q=input.value.trim();
+      if(clearBtn)clearBtn.style.display=q?'block':'none';
+      if(!q){
+        dropdown.style.display='none';
+        if(id==='origin'){selOrig=null;selOrigGroup=null;}
+        else{selDest=null;selDestGroup=null;}
+        runSearch();
+        return;
+      }
+      const ql=q.toLowerCase();
+      // Check country/region
+      let regionCodes=null,regionLabel=q.charAt(0).toUpperCase()+q.slice(1);
+      if(SEARCH_ALIASES[ql])regionCodes=[SEARCH_ALIASES[ql]];
+      if(!regionCodes){
+        for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+          if((k===ql||(k.startsWith(ql)&&ql.length>=3))&&v.length){regionCodes=v;regionLabel=k.charAt(0).toUpperCase()+k.slice(1);break;}
+        }
+      }
+      let html='';
+      if(regionCodes){
+        html+=`<div class="apt-opt" data-code="__GROUP__" data-group='${JSON.stringify(regionCodes)}' data-label="${regionLabel}" style="background:var(--accent-light);border-bottom:1px solid var(--border);">
+          <span class="opt-code" style="color:var(--accent)">★</span>
+          <span style="font-weight:600;color:var(--accent)">Todos en ${regionLabel} <span style="font-size:11px;opacity:.7">(${regionCodes.length} destinos)</span></span>
+        </div>`;
+        html+=regionCodes.slice(0,6).map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}</span></div>`).join('');
+      } else {
+        const matches=searchAirports(q,10);
+        if(!matches.length){dropdown.style.display='none';return;}
+        html=matches.map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span></div>`).join('');
+      }
+      dropdown.innerHTML=html;
+      dropdown.style.display='block';
+      dropdown.querySelectorAll('[data-code]').forEach(opt=>{
+        opt.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          const code=opt.dataset.code;
+          if(code==='__GROUP__'){
+            const grp=JSON.parse(opt.dataset.group||'[]');
+            const lbl=opt.dataset.label||q;
+            input.value=lbl+' ('+grp.length+' dest.)';
+            if(clearBtn)clearBtn.style.display='block';
+            if(id==='origin'){selOrig=grp[0];selOrigGroup=grp;}
+            else{selDest=grp[0];selDestGroup=grp;}
+          } else {
+            input.value=cityOf(code)+' ('+code+')';
+            if(clearBtn)clearBtn.style.display='block';
+            if(id==='origin'){selOrig=code;selOrigGroup=null;}
+            else{selDest=code;selDestGroup=null;}
+          }
+          dropdown.style.display='none';
+          runSearch();
+        });
+      });
     });
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch();});
+    input.addEventListener('blur',()=>setTimeout(()=>dropdown.style.display='none',150));
   });
 }
 
@@ -1045,24 +1203,59 @@ function runSearch(){
     results.innerHTML=html;return;
   }
 
-  // Both
-  const allPaths=findPaths(selOrig,selDest,2);
+  // Both — expand groups if needed
+  const origCodes=selOrigGroup||(selOrig?[selOrig]:[]);
+  const destCodes=selDestGroup||(selDest?[selDest]:[]);
+
+  if(!origCodes.length||!destCodes.length){
+    results.innerHTML='<div class="route-result-empty">Completá origen y destino.</div>';return;
+  }
+
+  // Find best paths across all origin-dest combinations
+  let allPaths=[];
+  const seen=new Set();
+  for(const orig of origCodes){
+    for(const dest of destCodes){
+      if(orig===dest)continue;
+      const paths=findPaths(orig,dest,3);
+      paths.forEach(p=>{
+        // Deduplicate by route signature
+        const sig=p.path.map(s=>s.apt).join('-');
+        if(!seen.has(sig)){seen.add(sig);allPaths.push({...p,fromOrig:orig,toDest:dest});}
+      });
+    }
+  }
+
+  // Sort: directs first, then by score
+  allPaths.sort((a,b)=>a.score-b.score);
+  allPaths=allPaths.slice(0,30); // cap at 30
+
   const directs=allPaths.filter(p=>p.stops===0);
   const stopovers=allPaths.filter(p=>p.stops>0);
+
+  const isGroup=selOrigGroup||selDestGroup;
+  const origLabel=selOrigGroup?document.getElementById('input-origin').value.replace(' →',''):selOrig;
+  const destLabel=selDestGroup?document.getElementById('input-dest').value.replace(' →',''):selDest;
 
   if(flightType==='direct'&&!directs.length&&stopovers.length){setFT('stopover',true);}
   else if(flightType==='stopover'&&!stopovers.length&&directs.length){setFT('direct',true);}
 
   if(flightType==='direct'){
-    if(!directs.length){results.innerHTML=`<div class="route-result-empty">No hay vuelos directos entre ${selOrig} y ${selDest}. Probá "Con escala".</div>`;return;}
+    if(!directs.length){results.innerHTML=`<div class="route-result-empty">No hay vuelos directos entre ${origLabel} y ${destLabel}. Probá "Con escala".</div>`;return;}
     let html=`<div class="route-section-subtitle" style="margin-bottom:10px">DIRECTOS (${directs.length})</div>`;
-    directs.forEach(p=>{html+=pathCardHTML(p,selOrig,selDest);});
+    directs.forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
     results.innerHTML=html;
   } else {
-    if(!allPaths.length){results.innerHTML=`<div class="route-result-empty">No se encontraron rutas ZED entre ${selOrig} y ${selDest}.</div>`;return;}
+    if(!allPaths.length){results.innerHTML=`<div class="route-result-empty">No se encontraron rutas ZED entre ${origLabel} y ${destLabel}.</div>`;return;}
     let html='';
-    if(directs.length){html+=`<div class="route-section-subtitle" style="margin-bottom:10px">DIRECTOS (${directs.length})</div>`;directs.forEach(p=>{html+=pathCardHTML(p,selOrig,selDest);});}
-    if(stopovers.length){html+=`<div class="route-section-subtitle" style="margin-bottom:10px;margin-top:${directs.length?'16px':'0'}">CON ESCALA (${stopovers.length} opciones)</div>`;stopovers.slice(0,20).forEach(p=>{html+=pathCardHTML(p,selOrig,selDest);});}
+    if(directs.length){
+      html+=`<div class="route-section-subtitle" style="margin-bottom:10px">DIRECTOS (${directs.length})</div>`;
+      directs.forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
+    }
+    if(stopovers.length){
+      html+=`<div class="route-section-subtitle" style="margin-bottom:10px;margin-top:${directs.length?'16px':'0'}">CON ESCALA (${stopovers.length} opciones)</div>`;
+      stopovers.slice(0,20).forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
+    }
     results.innerHTML=html;
   }
 }
