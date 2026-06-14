@@ -1246,6 +1246,32 @@ function initMap(){
   document.head.appendChild(sc);
 }
 
+// Track base lines with their airport codes for hover highlight
+const baseLineData=[]; // {line, airports:[o,d], iata}
+
+function highlightLinesForAirport(code, highlight){
+  if(mapOrig||mapDest)return; // Don't interfere when routes are selected
+  baseLineData.forEach(({line,airports,iata})=>{
+    if(airports.includes(code)){
+      if(highlight){
+        line.setStyle({weight:2.5,opacity:0.7});
+        line.bringToFront();
+      } else {
+        line.setStyle({weight:1,opacity:0.12});
+      }
+    }
+  });
+}
+
+function openGoogleMaps(code){
+  const c=ll(code);
+  if(!c)return;
+  const city=cityOf(code);
+  const url='https://www.google.com/maps/search/'+encodeURIComponent(city+' airport')+'/@'+c[0]+','+c[1]+',12z';
+  window.open(url,'_blank');
+}
+window.openGoogleMaps=openGoogleMaps;
+
 function buildBaseLayer(){
   // Draw all routes as faint lines
   Object.entries(ROUTES).forEach(([iata,pairs])=>{
@@ -1254,8 +1280,9 @@ function buildBaseLayer(){
       const[o,d]=pair.split('-');
       const oc=ll(o),dc=ll(d);
       if(!oc||!dc)return;
-      const line=L.polyline([oc,dc],{color,weight:1,opacity:0.12,interactive:false}).addTo(mapInstance);
+      const line=L.polyline([oc,dc],{color,weight:1,opacity:0.12,interactive:true}).addTo(mapInstance);
       baseLines.push(line);
+      baseLineData.push({line,airports:[o,d],iata});
     });
   });
   // Draw airport markers
@@ -1269,9 +1296,19 @@ function buildBaseLayer(){
     // Tooltip on hover: show city name + code, like flightconnections
     const tip=`<b>${code}</b>${cityOf(code)!==code?' — '+cityOf(code):''}${countryOf(code)?' · '+countryOf(code):''}`;
     m.bindTooltip(tip,{sticky:true,className:'leaflet-tooltip-zed',direction:'top',offset:[0,-4]});
-    m.on('click',()=>onMapAirportClick(code));
-    m.on('mouseover',()=>m.setStyle({fillOpacity:1,radius:r+2}));
-    m.on('mouseout',()=>{if(code!==mapOrig&&code!==mapDest)m.setStyle({fillOpacity:isHub?0.9:0.5,radius:r});});
+    m.on('click',e=>{L.DomEvent.stopPropagation(e);onMapAirportClick(code);});
+    m.on('contextmenu',()=>{
+      // Right-click or long-press → open Google Maps
+      openGoogleMaps(code);
+    });
+    m.on('mouseover',()=>{
+      m.setStyle({fillOpacity:1,radius:r+2});
+      highlightLinesForAirport(code,true);
+    });
+    m.on('mouseout',()=>{
+      if(code!==mapOrig&&code!==mapDest)m.setStyle({fillOpacity:isHub?0.9:0.5,radius:r});
+      highlightLinesForAirport(code,false);
+    });
     baseMarkers[code]=m;
   });
 }
@@ -1350,8 +1387,14 @@ function showOriginRoutes(orig){
     const alNames=airlines.map(al=>{const a=DATA.find(x=>x.iata===al);return a?al+' '+a.name:al;}).join(', ');
     const tipText=`<b>${dest}</b> — ${cityOf(dest)}<br><span style="opacity:.8">${alNames}</span>`;
     line.bindTooltip(tipText,{sticky:true,className:'leaflet-tooltip-zed',direction:'top'});
-    line.on('mouseover',()=>line.setStyle({weight:4,opacity:1}));
-    line.on('mouseout',()=>line.setStyle({weight:2,opacity:0.5}));
+    line.on('mouseover',()=>{
+      line.setStyle({weight:4,opacity:1});
+      if(baseMarkers[dest])baseMarkers[dest].setStyle({fillOpacity:1,radius:markerRadius(dest)+3});
+    });
+    line.on('mouseout',()=>{
+      line.setStyle({weight:2,opacity:0.5});
+      if(dest!==mapDest&&baseMarkers[dest])baseMarkers[dest].setStyle({fillOpacity:0.85,radius:markerRadius(dest)+1});
+    });
     line.on('click',()=>onMapAirportClick(dest));
     routeLayers.push(line);
     if(baseMarkers[dest])baseMarkers[dest].setStyle({fillColor:col,fillOpacity:0.85,radius:markerRadius(dest)+1});
@@ -1365,12 +1408,17 @@ function showOriginRoutes(orig){
   dests.forEach(dest=>{
     const als=destsByAl[dest];
     const col=als.length===1?(AL_COLORS[als[0]]||'#888'):'#888';
-    html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;margin-bottom:3px;cursor:pointer;background:var(--surface-2);" onclick="onMapAirportClick('${dest}')" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
-      <div style="flex:1;min-width:0;">
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;margin-bottom:3px;background:var(--surface-2);" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
+      <div style="flex:1;min-width:0;cursor:pointer;" onclick="onMapAirportClick('${dest}')">
         <div style="font-size:12px;font-weight:500">${cityOf(dest)}</div>
         <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted)">${dest}</div>
       </div>
-      <div style="display:flex;gap:2px;">${als.map(al=>`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${AL_COLORS[al]||'#999'};background:${AL_COLORS[al]||'#999'}22;border-radius:3px;padding:1px 4px">${al}</span>`).join('')}</div>
+      <div style="display:flex;gap:2px;align-items:center;">
+        ${als.map(al=>`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${AL_COLORS[al]||'#999'};background:${AL_COLORS[al]||'#999'}22;border-radius:3px;padding:1px 4px">${al}</span>`).join('')}
+        <a href="https://www.google.com/maps/search/${encodeURIComponent?encodeURIComponent(cityOf(dest)+' airport'):cityOf(dest)+' airport'}/@${ll(dest)?ll(dest)[0]:0},${ll(dest)?ll(dest)[1]:0},12z" target="_blank" onclick="event.stopPropagation()" title="Ver en Google Maps" style="margin-left:2px;color:var(--text-muted);opacity:.6;text-decoration:none;font-size:13px;display:flex;align-items:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </a>
+      </div>
     </div>`;
   });
   document.getElementById('map-side-content').innerHTML=html;
