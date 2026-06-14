@@ -133,6 +133,13 @@ input.asearch:focus{border-color:var(--accent);}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .legend-line{width:24px;height:3px;border-radius:2px;flex-shrink:0;}
 #map-side-content{overscroll-behavior:contain;touch-action:pan-y;}
+/* Hide × by default, show when input has content */
+#input-origin + button, #input-dest + button,
+#map-origin + button, #map-dest + button{display:none;}
+#input-origin:not(:placeholder-shown) + button,
+#input-dest:not(:placeholder-shown) + button,
+#map-origin:not(:placeholder-shown) + button,
+#map-dest:not(:placeholder-shown) + button{display:block;}
 .map-body{isolation:isolate;}
 #map-container{touch-action:none;}
 /* Panel */
@@ -296,7 +303,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         <div class="apt-wrap" style="max-width:230px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="apt-input" id="map-origin" placeholder="Origen…" autocomplete="off" style="padding-right:28px;"/>
-          <button id="map-clear-origin" onclick="clearMapField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;display:none;padding:0;z-index:2;">×</button>
+          <button id="map-clear-origin" onclick="clearMapField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;z-index:2;">×</button>
           <div class="apt-dd" id="map-origin-dd"></div>
         </div>
         <button id="map-swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
@@ -305,7 +312,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         <div class="apt-wrap" style="max-width:230px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="apt-input" id="map-dest" placeholder="Destino…" autocomplete="off" style="padding-right:28px;"/>
-          <button id="map-clear-dest" onclick="clearMapField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;display:none;padding:0;z-index:2;">×</button>
+          <button id="map-clear-dest" onclick="clearMapField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;z-index:2;">×</button>
           <div class="apt-dd" id="map-dest-dd"></div>
         </div>
 
@@ -1018,7 +1025,7 @@ function initRouteInputs(){
     <div style="position:relative;flex:1;min-width:180px;max-width:300px;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
-      <button id="clear-origin" onclick="clearField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;display:none;padding:0;z-index:3;">×</button>
+      <button id="clear-origin" onclick="clearField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0;z-index:3;">×</button>
       <div id="dd-origin" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:150;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
     </div>
     <button id="swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
@@ -1028,7 +1035,7 @@ function initRouteInputs(){
     <div style="position:relative;flex:1;min-width:180px;max-width:300px;">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
-      <button id="clear-dest" onclick="clearField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;display:none;padding:0;z-index:3;">×</button>
+      <button id="clear-dest" onclick="clearField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0;z-index:3;">×</button>
       <div id="dd-dest" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:150;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
     </div>
   </div>`;
@@ -1071,7 +1078,9 @@ function attachDropdowns(){
       if(SEARCH_ALIASES[ql])regionCodes=[SEARCH_ALIASES[ql]];
       if(!regionCodes){
         for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
-          if((k===ql||(k.startsWith(ql)&&ql.length>=3))&&v.length){regionCodes=v;regionLabel=k.charAt(0).toUpperCase()+k.slice(1);break;}
+          if((k===ql||(k.startsWith(ql)||k.includes(ql))&&ql.length>=3)&&v.length){
+            regionCodes=v;regionLabel=k.charAt(0).toUpperCase()+k.slice(1);break;
+          }
         }
       }
       let html='';
@@ -1110,7 +1119,42 @@ function attachDropdowns(){
         });
       });
     });
-    input.addEventListener('keydown',e=>{if(e.key==='Enter')runSearch();});
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const q=input.value.trim();
+        const ql=q.toLowerCase();
+        // Try region match first
+        let matched=false;
+        if(SEARCH_ALIASES[ql]){
+          const code=SEARCH_ALIASES[ql];
+          input.value=cityOf(code)+' ('+code+')';
+          if(clearBtn)clearBtn.style.display='block';
+          if(id==='origin'){selOrig=code;selOrigGroup=null;}
+          else{selDest=code;selDestGroup=null;}
+          if(dropdown)dropdown.style.display='none';
+          matched=true;
+        } else {
+          for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+            if((k===ql||(k.includes(ql)&&ql.length>=3))&&v.length){
+              input.value=k.charAt(0).toUpperCase()+k.slice(1)+' ('+v.length+' dest.)';
+              if(clearBtn)clearBtn.style.display='block';
+              if(id==='origin'){selOrig=v[0];selOrigGroup=v;}
+              else{selDest=v[0];selDestGroup=v;}
+              if(dropdown)dropdown.style.display='none';
+              matched=true;
+              break;
+            }
+          }
+        }
+        // If no region, pick first dropdown option if visible
+        if(!matched&&dropdown&&dropdown.style.display!=='none'){
+          const first=dropdown.querySelector('[data-code]');
+          if(first)first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
+        } else if(matched){
+          runSearch();
+        }
+      }
+    });
     input.addEventListener('blur',()=>setTimeout(()=>dropdown.style.display='none',150));
   });
 }
@@ -1769,15 +1813,54 @@ const ZONE_BOUNDS={
   '5':[[-50,60],[60,180]],
   '6':[[-50,110],[-5,180]],
 };
+// Zone airport sets for filtering
+const ZONE_AIRPORTS={
+  '1':new Set(['MAD','BCN','LIS','LHR','LGW','CDG','AMS','FRA','MUC','VIE','ZRH','GVA','FCO','MXP','PMI','IBZ','ACE','FUE','LPA','TFS','TFN','SPC','VDE','GMZ','HEL','ARN','OSL','CPH','WAW','PRG','BUD','BER','ATH','IST','MLA','DUB','BRU','PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU','OPO','SEZ','PRI','NAP','VCE','CTA','PMO','BRI','CAG','PSA','BLQ','VRN','MRS','LYS','NCE','TLS','BOD','AGP','ALC','SVQ','VLC','BIO','MAH','CMN','RAK','AGA','TUN','ALG']),
+  '2':new Set(['JFK','EWR','LAX','ORD','MDW','MIA','BOS','IAD','SFO','SEA','DEN','DFW','ATL','IAH','PHX','LAS','MCO','SFB','PIE','FLL','TPA','PGD','AZA','YYZ','YVR','YYC','YOW','YEG','YUL','YZF','YFB','YHY','YXY','YRB','YCB','YXL','YQT','YRL','YFH','YXS','YKA','YXJ','YQQ','YHZ','YWG','YYJ','YXE','YQR','YXX','YLW','YYT','CLT','BNA','AUS','HOU','PDX','PIT','CLE','CMH','CVG','IND','GRR','BHM','SAV','MYR','RIC','ILM','GSP','EUG','GEG','BOI','MSO','BIL','FAR','FSD','DSM','OMA','ICT','TUL','OKC','MKE','STL','MSY','SAT','ABQ','PHL','SAN','RDU','MCI']),
+  '3':new Set(['BOG','MDE','CTG','CLO','BAQ','CUC','ADZ','PEI','BGA','LIM','UIO','GYE','SCL','EZE','GRU','VVI','CCS','SDQ','HAV','SJO','SAL','GUA','PTY','CUN','PVR','SJD','NAS','MBJ','SJU','PUJ','FOR','REC','IQQ','ANF','LSC','CCP','PMC','PUQ','ZCO','CJC','ARI','CPO']),
+  '4':new Set(['AUH','DXB','DOH','KWI','BEY','AMM','TLV','RUH','JED','MCT','CAI','JNB','NBO','LOS','ADD','CMN','DSS','MRU','RAI','SID','VXE','BVC','CPT','MBA','DAR']),
+  '5':new Set(['NRT','HND','KIX','ICN','PEK','PVG','HKG','SIN','BKK','HKT','KUL','CGK','DPS','MNL','DEL','BOM','CMB','MLE']),
+  '6':new Set(['SYD','MEL','BNE','PER','ADL','CBR','OOL','CNS','AKL','WLG','CHC','ZQN','DUD','NSN','HLZ','PMR','ROT','NPE','NPL','TRG','IVC','NAN','PPT','HNL']),
+};
+
+function applyMapZoneFilter(z){
+  if(!mapInstance)return;
+  if(z==='all'){
+    // Show everything at base opacity
+    baseLineData.forEach(({line})=>line.setStyle({weight:1,opacity:0.12}));
+    Object.values(baseMarkers).forEach(m=>{
+      const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
+      m.setStyle({opacity:1,fillOpacity:isHub?0.9:0.5});
+    });
+    mapInstance.setView([25,10],2);
+  } else {
+    const zoneSet=ZONE_AIRPORTS[z]||new Set();
+    // Zoom to zone
+    if(ZONE_BOUNDS[z])mapInstance.fitBounds(ZONE_BOUNDS[z],{padding:[30,30]});
+    // Filter lines: show only those with at least one endpoint in this zone
+    baseLineData.forEach(({line,airports})=>{
+      const relevant=airports.some(a=>zoneSet.has(a));
+      line.setStyle({weight:relevant?1.5:0.5,opacity:relevant?0.3:0.04});
+    });
+    // Filter markers: highlight zone airports, dim others
+    Object.entries(baseMarkers).forEach(([code,m])=>{
+      const inZone=zoneSet.has(code);
+      const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
+      m.setStyle({
+        opacity:inZone?1:0.2,
+        fillOpacity:inZone?(isHub?0.95:0.7):0.1,
+        radius:inZone?(isHub?8:5):3,
+      });
+    });
+  }
+}
+
 function setupMapZoneBtns(){
   document.querySelectorAll('.mz-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       document.querySelectorAll('.mz-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      const z=btn.dataset.mz;
-      if(!mapInstance)return;
-      if(z==='all')mapInstance.setView([25,10],2);
-      else if(ZONE_BOUNDS[z])mapInstance.fitBounds(ZONE_BOUNDS[z],{padding:[20,20]});
+      applyMapZoneFilter(btn.dataset.mz);
     });
   });
 }
