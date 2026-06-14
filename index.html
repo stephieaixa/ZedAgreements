@@ -1057,14 +1057,39 @@ function initRouteInputs(){
 }
 
 function attachDropdowns(){
+  // Normalize: remove accents for fuzzy matching
+  function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
+
+  // Find region match - returns {label, codes} or null
+  function findRegion(q){
+    const qn=norm(q);
+    if(qn.length<3)return null;
+    // Check aliases first
+    for(const[k,v]of Object.entries(SEARCH_ALIASES)){
+      if(norm(k)===qn)return{label:q,codes:[v]};
+    }
+    // Check country/region groups
+    for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+      const kn=norm(k);
+      if((kn===qn||kn.startsWith(qn)||qn.startsWith(kn.slice(0,4)))&&v.length){
+        return{label:k.charAt(0).toUpperCase()+k.slice(1),codes:v};
+      }
+    }
+    return null;
+  }
+
+  // Temp store for group selections (avoid JSON in HTML attrs)
+  const pendingGroups={};
+  let groupCounter=0;
+
   ['origin','dest'].forEach(id=>{
     const input=document.getElementById('input-'+id);
     const dropdown=document.getElementById('dd-'+id);
     const clearBtn=document.getElementById('clear-'+id);
     if(!input||!dropdown)return;
+
     input.addEventListener('input',()=>{
       const q=input.value.trim();
-      if(clearBtn)clearBtn.style.display=q?'block':'none';
       if(!q){
         dropdown.style.display='none';
         if(id==='origin'){selOrig=null;selOrigGroup=null;}
@@ -1072,89 +1097,85 @@ function attachDropdowns(){
         runSearch();
         return;
       }
-      const ql=q.toLowerCase();
-      // Check country/region
-      let regionCodes=null,regionLabel=q.charAt(0).toUpperCase()+q.slice(1);
-      if(SEARCH_ALIASES[ql])regionCodes=[SEARCH_ALIASES[ql]];
-      if(!regionCodes){
-        for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
-          if((k===ql||(k.startsWith(ql)||k.includes(ql))&&ql.length>=3)&&v.length){
-            regionCodes=v;regionLabel=k.charAt(0).toUpperCase()+k.slice(1);break;
-          }
-        }
-      }
+
+      // Build dropdown options
       let html='';
-      if(regionCodes){
-        html+=`<div class="apt-opt" data-code="__GROUP__" data-group='${JSON.stringify(regionCodes)}' data-label="${regionLabel}" style="background:var(--accent-light);border-bottom:1px solid var(--border);">
+      const region=findRegion(q);
+      if(region){
+        // Store group with key to avoid HTML attribute escaping issues
+        const gkey='g'+(groupCounter++);
+        pendingGroups[gkey]=region.codes;
+        html+=`<div class="apt-opt" data-gkey="${gkey}" style="background:var(--accent-light);border-bottom:1px solid var(--border);">
           <span class="opt-code" style="color:var(--accent)">★</span>
-          <span style="font-weight:600;color:var(--accent)">Todos en ${regionLabel} <span style="font-size:11px;opacity:.7">(${regionCodes.length} destinos)</span></span>
+          <span><b style="color:var(--accent)">Todos en ${region.label}</b> <span style="font-size:11px;opacity:.7;color:var(--accent)">${region.codes.length} aeropuertos</span></span>
         </div>`;
-        html+=regionCodes.slice(0,6).map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}</span></div>`).join('');
+        // Show individual airports in group
+        html+=region.codes.slice(0,6).map(c=>`<div class="apt-opt" data-code="${c}">
+          <span class="opt-code">${c}</span>
+          <span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span>
+        </div>`).join('');
       } else {
         const matches=searchAirports(q,10);
         if(!matches.length){dropdown.style.display='none';return;}
-        html=matches.map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span></div>`).join('');
+        html=matches.map(c=>`<div class="apt-opt" data-code="${c}">
+          <span class="opt-code">${c}</span>
+          <span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span>
+        </div>`).join('');
       }
+
       dropdown.innerHTML=html;
       dropdown.style.display='block';
+
+      // Wire click handlers
+      dropdown.querySelectorAll('[data-gkey]').forEach(opt=>{
+        opt.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          const grp=pendingGroups[opt.dataset.gkey]||[];
+          const lbl=opt.querySelector('b').textContent;
+          input.value=lbl+' ('+grp.length+')';
+          if(id==='origin'){selOrig=grp[0]||null;selOrigGroup=grp;}
+          else{selDest=grp[0]||null;selDestGroup=grp;}
+          dropdown.style.display='none';
+          runSearch();
+        });
+      });
       dropdown.querySelectorAll('[data-code]').forEach(opt=>{
         opt.addEventListener('mousedown',e=>{
           e.preventDefault();
           const code=opt.dataset.code;
-          if(code==='__GROUP__'){
-            const grp=JSON.parse(opt.dataset.group||'[]');
-            const lbl=opt.dataset.label||q;
-            input.value=lbl+' ('+grp.length+' dest.)';
-            if(clearBtn)clearBtn.style.display='block';
-            if(id==='origin'){selOrig=grp[0];selOrigGroup=grp;}
-            else{selDest=grp[0];selDestGroup=grp;}
-          } else {
-            input.value=cityOf(code)+' ('+code+')';
-            if(clearBtn)clearBtn.style.display='block';
-            if(id==='origin'){selOrig=code;selOrigGroup=null;}
-            else{selDest=code;selDestGroup=null;}
-          }
+          input.value=cityOf(code)+' ('+code+')';
+          if(id==='origin'){selOrig=code;selOrigGroup=null;}
+          else{selDest=code;selDestGroup=null;}
           dropdown.style.display='none';
           runSearch();
         });
       });
     });
+
+    // Enter key: try region match first, then first dropdown item
     input.addEventListener('keydown',e=>{
       if(e.key==='Enter'){
         const q=input.value.trim();
-        const ql=q.toLowerCase();
-        // Try region match first
-        let matched=false;
-        if(SEARCH_ALIASES[ql]){
-          const code=SEARCH_ALIASES[ql];
-          input.value=cityOf(code)+' ('+code+')';
-          if(clearBtn)clearBtn.style.display='block';
-          if(id==='origin'){selOrig=code;selOrigGroup=null;}
-          else{selDest=code;selDestGroup=null;}
-          if(dropdown)dropdown.style.display='none';
-          matched=true;
-        } else {
-          for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
-            if((k===ql||(k.includes(ql)&&ql.length>=3))&&v.length){
-              input.value=k.charAt(0).toUpperCase()+k.slice(1)+' ('+v.length+' dest.)';
-              if(clearBtn)clearBtn.style.display='block';
-              if(id==='origin'){selOrig=v[0];selOrigGroup=v;}
-              else{selDest=v[0];selDestGroup=v;}
-              if(dropdown)dropdown.style.display='none';
-              matched=true;
-              break;
-            }
-          }
+        const region=findRegion(q);
+        if(region){
+          input.value=region.label+' ('+region.codes.length+')';
+          if(id==='origin'){selOrig=region.codes[0]||null;selOrigGroup=region.codes;}
+          else{selDest=region.codes[0]||null;selDestGroup=region.codes;}
+          dropdown.style.display='none';
+          runSearch();
+          return;
         }
-        // If no region, pick first dropdown option if visible
-        if(!matched&&dropdown&&dropdown.style.display!=='none'){
-          const first=dropdown.querySelector('[data-code]');
-          if(first)first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
-        } else if(matched){
+        // Try first visible dropdown option
+        const first=dropdown.querySelector('[data-code],[data-gkey]');
+        if(first&&dropdown.style.display!=='none'){
+          first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
+        } else {
           runSearch();
         }
       }
+      if(e.key==='Escape')dropdown.style.display='none';
     });
+
     input.addEventListener('blur',()=>setTimeout(()=>dropdown.style.display='none',150));
   });
 }
