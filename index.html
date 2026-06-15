@@ -994,28 +994,15 @@ let selDestGroup=null;
 
 function searchAirports(q,limit=12){
   const ql=norm(q);
-  if(!ql||ql.length<2)return[];
-  // Alias match (exact or partial)
-  for(const[k,v]of Object.entries(SEARCH_ALIASES)){
-    if(norm(k)===ql||norm(k).startsWith(ql)){
-      const codes=Array.isArray(v)?v:[v];
-      return codes.filter(c=>allAptCodes.includes(c));
-    }
-  }
-  // Country/region group (exact or partial)
-  for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
-    const kn=norm(k);
-    if((kn===ql||kn.startsWith(ql)||(ql.length>=3&&kn.includes(ql)))&&v.length){
-      return v.filter(c=>allAptCodes.includes(c));
-    }
-  }
-  // Airport code/city/country match
-  return allAptCodes.filter(c=>{
+  if(!ql)return[];
+  // ALWAYS search airport codes/cities first (so JFK shows on "j")
+  const direct=allAptCodes.filter(c=>{
     const city=norm(cityOf(c));
     const country=norm(countryOf(c));
     const code=c.toLowerCase();
-    return code.startsWith(ql)||city.includes(ql)||country.includes(ql)||city.startsWith(ql);
+    return code.startsWith(ql)||city.startsWith(ql)||(ql.length>=3&&(city.includes(ql)||country.includes(ql)||code.includes(ql)));
   }).slice(0,limit);
+  return direct;
 }
 
 function aptDropdownHTML(codes){
