@@ -79,8 +79,9 @@ input.asearch:focus{border-color:var(--accent);}
 .mode-btn{padding:7px 16px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all .15s;}
 .mode-btn.active{background:var(--accent);color:#fff;font-weight:500;}
 .flight-toggle{display:none;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--surface);}
-.ft-btn{padding:7px 14px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:12px;cursor:pointer;}
+.ft-btn{padding:7px 16px;border:none;background:transparent;color:var(--text-secondary);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .15s;}
 .ft-btn.active{background:var(--accent);color:#fff;font-weight:500;}
+.ft-btn:hover:not(.active){background:var(--surface-2);}
 /* Airport search */
 .apt-wrap{position:relative;flex:1;min-width:150px;max-width:280px;}
 .apt-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;}
@@ -140,6 +141,9 @@ input.asearch:focus{border-color:var(--accent);}
 #input-dest:not(:placeholder-shown) + button,
 #map-origin:not(:placeholder-shown) + button,
 #map-dest:not(:placeholder-shown) + button{display:block;}
+/* Show search button when either field has content */
+#route-inputs-area:has(#input-origin:not(:placeholder-shown)) ~ div #search-btn,
+#route-inputs-area:has(#input-dest:not(:placeholder-shown)) ~ div #search-btn{display:inline-block;}
 .map-body{isolation:isolate;}
 #map-container{touch-action:none;}
 /* Panel */
@@ -275,12 +279,17 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
     <p id="route-desc">Completá uno o los dos campos — solo muestra aerolíneas que permiten viajar sola.</p>
 
     <div id="single-mode">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;" id="route-inputs-area"></div>
-      <div class="flight-toggle" id="flight-toggle">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;" id="route-inputs-area"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="flight-toggle" id="flight-toggle" style="display:none;">
         <button class="ft-btn active" onclick="setFT('direct',false)">Directa</button>
         <button class="ft-btn" onclick="setFT('stopover',false)">Con escala</button>
       </div>
-      <div id="route-results" style="margin-top:16px;"></div>
+      <button id="search-btn" onclick="runSearch()" style="display:none;padding:7px 20px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;">
+        Buscar
+      </button>
+    </div>
+    <div id="route-results"></div>
     </div>
 
     <div id="multi-mode" style="display:none;">
@@ -1118,7 +1127,7 @@ function setFT(t,skip){
   document.querySelectorAll('.ft-btn').forEach((b,i)=>{
     b.classList.toggle('active',(t==='direct'&&i===0)||(t==='stopover'&&i===1));
   });
-  if(!skip&&(selOrig||selDest))runSearch();
+  if(!skip&&(selOrig||selOrigGroup||selDest||selDestGroup))runSearch();
 }
 window.setFT=setFT;
 
@@ -1336,7 +1345,10 @@ function runSearch(){
   const results=document.getElementById('route-results');
   const toggle=document.getElementById('flight-toggle');
   if(!selOrig&&!selDest){results.innerHTML='';toggle.style.display='none';return;}
-  toggle.style.display=(selOrig&&selDest)?'flex':'none';
+  const hasBoth=(selOrig||selOrigGroup)&&(selDest||selDestGroup);
+  toggle.style.display=hasBoth?'flex':'none';
+  const searchBtn=document.getElementById('search-btn');
+  if(searchBtn)searchBtn.style.display=(selOrig||selOrigGroup||selDest||selDestGroup)?'inline-block':'none';
 
   if(selOrig&&!selDest){
     // Show all airlines + dests from origin
