@@ -1343,21 +1343,20 @@ function attachDropdowns(){
   // Find region match - returns {label, codes} or null
   function findRegion(q){
     const qn=norm(q);
-    if(qn.length<2)return null;
-    // Check aliases — exact AND partial (startsWith)
+    // Need at least 3 chars to suggest a region/country
+    if(qn.length<3)return null;
+    // Check aliases — exact or startsWith (only 3+ chars)
     for(const[k,v]of Object.entries(SEARCH_ALIASES)){
       const kn=norm(k);
       if(kn===qn||kn.startsWith(qn)){
-        // v could be a single code or array
         const codes=Array.isArray(v)?v:[v];
-        const label=k.charAt(0).toUpperCase()+k.slice(1);
-        return{label,codes};
+        return{label:k.charAt(0).toUpperCase()+k.slice(1),codes};
       }
     }
-    // Check country/region groups — exact, startsWith, or contains
+    // Check country/region groups — must match at least 3 chars
     for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
       const kn=norm(k);
-      if((kn===qn||kn.startsWith(qn)||(qn.length>=3&&kn.includes(qn)))&&v.length){
+      if((kn===qn||kn.startsWith(qn)||(qn.length>=4&&kn.includes(qn)))&&v.length){
         return{label:k.charAt(0).toUpperCase()+k.slice(1),codes:v};
       }
     }
