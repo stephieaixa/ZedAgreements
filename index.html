@@ -1031,9 +1031,9 @@ function openPanel(iata){
     html+=`<div class="panel-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div class="panel-section-title" style="margin-bottom:0">Destinos (${total})</div>
-        <button onclick="toggleDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;font-family:var(--sans);">Ver destinos ↓</button>
+        <button onclick="toggleDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;font-family:var(--sans);">Ver todos ↓</button>
       </div>
-      <div id="dp" style="display:none;">`;
+      <div id="dp">`;
     // Preview: first region, max 6 cities
     const fr=a.dests[0];
     html+=`<div class="region-label">${fr.r}</div><div class="dest-grid">`;
