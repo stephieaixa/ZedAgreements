@@ -652,22 +652,29 @@ function findPaths(origin,dest,maxStops=2){
   buildGraph();
   if(!GRAPH[origin])return[];
   const results=[];
+  const seenSigs=new Set();
   const q=[{curr:origin,path:[{apt:origin,al:null}],visited:new Set([origin])}];
-  while(q.length&&results.length<60){
+  while(q.length&&results.length<80){
     const{curr,path,visited}=q.shift();
-    if(curr===dest){results.push(path);continue;}
+    if(curr===dest){
+      const segs=path.slice(1);
+      const airlines=[...new Set(segs.map(s=>s.al))];
+      const stops=path.length-2;
+      // Dedup by airline sequence + intermediate hubs
+      const sig=segs.map(s=>s.al+'→'+s.apt).join('|');
+      if(!seenSigs.has(sig)){
+        seenSigs.add(sig);
+        results.push({path,segs,airlines,stops,score:stops*10+airlines.length});
+      }
+      continue;
+    }
     if(path.length-2>=maxStops)continue;
     for(const{d,al}of(GRAPH[curr]||[])){
       if(visited.has(d))continue;
       q.push({curr:d,path:[...path,{apt:d,al}],visited:new Set([...visited,d])});
     }
   }
-  return results.map(path=>{
-    const segs=path.slice(1);
-    const airlines=[...new Set(segs.map(s=>s.al))];
-    const stops=path.length-2;
-    return{path,segs,airlines,stops,score:stops*10+airlines.length};
-  }).sort((a,b)=>a.score-b.score);
+  return results.sort((a,b)=>a.score-b.score);
 }
 
 function findStopoverRoutes(o,d){return findPaths(o,d,2).filter(r=>r.stops>0);}
@@ -762,11 +769,108 @@ const COUNTRY_AIRPORTS={
   'asia':['NRT','HND','KIX','ICN','PEK','PVG','HKG','SIN','BKK','KUL','CGK','MNL','DEL','BOM','CMB'],
   'oceania':['SYD','MEL','BNE','PER','ADL','AKL','WLG','CHC','ZQN'],
   'oceanía':['SYD','MEL','BNE','PER','ADL','AKL','WLG','CHC','ZQN'],
-  'africa':['JNB','NBO','ADD','LOS','CMN','RAK','DSS','MRU','SEZ'],
-  'áfrica':['JNB','NBO','ADD','LOS','CMN','RAK','DSS','MRU','SEZ'],
-  'caribe':['NAS','MBJ','SJU','PUJ','SDQ','HAV'],
+  'africa':['JNB','NBO','ADD','LOS','CMN','RAK','DSS','MRU','SEZ','CPT','MBA','DAR'],
+  'áfrica':['JNB','NBO','ADD','LOS','CMN','RAK','DSS','MRU','SEZ','CPT','MBA','DAR'],
+  'caribe':['NAS','MBJ','SJU','PUJ','SDQ','HAV','ADZ'],
   'caribbean':['NAS','MBJ','SJU','PUJ','SDQ','HAV'],
   'centroamerica':['SJO','SAL','GUA','PTY'],'centroamérica':['SJO','SAL','GUA','PTY'],
+  // Asia by country
+  'japon':['NRT','HND','KIX'],'japón':['NRT','HND','KIX'],'japan':['NRT','HND','KIX'],
+  'corea':['ICN','PUS'],'korea':['ICN','PUS'],'corea del sur':['ICN','PUS'],
+  'china':['PEK','PVG'],'pekin':['PEK'],'pekín':['PEK'],'beijing':['PEK'],
+  'shanghai':['PVG'],'hong kong':['HKG'],
+  'tailandia':['BKK','HKT'],'thailand':['BKK','HKT'],'bangkok':['BKK'],
+  'singapur':['SIN'],'singapore':['SIN'],
+  'malasia':['KUL'],'malaysia':['KUL'],'kuala lumpur':['KUL'],
+  'indonesia':['CGK','DPS'],'bali':['DPS'],'jakarta':['CGK'],
+  'filipinas':['MNL'],'philippines':['MNL'],'manila':['MNL'],
+  'india':['DEL','BOM'],'delhi':['DEL'],'mumbai':['BOM'],
+  'sri lanka':['CMB'],'colombo':['CMB'],
+  'maldivas':['MLE'],'maldives':['MLE'],'male':['MLE'],'malé':['MLE'],
+  // Africa by country
+  'sudafrica':['JNB','CPT'],'south africa':['JNB','CPT'],'johannesburgo':['JNB'],
+  'kenia':['NBO','MBA'],'kenya':['NBO','MBA'],'nairobi':['NBO'],
+  'nigeria':['LOS'],'lagos':['LOS'],
+  'etiopia':['ADD'],'etiopía':['ADD'],'addis':['ADD'],
+  'senegal':['DSS'],'dakar':['DSS'],
+  'marruecos':['CMN','RAK','AGA'],'morocco':['CMN','RAK','AGA'],'casablanca':['CMN'],
+  'marrakech':['RAK'],
+  'seychelles':['SEZ','PRI'],
+  'mauricio':['MRU'],'mauritius':['MRU'],
+  'cabo verde':['RAI','SID','VXE','BVC'],'cape verde':['RAI','SID','VXE','BVC'],
+  // Middle east by country
+  'emiratos':['AUH','DXB'],'uae':['AUH','DXB'],'dubai':['DXB'],'abu dhabi':['AUH'],
+  'qatar':['DOH'],'doha':['DOH'],
+  'kuwait':['KWI'],
+  'libano':['BEY'],'líbano':['BEY'],'beirut':['BEY'],
+  'jordania':['AMM'],'amman':['AMM'],
+  'israel':['TLV'],'tel aviv':['TLV'],
+  'arabia saudita':['RUH','JED'],'saudi arabia':['RUH','JED'],'riad':['RUH'],
+  'oman':['MCT'],'omán':['MCT'],'muscat':['MCT'],
+  'egipto':['CAI'],'egypt':['CAI'],'cairo':['CAI'],
+  // Oceania by country
+  'australia':['SYD','MEL','BNE','PER','ADL','CBR'],'sydney':['SYD'],'melbourne':['MEL'],
+  'nueva zelanda':['AKL','WLG','CHC','ZQN'],'new zealand':['AKL','WLG','CHC','ZQN'],'auckland':['AKL'],
+  'fiji':['NAN'],'fiyi':['NAN'],
+  'polinesia':['PPT'],'tahiti':['PPT'],'tahití':['PPT'],
+  // North America by country/city
+  'estados unidos':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','SEA','IAD','IAH','PHX'],
+  'usa':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO'],
+  'new york':['JFK','EWR'],'nueva york':['JFK','EWR'],
+  'los angeles':['LAX'],'los ángeles':['LAX'],
+  'chicago':['ORD','MDW'],'miami':['MIA'],'boston':['BOS'],
+  'san francisco':['SFO'],'denver':['DEN'],'dallas':['DFW'],
+  'atlanta':['ATL'],'las vegas':['LAS'],'orlando':['MCO'],
+  'seattle':['SEA'],'houston':['IAH','HOU'],'washington':['IAD','DCA'],
+  'canada':['YYZ','YVR','YYC','YOW','YUL'],'canadá':['YYZ','YVR','YYC','YOW','YUL'],
+  'toronto':['YYZ'],'vancouver':['YVR'],'montreal':['YUL'],
+  // Latin America by country/city
+  'colombia':['BOG','MDE','CTG','CLO','BAQ'],'bogota':['BOG'],'bogotá':['BOG'],
+  'peru':['LIM'],'perú':['LIM'],'lima':['LIM'],
+  'ecuador':['UIO','GYE'],'quito':['UIO'],'guayaquil':['GYE'],
+  'venezuela':['CCS'],'caracas':['CCS'],
+  'bolivia':['VVI'],'santa cruz':['VVI'],
+  'brasil':['GRU','FOR','REC'],'brazil':['GRU','FOR','REC'],'sao paulo':['GRU'],
+  'argentina':['EZE'],'buenos aires':['EZE'],
+  'chile':['SCL','IQQ','ANF','CCP','PMC','PUQ'],'santiago':['SCL'],
+  'panama':['PTY'],'panamá':['PTY'],
+  'costa rica':['SJO'],'san jose':['SJO'],'san josé':['SJO'],
+  'el salvador':['SAL'],'guatemala':['GUA'],
+  'republica dominicana':['SDQ','PUJ'],'república dominicana':['SDQ','PUJ'],
+  'cuba':['HAV'],'habana':['HAV'],
+  'jamaica':['MBJ'],
+  'puerto rico':['SJU'],
+  // Europe by country/city  
+  'suiza':['ZRH','GVA'],'switzerland':['ZRH','GVA'],'zurich':['ZRH'],'zúrich':['ZRH'],'ginebra':['GVA'],
+  'austria':['VIE'],'viena':['VIE'],
+  'alemania':['FRA','MUC','BER','HAM','DUS'],'germany':['FRA','MUC','BER','HAM','DUS'],
+  'berlin':['BER'],'berlín':['BER'],'munich':['MUC'],'múnich':['MUC'],'frankfurt':['FRA'],
+  'francia':['CDG','NCE','LYS','MRS','TLS','BOD'],'france':['CDG','NCE','LYS','MRS','TLS','BOD'],'paris':['CDG'],'parís':['CDG'],
+  'reino unido':['LHR','LGW'],'uk':['LHR','LGW'],'london':['LHR','LGW'],'londres':['LHR','LGW'],
+  'irlanda':['DUB'],'ireland':['DUB'],'dublin':['DUB'],'dublín':['DUB'],
+  'belgica':['BRU'],'bélgica':['BRU'],'belgium':['BRU'],'bruselas':['BRU'],
+  'holanda':['AMS'],'netherlands':['AMS'],'amsterdam':['AMS'],'ámsterdam':['AMS'],
+  'portugal':['LIS','OPO'],'lisboa':['LIS'],'oporto':['OPO'],
+  'finlandia':['HEL'],'finland':['HEL'],'helsinki':['HEL'],
+  'suecia':['ARN'],'sweden':['ARN'],'estocolmo':['ARN'],
+  'noruega':['OSL','BGO'],'norway':['OSL'],'oslo':['OSL'],
+  'dinamarca':['CPH'],'denmark':['CPH'],'copenhague':['CPH'],
+  'polonia':['WAW'],'poland':['WAW'],'varsovia':['WAW'],
+  'republica checa':['PRG'],'czech':['PRG'],'praga':['PRG'],
+  'hungria':['BUD'],'hungary':['BUD'],'budapest':['BUD'],
+  'grecia':['ATH','HER','RHO','KGS','JTR','JMK'],'greece':['ATH','HER','RHO'],'atenas':['ATH'],
+  'turquia':['IST','AYT'],'turkey':['IST','AYT'],'estambul':['IST'],
+  'malta':['MLA'],
+  'islandia':['KEF'],'iceland':['KEF'],'reikiavik':['KEF'],
+  'azores':['PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU'],
+  'acores':['PDL','TER','HOR','PIX','SMA','GRW','SJZ','FLW','CVU'],
+  'canarias':['LPA','TFS','TFN','ACE','FUE','SPC','VDE','GMZ'],
+  'italia':['FCO','MXP','NAP','VCE','FLR','PMO','CTA','BRI','CAG','PSA','BLQ','VRN'],'italy':['FCO','MXP','NAP','VCE','FLR','PMO','CTA','BRI','CAG'],
+  'roma':['FCO'],'milan':['MXP'],'milán':['MXP'],'napoles':['NAP'],'nápoles':['NAP'],
+  'venecia':['VCE'],'catania':['CTA'],'palermo':['PMO'],
+  'espana':['MAD','BCN','SVQ','VLC','BIO','AGP','PMI','IBZ','ALC'],'spain':['MAD','BCN','SVQ','VLC','AGP','PMI'],
+  'madrid':['MAD'],'barcelona':['BCN'],'sevilla':['SVQ'],'valencia':['VLC'],
+  'malaga':['AGP'],'málaga':['AGP'],'palma':['PMI'],'ibiza':['IBZ'],
 };
 
 // Resolve a search term to list of airport codes
@@ -1183,16 +1287,26 @@ function attachDropdowns(){
 function segHTML(al,from,to){
   const a=DATA.find(x=>x.iata===al);
   const color=AL_COLORS[al]||'#999';
-  return`<div class="route-card-seg" onclick="openPanel('${al}');event.stopPropagation()">
+  const fromCity=cityOf(from);
+  const toCity=cityOf(to);
+  return`<div class="route-card-seg" style="cursor:default;">
     <div class="seg-bar" style="background:${color}"></div>
     <div style="flex:1;min-width:0;">
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">
+      <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
         <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};background:${color}22;padding:1px 5px;border-radius:3px">${al}</span>
         <span style="font-size:12px;font-weight:600">${a?a.name:al}</span>
       </div>
-      <div style="font-family:var(--mono);font-size:11px;color:var(--text-secondary)">${from} → ${to}</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+        <span style="font-family:var(--mono);color:var(--green);font-weight:600">${from}</span>
+        <span style="color:var(--text-muted);font-size:10px;">${fromCity!==from?fromCity:''}</span>
+        <span style="color:var(--text-muted)">→</span>
+        <span style="font-family:var(--mono);color:var(--accent);font-weight:600">${to}</span>
+        <span style="color:var(--text-muted);font-size:10px;">${toCity!==to?toCity:''}</span>
+      </div>
     </div>
-    <span style="font-size:10px;color:var(--text-muted)">ver →</span>
+    <button onclick="openPanel('${al}');event.stopPropagation()" style="border:none;background:var(--surface-2);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:10px;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;">
+      más info
+    </button>
   </div>`;
 }
 
