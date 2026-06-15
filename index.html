@@ -1413,10 +1413,10 @@ function pathCardHTML(p,origin,dest){
       <div style="flex:1;padding-left:10px;padding-bottom:${isLast?'4px':'14px'};">
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.2">${from}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${fromCity!==from?fromCity:''}</div>
-        <div style="display:inline-flex;align-items:center;gap:5px;background:${color}12;border:1px solid ${color}30;border-radius:6px;padding:4px 8px;margin-bottom:${isLast?'6px':'0'};">
+        <div onclick="openPanel('${al}')" style="display:inline-flex;align-items:center;gap:5px;background:${color}12;border:1px solid ${color}30;border-radius:6px;padding:4px 10px;margin-bottom:${isLast?'6px':'0'};cursor:pointer;transition:background .1s;" onmouseover="this.style.background='${color}22'" onmouseout="this.style.background='${color}12'">
           <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${color}">${al}</span>
           <span style="font-size:11px;color:var(--text-secondary)">${a?a.name:al}</span>
-          <svg width="14" height="8" viewBox="0 0 20 10" style="color:${color};opacity:.7"><line x1="0" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1.5"/><polyline points="10,1 15,5 10,9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:${color};opacity:.6;margin-left:2px"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
     </div>`;
@@ -1438,7 +1438,7 @@ function pathCardHTML(p,origin,dest){
 
   // Clickable card — opens airline panel only on "más info", not on whole card
   return`<div class="route-card" style="cursor:default;overflow:visible;">
-    <div class="route-card-head" style="cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+    <div class="route-card-head">
       <span class="rrc-apt origin">${path[0].apt}</span>
       ${path.slice(1,-1).map(s=>`<span style="color:var(--text-muted);font-size:10px">→</span><span class="rrc-apt hub">${s.apt}</span>`).join('')}
       <span style="color:var(--text-muted);font-size:10px">→</span>
@@ -1448,9 +1448,7 @@ function pathCardHTML(p,origin,dest){
         ${alBadge}
       </div>
     </div>
-    <div style="display:block;">
-      ${itinerary}
-    </div>
+    ${itinerary}
   </div>`;
 }
 
