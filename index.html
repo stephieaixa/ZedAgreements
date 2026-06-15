@@ -1545,8 +1545,17 @@ function runSearch(){
 
   if(flightType==='direct'){
     if(!directs.length){results.innerHTML=`<div class="route-result-empty">No hay vuelos directos entre ${origLabel} y ${destLabel}. Probá "Con escala".</div>`;return;}
-    let html=`<div class="route-section-subtitle" style="margin-bottom:10px">DIRECTOS (${directs.length})</div>`;
-    directs.forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
+    let html='';
+    if(directs.length>1){
+      // Highlight best direct (fewest airlines = 1 for direct, so highlight cheapest connection)
+      html+=`<div class="route-section-subtitle" style="margin-bottom:10px">★ MEJOR OPCIÓN DIRECTA</div>`;
+      html+=pathCardHTML(directs[0],directs[0].fromOrig||selOrig,directs[0].toDest||selDest);
+      html+=`<div class="route-section-subtitle" style="margin-bottom:10px;margin-top:16px">TODAS LAS OPCIONES DIRECTAS (${directs.length})</div>`;
+      directs.slice(1).forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
+    } else {
+      html+=`<div class="route-section-subtitle" style="margin-bottom:10px">DIRECTOS (${directs.length})</div>`;
+      directs.forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
+    }
     results.innerHTML=html;
   } else {
     if(!allPaths.length){results.innerHTML=`<div class="route-result-empty">No se encontraron rutas ZED entre ${origLabel} y ${destLabel}.</div>`;return;}
@@ -1556,7 +1565,34 @@ function runSearch(){
       directs.forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
     }
     if(stopovers.length){
-      html+=`<div class="route-section-subtitle" style="margin-bottom:10px;margin-top:${directs.length?'16px':'0'}">CON ESCALA (${stopovers.length} opciones)</div>`;
+      // Sort stopovers: find best by stops, best by airlines
+      const bestStops=stopovers.reduce((b,p)=>p.stops<b.stops?p:b,stopovers[0]);
+      const bestAirlines=stopovers.reduce((b,p)=>p.airlines.length<b.airlines.length?p:b,stopovers[0]);
+      const showBest=stopovers.length>1;
+
+      if(showBest){
+        html+=`<div style="margin-bottom:16px;margin-top:${directs.length?'20px':'0'}">
+          <div class="route-section-subtitle" style="margin-bottom:10px">RECOMENDACIONES</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;">
+            <div style="background:var(--green-bg);border:1px solid var(--green);border-radius:10px;padding:2px 0 0;overflow:hidden;">
+              <div style="padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid ${`rgba(26,107,60,.15)`}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <span style="font-size:11px;font-weight:600;color:var(--green)">Menos escalas</span>
+              </div>
+              ${pathCardHTML(bestStops,bestStops.fromOrig||selOrig,bestStops.toDest||selDest)}
+            </div>
+            <div style="background:var(--accent-light);border:1px solid #F0A080;border-radius:10px;padding:2px 0 0;overflow:hidden;">
+              <div style="padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(232,66,10,.15)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span style="font-size:11px;font-weight:600;color:var(--accent)">Menos aerolíneas</span>
+              </div>
+              ${pathCardHTML(bestAirlines,bestAirlines.fromOrig||selOrig,bestAirlines.toDest||selDest)}
+            </div>
+          </div>
+        </div>`;
+      }
+
+      html+=`<div class="route-section-subtitle" style="margin-bottom:10px;margin-top:${(directs.length||showBest)?'4px':'0'}">TODAS LAS OPCIONES CON ESCALA (${stopovers.length})</div>`;
       stopovers.slice(0,20).forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
     }
     results.innerHTML=html;
