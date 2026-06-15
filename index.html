@@ -1907,6 +1907,9 @@ function onMapAirportClick(code){
 
 function showOriginRoutes(orig){
   clearRouteLines();resetMarkers();
+  // Fade all base lines
+  baseLineData.forEach(({line})=>line.setStyle({opacity:0.04,weight:0.5}));
+  Object.values(baseMarkers).forEach(m=>m.setStyle({fillOpacity:0.12,opacity:0.25}));
   highlightMarker(orig,'#1A6B3C',10,true);
   const oc=ll(orig);if(!oc)return;
   // Find all direct dests
@@ -1977,6 +1980,9 @@ function showOriginRoutes(orig){
 
 function showBothRoutes(){
   clearRouteLines();resetMarkers();
+  // Fade ALL base lines to near-invisible
+  baseLineData.forEach(({line})=>line.setStyle({opacity:0.03,weight:0.5}));
+  Object.values(baseMarkers).forEach(m=>m.setStyle({fillOpacity:0.1,opacity:0.2}));
   const oc=ll(mapOrig),dc=ll(mapDest);
   highlightMarker(mapOrig,'#1A6B3C',10,true);
   highlightMarker(mapDest,'#E8420A',10,true);
