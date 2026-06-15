@@ -1077,6 +1077,20 @@ document.getElementById(document.querySelector('.panel-x')?'panel':'overlay').ad
 });
 
 window.openPanel=openPanel;
+
+// Route detail drawer
+function openRouteDetail(cardId){
+  const itinerary=window._routeDetails&&window._routeDetails[cardId];
+  if(!itinerary)return;
+  // Reuse the panel
+  document.getElementById('p-iata').textContent='Detalle del recorrido';
+  document.getElementById('p-name').textContent='';
+  document.getElementById('panel-body').innerHTML=itinerary;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+  if(window.innerWidth<=768)document.getElementById('panel-back').style.display='flex';
+}
+window.openRouteDetail=openRouteDetail;
 window.toggleDests=toggleDests;
 
 // ═══════════════════════════════════════════════════════════════════
