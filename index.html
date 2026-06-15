@@ -845,6 +845,32 @@ const COUNTRY_AIRPORTS={
   'caribe':['NAS','MBJ','SJU','PUJ','SDQ','HAV','ADZ'],
   'caribbean':['NAS','MBJ','SJU','PUJ','SDQ','HAV'],
   'centroamerica':['SJO','SAL','GUA','PTY'],'centroamérica':['SJO','SAL','GUA','PTY'],
+  // City/island aliases (so partial typing works)
+  'sicilia':['CTA','PMO'],'sicily':['CTA','PMO'],
+  'male':['MLE'],'malé':['MLE'],
+  'buenos aires':['EZE'],
+  'nueva york':['JFK','EWR'],'new york':['JFK','EWR'],
+  'los angeles':['LAX'],'los ángeles':['LAX'],
+  'san francisco':['SFO'],
+  'miami':['MIA'],
+  'chicago':['ORD','MDW'],
+  'london':['LHR','LGW'],'londres':['LHR','LGW'],
+  'paris':['CDG','ORY'],'parís':['CDG','ORY'],
+  'roma':['FCO'],'rome':['FCO'],
+  'milan':['MXP','BGY'],'milán':['MXP','BGY'],
+  'venice':['VCE'],'venecia':['VCE'],
+  'catania':['CTA'],'palermo':['PMO'],
+  'reykjavik':['KEF'],'reikiavik':['KEF'],
+  'tenerife':['TFS','TFN'],
+  'lanzarote':['ACE'],'fuerteventura':['FUE'],
+  'gran canaria':['LPA'],
+  'mallorca':['PMI'],'ibiza':['IBZ'],
+  'bangkok':['BKK'],'tokio':['NRT','HND'],'tokyo':['NRT','HND'],
+  'bali':['DPS'],'singapore':['SIN'],'singapur':['SIN'],
+  'dubai':['DXB'],'abu dhabi':['AUH'],
+  'sydney':['SYD'],'melbourne':['MEL'],'auckland':['AKL'],
+  'toronto':['YYZ'],'vancouver':['YVR'],'montreal':['YUL'],
+  'bogota':['BOG'],'bogotá':['BOG'],'lima':['LIM'],'santiago':['SCL'],
   // Asia by country
   'japon':['NRT','HND','KIX'],'japón':['NRT','HND','KIX'],'japan':['NRT','HND','KIX'],
   'corea':['ICN','PUS'],'korea':['ICN','PUS'],'corea del sur':['ICN','PUS'],
@@ -967,20 +993,28 @@ let selOrigGroup=null; // null or array of codes
 let selDestGroup=null;
 
 function searchAirports(q,limit=12){
-  const ql=q.toLowerCase().trim();
-  if(!ql)return[];
-  // Exact alias
-  if(SEARCH_ALIASES[ql])return[SEARCH_ALIASES[ql]];
-  // Country group
-  if(COUNTRY_AIRPORTS[ql])return COUNTRY_AIRPORTS[ql].filter(c=>allAptCodes.includes(c));
-  // Partial country match
-  for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
-    if(k.startsWith(ql)&&ql.length>=3)return v.filter(c=>allAptCodes.includes(c));
+  const ql=norm(q);
+  if(!ql||ql.length<2)return[];
+  // Alias match (exact or partial)
+  for(const[k,v]of Object.entries(SEARCH_ALIASES)){
+    if(norm(k)===ql||norm(k).startsWith(ql)){
+      const codes=Array.isArray(v)?v:[v];
+      return codes.filter(c=>allAptCodes.includes(c));
+    }
   }
+  // Country/region group (exact or partial)
+  for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+    const kn=norm(k);
+    if((kn===ql||kn.startsWith(ql)||(ql.length>=3&&kn.includes(ql)))&&v.length){
+      return v.filter(c=>allAptCodes.includes(c));
+    }
+  }
+  // Airport code/city/country match
   return allAptCodes.filter(c=>{
-    const city=cityOf(c).toLowerCase();
-    const country=countryOf(c).toLowerCase();
-    return c.toLowerCase().includes(ql)||city.includes(ql)||country.includes(ql);
+    const city=norm(cityOf(c));
+    const country=norm(countryOf(c));
+    const code=c.toLowerCase();
+    return code.startsWith(ql)||city.includes(ql)||country.includes(ql)||city.startsWith(ql);
   }).slice(0,limit);
 }
 
@@ -1339,15 +1373,21 @@ function attachDropdowns(){
   // Find region match - returns {label, codes} or null
   function findRegion(q){
     const qn=norm(q);
-    if(qn.length<3)return null;
-    // Check aliases first
+    if(qn.length<2)return null;
+    // Check aliases — exact AND partial (startsWith)
     for(const[k,v]of Object.entries(SEARCH_ALIASES)){
-      if(norm(k)===qn)return{label:q,codes:[v]};
+      const kn=norm(k);
+      if(kn===qn||kn.startsWith(qn)){
+        // v could be a single code or array
+        const codes=Array.isArray(v)?v:[v];
+        const label=k.charAt(0).toUpperCase()+k.slice(1);
+        return{label,codes};
+      }
     }
-    // Check country/region groups
+    // Check country/region groups — exact, startsWith, or contains
     for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
       const kn=norm(k);
-      if((kn===qn||kn.startsWith(qn)||qn.startsWith(kn.slice(0,4)))&&v.length){
+      if((kn===qn||kn.startsWith(qn)||(qn.length>=3&&kn.includes(qn)))&&v.length){
         return{label:k.charAt(0).toUpperCase()+k.slice(1),codes:v};
       }
     }
