@@ -1025,9 +1025,9 @@ function openPanel(iata){
     html+=`<div class="panel-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div class="panel-section-title" style="margin-bottom:0">Destinos (${total})</div>
-        <button onclick="toggleDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;font-family:var(--sans);">Ver todos ↓</button>
+        <button onclick="toggleDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;font-family:var(--sans);">Ver destinos ↓</button>
       </div>
-      <div id="dp">`;
+      <div id="dp" style="display:none;">`;
     // Preview: first region, max 6 cities
     const fr=a.dests[0];
     html+=`<div class="region-label">${fr.r}</div><div class="dest-grid">`;
@@ -1354,24 +1354,32 @@ function segHTML(al,from,to){
   const color=AL_COLORS[al]||'#999';
   const fromCity=cityOf(from);
   const toCity=cityOf(to);
-  return`<div class="route-card-seg" style="cursor:default;">
-    <div class="seg-bar" style="background:${color}"></div>
-    <div style="flex:1;min-width:0;">
-      <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
-        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color};background:${color}22;padding:1px 5px;border-radius:3px">${al}</span>
-        <span style="font-size:12px;font-weight:600">${a?a.name:al}</span>
+  return`<div class="route-card-seg" style="background:transparent;cursor:default;border-bottom:none;padding:10px 14px 0;">
+    <div style="display:flex;align-items:stretch;gap:0;width:100%;">
+      <!-- Airline color bar + dot -->
+      <div style="display:flex;flex-direction:column;align-items:center;width:20px;flex-shrink:0;padding-top:2px;">
+        <div style="width:9px;height:9px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 0 1.5px ${color};flex-shrink:0;"></div>
+        <div style="width:2px;flex:1;background:${color};opacity:.3;margin-top:3px;min-height:28px;"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-        <span style="font-family:var(--mono);color:var(--green);font-weight:600">${from}</span>
-        <span style="color:var(--text-muted);font-size:10px;">${fromCity!==from?fromCity:''}</span>
-        <span style="color:var(--text-muted)">→</span>
-        <span style="font-family:var(--mono);color:var(--accent);font-weight:600">${to}</span>
-        <span style="color:var(--text-muted);font-size:10px;">${toCity!==to?toCity:''}</span>
+      <!-- Segment detail -->
+      <div style="flex:1;min-width:0;padding-left:10px;padding-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${color};background:${color}18;padding:2px 6px;border-radius:4px;letter-spacing:.02em">${al}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--text-primary)">${a?a.name:al}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text-primary)">${from}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">${fromCity!==from?fromCity:''}</div>
+          </div>
+          <svg width="20" height="10" viewBox="0 0 20 10" style="flex-shrink:0;color:var(--text-muted)"><line x1="0" y1="5" x2="16" y2="5" stroke="currentColor" stroke-width="1.5"/><polyline points="11,1 16,5 11,9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text-primary)">${to}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:1px">${toCity!==to?toCity:''}</div>
+          </div>
+        </div>
       </div>
     </div>
-    <button onclick="openPanel('${al}');event.stopPropagation()" style="border:none;background:var(--surface-2);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:10px;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;">
-      más info
-    </button>
   </div>`;
 }
 
@@ -1379,20 +1387,70 @@ function pathCardHTML(p,origin,dest){
   const{path,segs,airlines,stops}=p;
   const sameAl=airlines.length===1;
   const stopsBadge=stops===0?'Directo':stops===1?'1 escala':stops+' escalas';
-  const alBadge=sameAl?`<span style="font-size:10px;padding:1px 8px;border-radius:99px;background:var(--green-bg);color:var(--green)">1 aerolínea</span>`:`<span style="font-size:10px;padding:1px 8px;border-radius:99px;background:var(--border);color:var(--text-muted)">${airlines.length} aerolíneas</span>`;
-  const routeParts=[];
-  path.forEach((step,i)=>{
-    const isO=i===0,isD=i===path.length-1,isHub=!isO&&!isD;
-    routeParts.push(`<span class="rrc-apt ${isO?'origin':isD?'dest':'hub'}">${step.apt}</span>`);
-    if(i<path.length-1)routeParts.push(`<span style="color:var(--text-muted);font-size:11px">→</span>`);
-  });
-  let segRows='';
+  const stopsBg=stops===0?'var(--green-bg)':'var(--border)';
+  const stopsColor=stops===0?'var(--green)':'var(--text-secondary)';
+  const alBadge=sameAl
+    ?`<span style="font-size:10px;padding:1px 8px;border-radius:99px;background:var(--green-bg);color:var(--green);font-weight:500">1 aerolínea</span>`
+    :`<span style="font-size:10px;padding:1px 8px;border-radius:99px;background:var(--border);color:var(--text-muted)">${airlines.length} aerolíneas</span>`;
+
+  // Build the visual itinerary
+  let itinerary='<div style="padding:12px 14px 4px;">';
   for(let i=1;i<path.length;i++){
-    segRows+=segHTML(path[i].al,path[i-1].apt,path[i].apt);
+    const al=path[i].al;
+    const from=path[i-1].apt;
+    const to=path[i].apt;
+    const a=DATA.find(x=>x.iata===al);
+    const color=AL_COLORS[al]||'#999';
+    const fromCity=cityOf(from);
+    const toCity=cityOf(to);
+    const isLast=i===path.length-1;
+
+    itinerary+=`<div style="display:flex;align-items:stretch;gap:0;">
+      <div style="display:flex;flex-direction:column;align-items:center;width:22px;flex-shrink:0;">
+        <div style="width:10px;height:10px;border-radius:50%;background:${i===1?'var(--green)':color};border:2px solid #fff;box-shadow:0 0 0 1.5px ${i===1?'var(--green)':color};margin-top:2px;"></div>
+        ${!isLast?`<div style="width:2px;flex:1;min-height:36px;background:${color};opacity:.25;margin:3px 0;"></div>`:''}
+      </div>
+      <div style="flex:1;padding-left:10px;padding-bottom:${isLast?'4px':'14px'};">
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.2">${from}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${fromCity!==from?fromCity:''}</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:${color}12;border:1px solid ${color}30;border-radius:6px;padding:4px 8px;margin-bottom:${isLast?'6px':'0'};">
+          <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${color}">${al}</span>
+          <span style="font-size:11px;color:var(--text-secondary)">${a?a.name:al}</span>
+          <svg width="14" height="8" viewBox="0 0 20 10" style="color:${color};opacity:.7"><line x1="0" y1="5" x2="15" y2="5" stroke="currentColor" stroke-width="1.5"/><polyline points="10,1 15,5 10,9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+    </div>`;
+
+    // Final destination dot
+    if(isLast){
+      itinerary+=`<div style="display:flex;align-items:flex-start;gap:0;">
+        <div style="width:22px;flex-shrink:0;display:flex;justify-content:center;">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--accent);margin-top:2px;"></div>
+        </div>
+        <div style="padding-left:10px;padding-bottom:8px;">
+          <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.2">${to}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${toCity!==to?toCity:''}</div>
+        </div>
+      </div>`;
+    }
   }
-  return`<div class="route-card">
-    <div class="route-card-head">${routeParts.join(' ')}<div style="margin-left:auto;display:flex;gap:4px;"><span style="font-size:10px;padding:1px 8px;border-radius:99px;background:var(--border);color:var(--text-secondary)">${stopsBadge}</span>${alBadge}</div></div>
-    ${segRows}
+  itinerary+='</div>';
+
+  // Clickable card — opens airline panel only on "más info", not on whole card
+  return`<div class="route-card" style="cursor:default;overflow:visible;">
+    <div class="route-card-head" style="cursor:pointer;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+      <span class="rrc-apt origin">${path[0].apt}</span>
+      ${path.slice(1,-1).map(s=>`<span style="color:var(--text-muted);font-size:10px">→</span><span class="rrc-apt hub">${s.apt}</span>`).join('')}
+      <span style="color:var(--text-muted);font-size:10px">→</span>
+      <span class="rrc-apt dest">${path[path.length-1].apt}</span>
+      <div style="margin-left:auto;display:flex;gap:4px;align-items:center;">
+        <span style="font-size:10px;padding:1px 8px;border-radius:99px;background:${stopsBg};color:${stopsColor};font-weight:500">${stopsBadge}</span>
+        ${alBadge}
+      </div>
+    </div>
+    <div style="display:block;">
+      ${itinerary}
+    </div>
   </div>`;
 }
 
