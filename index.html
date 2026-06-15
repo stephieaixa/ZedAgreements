@@ -381,7 +381,13 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
           <div class="apt-dd" id="map-dest-dd"></div>
         </div>
 
+        <div style="display:flex;align-items:center;gap:8px;flex:1;">
         <div class="map-badge" id="map-badge">Click en un aeropuerto para explorar</div>
+        <button id="map-clear-btn" onclick="clearMapSelections()" style="display:none;padding:4px 12px;border:1px solid var(--border);border-radius:99px;background:var(--surface);font-family:var(--sans);font-size:12px;cursor:pointer;color:var(--text-secondary);align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Limpiar
+        </button>
+      </div>
       </div>
       <div class="map-toolbar-row">
         <div class="map-zone-btns">
