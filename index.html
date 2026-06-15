@@ -1859,8 +1859,17 @@ function resetMarkers(){
   });
 }
 
-function highlightMarker(code,col,r){
-  const m=baseMarkers[code];if(m)m.setStyle({fillColor:col,fillOpacity:1,radius:r,zIndexOffset:500});
+function highlightMarker(code,col,r,permanent){
+  const m=baseMarkers[code];
+  if(!m)return;
+  m.setStyle({fillColor:col,fillOpacity:1,radius:r,zIndexOffset:500});
+  if(permanent){
+    m.unbindTooltip();
+    m.bindTooltip(
+      `<b>${code}</b> — ${cityOf(code)}`,
+      {permanent:true,direction:'top',offset:[0,-(r+2)],className:'leaflet-tooltip-zed'}
+    ).openTooltip();
+  }
 }
 
 function onMapAirportClick(code){
@@ -1898,7 +1907,7 @@ function onMapAirportClick(code){
 
 function showOriginRoutes(orig){
   clearRouteLines();resetMarkers();
-  highlightMarker(orig,'#1A6B3C',10);
+  highlightMarker(orig,'#1A6B3C',10,true);
   const oc=ll(orig);if(!oc)return;
   // Find all direct dests
   const destsByAl={};
@@ -1931,7 +1940,15 @@ function showOriginRoutes(orig){
     });
     line.on('click',()=>onMapAirportClick(dest));
     routeLayers.push(line);
-    if(baseMarkers[dest])baseMarkers[dest].setStyle({fillColor:col,fillOpacity:0.85,radius:markerRadius(dest)+1});
+    if(baseMarkers[dest]){
+      baseMarkers[dest].setStyle({fillColor:col,fillOpacity:0.9,radius:markerRadius(dest)+2});
+      // Show permanent label with city name
+      baseMarkers[dest].unbindTooltip();
+      baseMarkers[dest].bindTooltip(
+        `<b>${dest}</b> — ${cityOf(dest)}`,
+        {permanent:true, direction:'top', offset:[0,-6], className:'leaflet-tooltip-zed'}
+      ).openTooltip();
+    }
   });
   // Side panel
   const side=document.getElementById('map-side');
@@ -1961,8 +1978,8 @@ function showOriginRoutes(orig){
 function showBothRoutes(){
   clearRouteLines();resetMarkers();
   const oc=ll(mapOrig),dc=ll(mapDest);
-  highlightMarker(mapOrig,'#1A6B3C',10);
-  highlightMarker(mapDest,'#E8420A',10);
+  highlightMarker(mapOrig,'#1A6B3C',10,true);
+  highlightMarker(mapDest,'#E8420A',10,true);
   const directs=DATA.filter(a=>isDirect(a.iata,mapOrig,mapDest));
   const stopovers=findStopoverRoutes(mapOrig,mapDest);
   // Draw directs — solid colored lines
