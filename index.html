@@ -1084,18 +1084,105 @@ document.getElementById(document.querySelector('.panel-x')?'panel':'overlay').ad
 
 window.openPanel=openPanel;
 
-// Route detail drawer
+// Route detail drawer — full self-contained panel
 function openRouteDetail(cardId){
-  const itinerary=window._routeDetails&&window._routeDetails[cardId];
-  if(!itinerary)return;
-  // Reuse the panel
-  document.getElementById('p-iata').textContent='Detalle del recorrido';
+  const pathData=window._routePaths&&window._routePaths[cardId];
+  if(!pathData)return;
+  const{path,airlines,stops,fromOrig,toDest}=pathData;
+
+  // Header
+  document.getElementById('p-iata').textContent='';
   document.getElementById('p-name').textContent='';
-  document.getElementById('panel-body').innerHTML=itinerary;
+
+  let html='';
+
+  // Route summary pill at top
+  const stopsBadge=stops===0?'Directo':stops===1?'1 escala':stops+' escalas';
+  html+=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:0 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;">
+    ${path.map((s,i)=>`${i>0?'<span style="color:var(--text-muted);font-size:11px">→</span>':''}<span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${i===0?'var(--green)':i===path.length-1?'var(--accent)':'var(--amber)'}">${s.apt}</span>`).join('')}
+    <span style="margin-left:auto;font-size:11px;padding:2px 9px;border-radius:99px;background:var(--border);color:var(--text-secondary)">${stopsBadge}</span>
+    <span style="font-size:11px;padding:2px 9px;border-radius:99px;background:${airlines.length===1?'var(--green-bg)':'var(--border)'};color:${airlines.length===1?'var(--green)':'var(--text-muted)'}">
+      ${airlines.length===1?'1 aerolínea':airlines.length+' aerolíneas'}
+    </span>
+  </div>`;
+
+  // Timeline
+  html+='<div style="margin-bottom:20px;">';
+  for(let i=0;i<path.length;i++){
+    const apt=path[i].apt;
+    const city=cityOf(apt);
+    const isDest=i===path.length-1;
+    const nextSeg=i<path.length-1?path[i+1]:null;
+    const dotColor=i===0?'var(--green)':isDest?'var(--accent)':(AL_COLORS[nextSeg?.al]||'#999');
+    const lineColor=nextSeg?(AL_COLORS[nextSeg.al]||'#999'):'transparent';
+
+    html+=`<div style="display:flex;align-items:stretch;gap:0;">
+      <div style="display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0;">
+        <div style="width:${isDest?13:11}px;height:${isDest?13:11}px;border-radius:50%;background:${dotColor};border:2px solid #fff;box-shadow:0 0 0 2px ${dotColor};margin-top:3px;flex-shrink:0;"></div>
+        ${!isDest?`<div style="width:2px;background:${lineColor};opacity:.35;flex:1;min-height:56px;margin:4px 0;border-radius:1px;"></div>`:''}
+      </div>
+      <div style="flex:1;padding-left:12px;padding-bottom:${isDest?'4px':'0'};">
+        <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text-primary);line-height:1.2;margin-top:1px">${apt}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:${nextSeg?'10px':'0'}">${city!==apt?city:''}</div>
+        ${nextSeg?`
+        <!-- Airline segment pill + collapsible info -->
+        <div style="margin-bottom:14px;">
+          <div onclick="toggleSegInfo('seg-${cardId}-${i}')" style="display:inline-flex;align-items:center;gap:6px;background:${AL_COLORS[nextSeg.al]||'#999'}10;border:1px solid ${AL_COLORS[nextSeg.al]||'#999'}35;border-radius:8px;padding:6px 12px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='${AL_COLORS[nextSeg.al]||'#999'}22'" onmouseout="this.style.background='${AL_COLORS[nextSeg.al]||'#999'}10'">
+            <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${AL_COLORS[nextSeg.al]||'#999'}">${nextSeg.al}</span>
+            <span style="font-size:12px;font-weight:500;color:var(--text-primary)">${DATA.find(x=>x.iata===nextSeg.al)?.name||nextSeg.al}</span>
+            <svg id="seg-arrow-${cardId}-${i}" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${AL_COLORS[nextSeg.al]||'#999'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <!-- Collapsed airline detail -->
+          <div id="seg-${cardId}-${i}" style="display:none;margin-top:8px;padding:10px 14px;background:var(--surface-2);border-radius:8px;border-left:3px solid ${AL_COLORS[nextSeg.al]||'#999'};">
+            ${(()=>{
+              const a=DATA.find(x=>x.iata===nextSeg.al);
+              if(!a)return'';
+              const destCount=a.dests?a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0):0;
+              const hubCity=cityOf(a.hub);
+              let destHTML='';
+              if(a.dests&&a.dests.length){
+                const first=a.dests[0];
+                destHTML=`<div style="margin-top:8px;"><div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">${first.r}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                  ${(first.c||[]).slice(0,8).map(d=>`<span style="font-family:var(--mono);font-size:10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:2px 6px;">${d.c}</span>`).join('')}
+                  ${(first.c||[]).length>8?`<span style="font-size:10px;color:var(--text-muted)">+${first.c.length-8} más</span>`:''}
+                </div></div>`;
+              }
+              return`<div style="display:flex;gap:12px;align-items:flex-start;">
+                <div style="flex:1;">
+                  <div style="font-size:11px;color:var(--text-muted);">Hub principal</div>
+                  <div style="font-family:var(--mono);font-size:12px;font-weight:600;">${a.hub} <span style="font-family:var(--sans);font-weight:400;color:var(--text-muted)">${hubCity}</span></div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);">Destinos</div>
+                  <div style="font-family:var(--mono);font-size:12px;font-weight:600;">${destCount}</div>
+                </div>
+              </div>${destHTML}`;
+            })()}
+          </div>
+        </div>
+        `:''}
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+
+  document.getElementById('panel-body').innerHTML=html;
   document.getElementById('overlay').classList.add('open');
   document.getElementById('panel').classList.add('open');
   if(window.innerWidth<=768)document.getElementById('panel-back').style.display='flex';
 }
+
+window.toggleSegInfo=function(id){
+  const el=document.getElementById(id);
+  const i=id.split('-').pop();
+  const cardId=id.replace('-'+i,'').replace('seg-','');
+  const arrow=document.getElementById('seg-arrow-'+cardId+'-'+i);
+  if(!el)return;
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(arrow)arrow.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+};
 window.openRouteDetail=openRouteDetail;
 window.toggleDests=toggleDests;
 
@@ -1448,10 +1535,10 @@ function pathCardHTML(p,origin,dest){
   }
   itinerary+='</div>';
 
-  // Store itinerary for panel, show compact card in list
+  // Store path data for panel
   const cardId='rc'+(Date.now()+Math.random()).toString(36).slice(-6);
-  window._routeDetails=window._routeDetails||{};
-  window._routeDetails[cardId]=itinerary;
+  window._routePaths=window._routePaths||{};
+  window._routePaths[cardId]={path,segs,airlines,stops,fromOrig:origin,toDest:dest};
 
   return`<div class="route-card" style="cursor:pointer;" onclick="openRouteDetail('${cardId}')">
     <div class="route-card-head">
@@ -1594,9 +1681,10 @@ function runSearch(){
         const d=p.toDest||selDest;
         const stopsBadge=p.stops===0?'Directo':p.stops===1?'1 escala':p.stops+' escalas';
         const cardId='rc'+(Date.now()+Math.random()).toString(36).slice(-6);
-        window._routeDetails=window._routeDetails||{};
-        // Build itinerary for this path
-        let itin='<div style="padding:12px 14px 8px;">';
+        window._routePaths=window._routePaths||{};
+        window._routePaths[cardId]={path:p.path,segs:p.segs,airlines:p.airlines,stops:p.stops,fromOrig:o,toDest:d};
+        // Build itinerary for this path (unused now, kept for compat)
+        let itin='<div>';
         for(let i=0;i<p.path.length;i++){
           const apt=p.path[i].apt;
           const city=cityOf(apt);
@@ -1621,7 +1709,6 @@ function runSearch(){
           </div>`;
         }
         itin+='</div>';
-        window._routeDetails[cardId]=itin;
         return`<div onclick="openRouteDetail('${cardId}')" style="cursor:pointer;">
           <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:9px 12px;background:rgba(0,0,0,.03);border-bottom:1px solid rgba(0,0,0,.06);">
             <span class="rrc-apt origin">${p.path[0].apt}</span>
