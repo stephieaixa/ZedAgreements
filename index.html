@@ -1039,46 +1039,29 @@ function openPanel(iata){
   const a=DATA.find(x=>x.iata===iata);if(!a)return;
   document.getElementById('p-iata').textContent=`${a.iata} · Zona ${a.zone} · ${ZONES[a.zone].name}`;
   document.getElementById('p-name').textContent=a.name;
-  // Build content
   let html=`<div class="panel-section">
     <div class="panel-section-title">Acuerdo ZED</div>
     <div class="info-block">
       <div class="info-row"><span class="info-key">Estado</span><span class="info-val" style="color:var(--green)">✓ Viaja sola</span></div>
-      <div class="info-row"><span class="info-key">Hub principal</span><span class="info-val" style="font-family:var(--mono)">${a.hub}</span></div>
+      <div class="info-row"><span class="info-key">Hub principal</span><span class="info-val" style="font-family:var(--mono)">${a.hub} — ${cityOf(a.hub)}</span></div>
     </div>
   </div>`;
   if(a.dests&&a.dests.length){
     const total=a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0);
-    html+=`<div class="panel-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div class="panel-section-title" style="margin-bottom:0">Destinos (${total})</div>
-        <button onclick="toggleDests(this)" style="font-size:11px;color:var(--accent);border:none;background:none;cursor:pointer;font-family:var(--sans);">Ver todos ↓</button>
-      </div>
-      <div id="dp">`;
-    // Preview: first region, max 6 cities
-    const fr=a.dests[0];
-    html+=`<div class="region-label">${fr.r}</div><div class="dest-grid">`;
-    (fr.c||[]).slice(0,6).forEach(d=>{
-      // Find connecting airlines at this dest
-      const conns=(airportMap[d.c]?.airlines||[]).filter(al=>al!==a.iata);
-      html+=`<div class="dest-card"><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div>
-        ${conns.length?`<div class="dest-conn">${conns.slice(0,3).map(al=>`<span class="conn-badge" style="color:${AL_COLORS[al]||'#999'};background:${AL_COLORS[al]||'#999'}22">${al}</span>`).join('')}</div>`:''}
-      </div>`;
-    });
-    if((fr.c||[]).length>6)html+=`<div style="font-size:11px;color:var(--text-muted);padding:5px 0">+${fr.c.length-6} más</div>`;
-    html+=`</div></div>
-      <div id="df" style="display:none;">`;
+    html+=`<div class="panel-section"><div class="panel-section-title">Destinos (${total})</div>`;
     a.dests.forEach(r=>{
       html+=`<div class="region-label">${r.r}</div><div class="dest-grid">`;
       (r.c||[]).forEach(d=>{
         const conns=(airportMap[d.c]?.airlines||[]).filter(al=>al!==a.iata);
-        html+=`<div class="dest-card"><div class="dest-city">${d.y}</div><div class="dest-code">${d.c}</div>
+        html+=`<div class="dest-card">
+          <div class="dest-city">${d.y}</div>
+          <div class="dest-code">${d.c}</div>
           ${conns.length?`<div class="dest-conn">${conns.slice(0,3).map(al=>`<span class="conn-badge" style="color:${AL_COLORS[al]||'#999'};background:${AL_COLORS[al]||'#999'}22">${al}</span>`).join('')}</div>`:''}
         </div>`;
       });
       html+=`</div>`;
     });
-    html+=`</div></div>`;
+    html+=`</div>`;
   }
   document.getElementById('panel-body').innerHTML=html;
   document.getElementById('overlay').classList.add('open');
