@@ -2483,6 +2483,9 @@ function setupMapSearch(){
     const clearBtnId=inputId==='map-origin'?'map-clear-origin':'map-clear-dest';
     if(!input||!dd)return;
 
+    let mapPendingGroups={};
+    let mapGcount=0;
+
     function openDD(html){dd.innerHTML=html;dd.style.display='block';}
     function closeDD(){dd.style.display='none';}
 
@@ -2494,20 +2497,30 @@ function setupMapSearch(){
 
       let html='';
 
-      // Region/country suggestion (3+ chars) — same as Buscar ruta
+      // Region option (3+ chars) — exact same logic as attachDropdowns
       if(q.length>=3){
-        const region=findRegion(q);
-        if(region&&region.codes.length){
-          const validCodes=region.codes.filter(c=>allAptCodes.includes(c));
-          if(validCodes.length){
-            const mrk='mr'+(Date.now()).toString(36);
-            window._mapRegions=window._mapRegions||{};
-            window._mapRegions[mrk]={label:region.label,codes:validCodes};
-            html+=`<div class="apt-opt" data-mrkey="${mrk}" style="background:var(--accent-light);border-bottom:1px solid #E2E0D880;">
-              <span class="opt-code" style="color:var(--accent)">★</span>
-              <span><b style="color:var(--accent)">${region.label}</b> <span style="font-size:11px;opacity:.6;color:var(--accent)">${validCodes.length} aeropuertos</span></span>
-            </div>`;
+        const qn=q.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+        let region=null;
+        for(const[k,v]of Object.entries(SEARCH_ALIASES)){
+          if(k.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().startsWith(qn)){
+            region={label:k.charAt(0).toUpperCase()+k.slice(1),codes:[v].flat()};break;
           }
+        }
+        if(!region){
+          for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+            const kn=k.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+            if((kn===qn||kn.startsWith(qn)||(qn.length>=3&&kn.includes(qn)))&&v.length){
+              region={label:k.charAt(0).toUpperCase()+k.slice(1),codes:v};break;
+            }
+          }
+        }
+        if(region&&region.codes.length){
+          const gkey='mg'+(mapGcount++);
+          mapPendingGroups[gkey]=region.codes;
+          html+=`<div class="apt-opt" data-gkey="${gkey}" data-label="${region.label}" style="background:#FDF0EC;border-bottom:1px solid #F0A080;">
+            <span class="opt-code" style="color:#E8420A">★</span>
+            <span><b style="color:#E8420A">${region.label}</b> <span style="font-size:11px;opacity:.6;color:#E8420A">${region.codes.length} aeropuertos</span></span>
+          </div>`;
         }
       }
 
@@ -2521,32 +2534,28 @@ function setupMapSearch(){
       if(!html){closeDD();return;}
       openDD(html);
 
-      // Wire airport clicks
-      dd.querySelectorAll('[data-code]').forEach(opt=>{
+      dd.querySelectorAll('[data-code],[data-gkey]').forEach(opt=>{
         opt.addEventListener('mousedown',e=>{
           e.preventDefault();
-          const code=opt.dataset.code;
-          input.value=cityOf(code)+' ('+code+')';
-          const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
-          setCode(code);closeDD();
-        });
-      });
-      // Wire region clicks
-      dd.querySelectorAll('[data-mrkey]').forEach(opt=>{
-        opt.addEventListener('mousedown',e=>{
-          e.preventDefault();
-          const reg=(window._mapRegions||{})[opt.dataset.mrkey];
-          if(!reg)return;
-          input.value=reg.label+' ('+reg.codes.length+')';
-          const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
-          setCode(reg.codes[0]);closeDD();
+          if(opt.dataset.gkey){
+            const grp=mapPendingGroups[opt.dataset.gkey]||[];
+            const lbl=opt.dataset.label||q;
+            input.value=lbl+' ('+grp.length+')';
+            const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
+            setCode(grp[0]||null);closeDD();
+          } else {
+            const code=opt.dataset.code;
+            input.value=cityOf(code)+' ('+code+')';
+            const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
+            setCode(code);closeDD();
+          }
         });
       });
     });
 
     input.addEventListener('keydown',e=>{
       if(e.key==='Enter'){
-        const first=dd.querySelector('[data-code]');
+        const first=dd.querySelector('[data-code],[data-gkey]');
         if(first&&dd.style.display!=='none'){first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));}
         else{const code=input.value.trim().toUpperCase();if(allAptCodes&&allAptCodes.includes(code)){input.value=cityOf(code)+' ('+code+')';setCode(code);closeDD();}}
       }
