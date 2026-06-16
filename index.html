@@ -2254,10 +2254,16 @@ function showBothRoutes(){
     html+=`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:8px">Directos (${directs.length})</div>`;
     directs.forEach(a=>{
       const col=AL_COLORS[a.iata]||'#999';
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface-2);border-radius:6px;margin-bottom:5px;cursor:pointer;border-left:3px solid ${col};" onclick="openPanel('${a.iata}')">
+      // Create a direct route path for detail panel
+      const cardId='md'+(Date.now()+Math.random()).toString(36).slice(-6);
+      window._routePaths=window._routePaths||{};
+      const directPath=[{apt:mapOrig,al:null},{apt:mapDest,al:a.iata}];
+      window._routePaths[cardId]={path:directPath,segs:[{apt:mapDest,al:a.iata}],airlines:[a.iata],stops:0,fromOrig:mapOrig,toDest:mapDest};
+      html+=`<div onclick="openRouteDetail('${cardId}')" style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface-2);border-radius:6px;margin-bottom:5px;cursor:pointer;border-left:3px solid ${col};transition:background .1s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
         <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${col}">${a.iata}</span>
         <span style="font-size:12px;font-weight:500;flex:1">${a.name}</span>
-        <span style="font-size:10px;color:var(--text-muted)">ver →</span>
+        <span style="font-size:10px;font-weight:600;color:var(--green);background:var(--green-bg);padding:1px 6px;border-radius:99px;">Directo</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`;
     });
   }
@@ -2266,9 +2272,13 @@ function showBothRoutes(){
     stopovers.slice(0,12).forEach(r=>{
       const hubs=r.path.slice(1,-1).map(s=>s.apt).join(' · ');
       const airlineSpans=r.airlines.map(al=>{const col=AL_COLORS[al]||'#999';return`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${col};background:${col}22;border-radius:3px;padding:1px 4px">${al}</span>`;}).join(' ');
-      html+=`<div style="background:var(--surface-2);border-radius:6px;padding:8px;margin-bottom:5px;">
+      // Store path for route detail
+      const cardId='mc'+(Date.now()+Math.random()).toString(36).slice(-6);
+      window._routePaths=window._routePaths||{};
+      window._routePaths[cardId]={path:r.path,segs:r.segs,airlines:r.airlines,stops:r.stops,fromOrig:mapOrig,toDest:mapDest};
+      html+=`<div onclick="openRouteDetail('${cardId}')" style="background:var(--surface-2);border-radius:6px;padding:8px;margin-bottom:5px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
         <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:4px">${mapOrig} → <b style="color:var(--amber)">${hubs}</b> → ${mapDest}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">${airlineSpans}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">${airlineSpans}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>`;
     });
   }
