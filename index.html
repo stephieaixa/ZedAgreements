@@ -1240,6 +1240,72 @@ window.toggleSegInfo=function(id){
   if(arrow)arrow.style.transform=open?'rotate(180deg)':'rotate(0deg)';
 };
 window.openRouteDetail=openRouteDetail;
+
+// Open route detail AND draw it on map
+function openMapRoute(cardId){
+  const pathData=window._routePaths&&window._routePaths[cardId];
+  if(!pathData||!mapInstance)return openRouteDetail(cardId);
+  
+  // Draw the route on the map
+  const apts=pathData.path.map(s=>s.apt||s);
+  if(apts.length>=2){
+    // Clear existing route lines
+    mapRouteLines.forEach(l=>mapInstance.removeLayer(l));
+    mapRouteLines=[];
+    mapRouteDots.forEach(d=>mapInstance.removeLayer(d));
+    mapRouteDots=[];
+    
+    // Set map origin/dest for highlighting
+    mapOrig=apts[0];
+    mapDest=apts[apts.length-1];
+    
+    // Fade base lines
+    baseLineData.forEach(({line})=>line.setStyle({opacity:0.04,weight:0.5}));
+    Object.values(baseMarkers).forEach(m=>{
+      m.setStyle({fillOpacity:0.15,opacity:0.3});
+    });
+    
+    // Draw each segment
+    for(let i=0;i<apts.length-1;i++){
+      const o=apts[i],d=apts[i+1];
+      const oc=ll(o),dc=ll(d);
+      if(!oc||!dc)continue;
+      const isDirect=apts.length===2;
+      const seg=pathData.segs?pathData.segs[i]:null;
+      const col=seg?(AL_COLORS[seg.al]||'#666'):'var(--accent)';
+      const line=L.polyline([oc,dc],{
+        color:col,weight:isDirect?3:2.5,
+        opacity:0.85,dashArray:i>0&&apts.length>2?'6 4':null
+      }).addTo(mapInstance);
+      mapRouteLines.push(line);
+    }
+    
+    // Highlight airports on route
+    apts.forEach((apt,i)=>{
+      const c=ll(apt);if(!c)return;
+      const isOrig=i===0,isDest=i===apts.length-1;
+      const col=isOrig?'#1A6B3C':isDest?'var(--accent)':'var(--amber)';
+      const dot=L.circleMarker(c,{
+        radius:isOrig||isDest?10:7,
+        fillColor:col,color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500
+      }).addTo(mapInstance);
+      dot.bindTooltip(`<b>${apt}</b> — ${cityOf(apt)}`,{sticky:true,className:'leaflet-tooltip-zed',direction:'top'});
+      mapRouteDots.push(dot);
+      if(baseMarkers[apt])baseMarkers[apt].setStyle({fillOpacity:0,opacity:0});
+    });
+    
+    // Fit bounds
+    const coords=apts.map(ll).filter(Boolean);
+    if(coords.length>1)mapInstance.fitBounds(coords,{padding:[60,60]});
+    
+    // Show clear button
+    const cb=document.getElementById('map-clear-btn');
+    if(cb)cb.style.display='flex';
+  }
+  
+  openRouteDetail(cardId);
+}
+window.openMapRoute=openMapRoute;
 window.toggleDests=toggleDests;
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2424,7 +2490,7 @@ function showBothRoutes(){
       window._routePaths=window._routePaths||{};
       const directPath=[{apt:mapOrig,al:null},{apt:mapDest,al:a.iata}];
       window._routePaths[cardId]={path:directPath,segs:[{apt:mapDest,al:a.iata}],airlines:[a.iata],stops:0,fromOrig:mapOrig,toDest:mapDest};
-      html+=`<div onclick="openRouteDetail('${cardId}')" style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface-2);border-radius:6px;margin-bottom:5px;cursor:pointer;border-left:3px solid ${col};transition:background .1s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
+      html+=`<div onclick="openMapRoute('${cardId}')" style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface-2);border-radius:6px;margin-bottom:5px;cursor:pointer;border-left:3px solid ${col};transition:background .1s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
         <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${col}">${a.iata}</span>
         <span style="font-size:12px;font-weight:500;flex:1">${a.name}</span>
         <span style="font-size:10px;font-weight:600;color:var(--green);background:var(--green-bg);padding:1px 6px;border-radius:99px;">Directo</span>
@@ -2441,7 +2507,7 @@ function showBothRoutes(){
       const cardId='mc'+(Date.now()+Math.random()).toString(36).slice(-6);
       window._routePaths=window._routePaths||{};
       window._routePaths[cardId]={path:r.path,segs:r.segs,airlines:r.airlines,stops:r.stops,fromOrig:mapOrig,toDest:mapDest};
-      html+=`<div onclick="openRouteDetail('${cardId}')" style="background:var(--surface-2);border-radius:6px;padding:8px;margin-bottom:5px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
+      html+=`<div onclick="openMapRoute('${cardId}')" style="background:var(--surface-2);border-radius:6px;padding:8px;margin-bottom:5px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--surface-2)'">
         <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-bottom:4px">${mapOrig} → <b style="color:var(--amber)">${hubs}</b> → ${mapDest}</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;">${airlineSpans}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>`;
