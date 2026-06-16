@@ -1856,9 +1856,64 @@ function runSearch(){
       html+=`<div class="route-section-subtitle" style="margin-bottom:10px;margin-top:${(directs.length||showBest)?'4px':'0'}">TODAS LAS OPCIONES CON ESCALA (${stopovers.length})</div>`;
       stopovers.slice(0,20).forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
     }
+
+    // ── Nearby ground alternatives ──────────────────────────────────
+    if(directs.length===0){
+      const mainOrig=(selOrigGroup?selOrigGroup[0]:selOrig);
+      const mainDest=(selDestGroup?selDestGroup[0]:selDest);
+      if(mainOrig&&mainDest){
+        buildGraph();
+        // Find nearby airports with DIRECT routes to dest (better than current best)
+        const bestStops=allPaths.length>0?allPaths[0].stops:99;
+        const nearbyAlts=findNearbyAirports(mainOrig).filter(({code})=>{
+          const paths=findPaths(code,mainDest,1);
+          return paths.some(p=>p.stops<bestStops);
+        });
+        if(nearbyAlts.length){
+          html+=`<div style="margin-top:20px;padding:12px 14px;background:#FFFBF0;border:1px solid #D4A800;border-radius:8px;">
+            <div style="font-size:11px;font-weight:600;color:#8A6A00;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;">✈ Aeropuertos cercanos con mejores conexiones</div>
+            <div style="font-size:12px;color:#7A5C00;margin-bottom:10px;">Llegar por tierra desde <b>${cityOf(mainOrig)}</b> a uno de estos aeropuertos puede darte rutas más directas:</div>`;
+          nearbyAlts.slice(0,3).forEach(({code,km})=>{
+            const paths=findPaths(code,mainDest,2);
+            if(!paths.length)return;
+            const best=paths[0];
+            const stopsBadge=best.stops===0?'Directo':best.stops+' escala'+(best.stops!==1?'s':'');
+            const stopsBg=best.stops===0?'#1A6B3C':'#666';
+            const alBadges=best.airlines.map(al=>{const col=AL_COLORS[al]||'#999';return`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${col};background:${col}22;padding:1px 5px;border-radius:3px">${al}</span>`;}).join(' ');
+            html+=`<div onclick="selectNearbyOrigin('${code}')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:white;border:1px solid #D4A800;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='#FEF6E4'" onmouseout="this.style.background='white'">
+              <div style="flex-shrink:0;text-align:center;">
+                <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#8A6A00">${code}</div>
+                <div style="font-size:10px;color:#8A6A00;opacity:.8">${km}km</div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;font-weight:500;margin-bottom:3px;">${cityOf(code)}</div>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                  <span style="font-size:10px;padding:1px 7px;border-radius:99px;background:${stopsBg};color:#fff;font-weight:500">${stopsBadge}</span>
+                  ${alBadges}
+                  <span style="font-size:10px;color:#9E9C96;margin-left:2px">${best.path.map(s=>s.apt).join('→')}</span>
+                </div>
+              </div>
+              <div style="font-size:10px;color:#8A6A00;flex-shrink:0;">Buscar →</div>
+            </div>`;
+          });
+          html+=`</div>`;
+        }
+      }
+    }
+
     results.innerHTML=html;
   }
 }
+
+function selectNearbyOrigin(code){
+  selOrig=code;selOrigGroup=null;
+  const input=document.getElementById('input-origin');
+  if(input)input.value=cityOf(code)+' ('+code+')';
+  const cb=document.getElementById('clear-origin');
+  if(cb)cb.style.display='block';
+  runSearch();
+}
+window.selectNearbyOrigin=selectNearbyOrigin;
 
 // ═══════════════════════════════════════════════════════════════════
 // MULTI-DESTINATION
