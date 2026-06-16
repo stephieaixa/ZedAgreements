@@ -389,7 +389,8 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         </button>
       </div>
       </div>
-      <div class="map-toolbar-row">
+      <div class="map-toolbar-row" style="gap:6px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">Zona:</span>
         <div class="map-zone-btns">
           <button class="mz-btn active" data-mz="all">Todas</button>
           <button class="mz-btn" data-mz="1">Europa</button>
@@ -399,6 +400,10 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
           <button class="mz-btn" data-mz="5">Asia</button>
           <button class="mz-btn" data-mz="6">Oceanía</button>
         </div>
+      </div>
+      <div class="map-toolbar-row" style="gap:4px;flex-wrap:wrap;" id="airline-filter-row">
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">Aerolínea:</span>
+        <button class="mz-btn active" data-al="all" onclick="filterMapByAirline('all')" style="font-weight:600">Todas</button>
       </div>
     </div>
     <div class="map-body" style="position:relative;overflow:hidden;flex:1;min-height:0;">
@@ -2467,6 +2472,96 @@ function setupMapZoneBtns(){
 }
 
 window.clearMapSelections=clearMapSelections;
+
+// ── AIRLINE FILTER ────────────────────────────────────────────────
+let activeAirlineFilter='all';
+
+function buildAirlineFilterBtns(){
+  const row=document.getElementById('airline-filter-row');
+  if(!row)return;
+  // Build buttons for each ZED airline
+  DATA.forEach(a=>{
+    const col=AL_COLORS[a.iata]||'#888';
+    const btn=document.createElement('button');
+    btn.className='mz-btn';
+    btn.dataset.al=a.iata;
+    btn.style.cssText=`border-color:${col}33;`;
+    btn.innerHTML=`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${col}">${a.iata}</span> <span style="font-size:10px;color:var(--text-secondary)">${a.name.split(' ')[0]}</span>`;
+    btn.addEventListener('click',()=>filterMapByAirline(a.iata));
+    row.appendChild(btn);
+  });
+}
+
+function filterMapByAirline(iata){
+  activeAirlineFilter=iata;
+  // Update button states
+  document.querySelectorAll('#airline-filter-row .mz-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.al===iata);
+  });
+  if(!mapInstance)return;
+
+  if(iata==='all'){
+    // Restore base opacity
+    baseLineData.forEach(({line})=>line.setStyle({weight:1,opacity:0.12}));
+    Object.values(baseMarkers).forEach(m=>{
+      const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
+      m.setStyle({opacity:1,fillOpacity:isHub?0.9:0.5});
+    });
+    document.getElementById('map-side').classList.remove('open');
+    return;
+  }
+
+  // Filter lines by airline
+  const airlineApts=new Set();
+  baseLineData.forEach(({line,airports,iata:lineIata})=>{
+    const match=lineIata===iata;
+    line.setStyle({weight:match?2:0.5,opacity:match?0.55:0.04});
+    if(match){airports.forEach(a=>airlineApts.add(a));}
+  });
+
+  // Dim/highlight markers
+  Object.entries(baseMarkers).forEach(([code,m])=>{
+    const inAirline=airlineApts.has(code);
+    m.setStyle({
+      fillOpacity:inAirline?0.95:0.1,
+      opacity:inAirline?1:0.2,
+      radius:inAirline?(m.options.fillColor==='#E8420A'?9:6):3,
+    });
+  });
+
+  // Open side panel with airline info
+  const a=DATA.find(x=>x.iata===iata);
+  if(a){
+    const side=document.getElementById('map-side');
+    const col=AL_COLORS[iata]||'#888';
+    side.classList.add('open');
+    document.getElementById('map-side-title').innerHTML=
+      `<span style="font-family:var(--mono);font-weight:700;color:${col}">${iata}</span> — ${a.name}`;
+    const total=a.dests?a.dests.reduce((t,r)=>t+(r.c?r.c.length:0),0):0;
+    let html=`<div style="padding:8px 0;font-size:12px;color:var(--text-muted);margin-bottom:8px;">Hub: <b style="color:var(--text-primary);font-family:var(--mono)">${a.hub}</b> · ${total} destinos</div>`;
+    const routes=ROUTES[iata]||[];
+    html+=`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">${routes.length} rutas directas</div>`;
+    // Show destination airports
+    if(a.dests){
+      a.dests.forEach(r=>{
+        html+=`<div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:8px 0 4px;">${r.r}</div>`;
+        html+=`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px;">`;
+        (r.c||[]).forEach(d=>{
+          html+=`<span style="font-family:var(--mono);font-size:10px;background:${col}15;border:1px solid ${col}30;border-radius:3px;padding:2px 5px;cursor:pointer;" onclick="onMapAirportClick('${d.c}')" title="${d.y}">${d.c}</span>`;
+        });
+        html+=`</div>`;
+      });
+    }
+    document.getElementById('map-side-content').innerHTML=html;
+    // Zoom to airline's network
+    const coords=routes.flatMap(p=>{
+      const[o,d]=p.split('-');
+      return[ll(o),ll(d)].filter(Boolean);
+    });
+    if(coords.length>1)mapInstance.fitBounds(coords,{padding:[40,40]});
+  }
+}
+window.filterMapByAirline=filterMapByAirline;
 window.onMapAirportClick=onMapAirportClick;
 
 // ── Init ──────────────────────────────────────────────────────────
