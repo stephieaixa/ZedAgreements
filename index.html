@@ -115,14 +115,14 @@ input.asearch:focus{border-color:var(--accent);}
 .multi-action-btn.primary{background:var(--accent);color:#fff;}
 .multi-action-btn.secondary{background:var(--surface);color:var(--text-primary);border:1px solid var(--border);}
 /* Map */
-.map-tab{flex:1;display:flex;flex-direction:column;}
+.map-tab{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;}
 .map-toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;flex-direction:column;gap:8px;}
 .map-toolbar-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .map-badge{font-size:11px;color:var(--text-muted);}
 .map-zone-btns{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;}
 .mz-btn{padding:3px 10px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .1s;}
 .mz-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-.map-body{flex:1;display:flex;overflow:hidden;}
+.map-body{flex:1;display:flex;overflow:hidden;min-height:0;}
 #map-container{flex:1;}
 .map-side{width:300px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);overflow:hidden;display:none;flex-direction:column;overscroll-behavior:contain;}
 .map-side.open{display:flex;}
@@ -361,7 +361,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
 </div>
 
 <!-- TAB: MAPA -->
-<div class="tab-content" id="tab-map" style="height:calc(100vh - 115px);overflow:hidden;">
+<div class="tab-content" id="tab-map" style="height:calc(100vh - 115px);overflow:hidden;flex-direction:column;">
   <div class="map-tab">
     <div class="map-toolbar">
       <div class="map-toolbar-row">
@@ -401,8 +401,8 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         </div>
       </div>
     </div>
-    <div class="map-body" style="position:relative;overflow:hidden;flex:1;">
-      <div id="map-container" style="width:100%;height:100%;position:absolute;inset:0;"></div>
+    <div class="map-body" style="position:relative;overflow:hidden;flex:1;min-height:0;">
+      <div id="map-container" style="flex:1;min-height:0;"></div>
       <div class="map-legend">
         <div class="map-legend-title">Leyenda</div>
         <div class="legend-row"><div class="legend-dot" style="background:#E8420A;"></div>Hub aerolínea (>100 rutas)</div>
@@ -1936,6 +1936,7 @@ function initMap(){
       if(!e.ctrlKey&&!e.metaKey)e.stopPropagation();
     },{passive:true});
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CartoDB',maxZoom:19}).addTo(mapInstance);
+    setTimeout(()=>mapInstance.invalidateSize(),100);
     buildBaseLayer();
     setupMapSearch();
     setupMapZoneBtns();
