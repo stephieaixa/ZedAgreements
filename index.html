@@ -705,6 +705,29 @@ function countryOf(c){return COUNTRIES[c]||'';}
 // ROUTING ENGINE
 // ═══════════════════════════════════════════════════════════════════
 let GRAPH=null;
+// ── NEARBY AIRPORT SUGGESTIONS ──────────────────────────────────────
+const MAX_NEARBY_KM = 500; // ~5 hours by land
+
+function haversineKm(code1, code2){
+  const c1=ll(code1), c2=ll(code2);
+  if(!c1||!c2)return 99999;
+  const dlat=(c2[0]-c1[0])*Math.PI/180;
+  const dlng=(c2[1]-c1[1])*Math.PI/180;
+  const a=Math.sin(dlat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dlng/2)**2;
+  return 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*6371;
+}
+
+function findNearbyAirports(code, maxKm=MAX_NEARBY_KM){
+  // Find airports in COORDS within maxKm that are in the graph
+  return Object.keys(COORDS).filter(c=>{
+    if(c===code)return false;
+    const d=haversineKm(code,c);
+    return d>0 && d<=maxKm && GRAPH[c]; // must be in ZED network
+  }).map(c=>({code:c, km:Math.round(haversineKm(code,c))}))
+    .sort((a,b)=>a.km-b.km)
+    .slice(0,5);
+}
+
 function buildGraph(){
   if(GRAPH)return;
   GRAPH={};
@@ -1676,7 +1699,70 @@ function runSearch(){
     }
     results.innerHTML=html;
   } else {
-    if(!allPaths.length){results.innerHTML=`<div class="route-result-empty">No se encontraron rutas ZED entre ${origLabel} y ${destLabel}.</div>`;return;}
+    if(!allPaths.length){
+      // Show nearby airport suggestions
+      let nearbyHtml='<div class="route-result-empty" style="text-align:left;padding:16px;">';
+      nearbyHtml+=`<div style="margin-bottom:12px;color:var(--text-primary)">No se encontraron rutas ZED directas entre <b>${origLabel}</b> y <b>${destLabel}</b>.</div>`;
+      
+      const origCodes2=selOrigGroup||[selOrig];
+      const destCodes2=selDestGroup||[selDest];
+      
+      // Find nearby airports for origin
+      buildGraph();
+      let suggestions=[];
+      origCodes2.slice(0,3).forEach(orig=>{
+        const nearby=findNearbyAirports(orig);
+        nearby.forEach(({code,km})=>{
+          const paths=findPaths(code,destCodes2[0]||selDest,3);
+          if(paths.length){
+            suggestions.push({type:'origin',orig,altCode:code,km,best:paths[0]});
+          }
+        });
+      });
+      destCodes2.slice(0,3).forEach(dest=>{
+        const nearby=findNearbyAirports(dest);
+        nearby.forEach(({code,km})=>{
+          const paths=findPaths(origCodes2[0]||selOrig,code,3);
+          if(paths.length){
+            suggestions.push({type:'dest',dest,altCode:code,km,best:paths[0]});
+          }
+        });
+      });
+      
+      if(suggestions.length){
+        nearbyHtml+=`<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">✈ Aeropuertos cercanos con rutas disponibles</div>`;
+        const seen=new Set();
+        suggestions.slice(0,5).forEach(({type,orig,dest,altCode,km,best})=>{
+          const key=type+altCode;
+          if(seen.has(key))return;
+          seen.add(key);
+          const isOrig=type==='origin';
+          const cardId='ns'+(Date.now()+Math.random()).toString(36).slice(-6);
+          window._routePaths=window._routePaths||{};
+          window._routePaths[cardId]={path:best.path,segs:best.segs,airlines:best.airlines,stops:best.stops,fromOrig:best.path[0].apt,toDest:best.path[best.path.length-1].apt};
+          nearbyHtml+=`<div onclick="openRouteDetail('${cardId}')" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;">🚌 ${km}km por tierra</div>
+              <div style="font-size:12px;color:var(--text-secondary)">
+                ${isOrig
+                  ? `Ir a <b style="font-family:var(--mono)">${altCode}</b> (${cityOf(altCode)}) y volar desde ahí`
+                  : `Llegar a <b style="font-family:var(--mono)">${altCode}</b> (${cityOf(altCode)}) y continuar por tierra`
+                }
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              ${best.path.map((s,i)=>`${i>0?'<span style="color:var(--text-muted);font-size:10px">→</span>':''}<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${i===0?'var(--green)':i===best.path.length-1?'var(--accent)':'var(--amber)'}">${s.apt}</span>`).join('')}
+              <span style="font-size:10px;padding:1px 7px;border-radius:99px;background:var(--border);color:var(--text-secondary);margin-left:auto">${best.stops===0?'Directo':best.stops+' escala'+(best.stops!==1?'s':'')}</span>
+            </div>
+          </div>`;
+        });
+      } else {
+        nearbyHtml+=`<div style="color:var(--text-muted);font-size:12px;">No se encontraron alternativas cercanas.</div>`;
+      }
+      nearbyHtml+='</div>';
+      results.innerHTML=nearbyHtml;
+      return;
+    }
     let html='';
     if(directs.length){
       html+=`<div class="route-section-subtitle" style="margin-bottom:10px">DIRECTOS (${directs.length})</div>`;
