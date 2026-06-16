@@ -1381,7 +1381,9 @@ function attachDropdowns(){
     function showDD(html){
       if(!html){dd.style.display='none';return;}
       dd.innerHTML=html;
-      dd.style.cssText='display:block;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12);';
+      // Position dropdown relative to input
+      const rect=input.getBoundingClientRect();
+      dd.style.cssText=`display:block;position:fixed;top:${rect.bottom+2}px;left:${rect.left}px;width:${rect.width}px;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);font-family:var(--sans);`;
       dd.querySelectorAll('[data-code],[data-gkey]').forEach(opt=>{
         opt.addEventListener('mousedown',e=>{
           e.preventDefault();
@@ -1457,7 +1459,7 @@ function attachDropdowns(){
       if(e.key==='Escape')dd.style.display='none';
     });
 
-    input.addEventListener('blur',()=>setTimeout(()=>dd.style.display='none',150));
+    input.addEventListener('blur',()=>setTimeout(()=>{dd.style.display='none';},180));
   });
 }
 
