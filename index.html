@@ -1895,14 +1895,18 @@ function runSearch(){
         if(uniq.length){
           const savingsBest=uniq[0].best.stops;
           const saving=bestStops-savingsBest;
-          html+=`<div style="margin-top:20px;padding:14px;background:#FFFBF0;border:1px solid #D4A800;border-radius:10px;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-              <span style="font-size:16px">🚌</span>
-              <div>
-                <div style="font-size:12px;font-weight:700;color:#8A6A00;">Moverte ${saving===bestStops?'y volar directo':'con menos escalas'} desplazándote por tierra</div>
-                <div style="font-size:11px;color:#8A6A00;opacity:.8;">Aeropuertos a menos de 500km con mejores conexiones</div>
+          const nearbyId='nb'+(Date.now()).toString(36);
+          html+=`<div style="margin-top:12px;border:1px solid #D4A800;border-radius:10px;overflow:hidden;">
+            <div onclick="document.getElementById('${nearbyId}').style.display=document.getElementById('${nearbyId}').style.display==='none'?'block':'none';this.querySelector('.nb-arrow').style.transform=document.getElementById('${nearbyId}').style.display==='none'?'rotate(0deg)':'rotate(180deg)';"
+              style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#FFFBF0;cursor:pointer;user-select:none;">
+              <span style="font-size:15px">🚌</span>
+              <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;color:#8A6A00;">Alternativa por tierra · ${saving===bestStops?'volar directo':'menos escalas'} desde aeropuerto cercano</div>
+                <div style="font-size:11px;color:#8A6A00;opacity:.75;">${uniq.length} opción${uniq.length!==1?'es':''} a menos de 500km</div>
               </div>
-            </div>`;
+              <svg class="nb-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A6A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .2s;transform:rotate(0deg)"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div id="${nearbyId}" style="display:none;padding:10px 12px;background:#FFFBF0;border-top:1px solid #D4A80040;">`;
           uniq.slice(0,4).forEach(({side,fromCode,toCode,km,best})=>{
             const stopsBadge=best.stops===0?'Directo':best.stops===1?'1 escala':best.stops+' escalas';
             const stopsBg=best.stops===0?'var(--green)':'var(--amber)';
@@ -1924,7 +1928,7 @@ function runSearch(){
               </div>
             </div>`;
           });
-          html+=`</div>`;
+          html+=`</div></div>`;
         }
       }
     }
