@@ -2190,28 +2190,14 @@ function buildBaseLayer(){
       const line=L.polyline([oc,dc],{color,weight:1,opacity:0.12,interactive:true}).addTo(mapInstance);
       baseLines.push(line);
       baseLineData.push({line,airports:[o,d],iata});
-      // Hover on base line: show both endpoint labels temporarily
+      // Hover on base line: just highlight the line, tooltip is on the markers
       line.on('mouseover',function(){
-        if(mapOrig||mapDest)return; // don't interfere when route selected
+        if(mapOrig||mapDest)return;
         this.setStyle({weight:2.5,opacity:0.65});
-        [o,d].forEach(code=>{
-          const m=baseMarkers[code];if(!m)return;
-          m.unbindTooltip();
-          m.bindTooltip(`<b>${code}</b> — ${cityOf(code)}`,
-            {permanent:true,direction:'top',offset:[0,-(markerRadius(code)+4)],className:'leaflet-tooltip-zed'}
-          ).openTooltip();
-        });
       });
       line.on('mouseout',function(){
         if(mapOrig||mapDest)return;
         this.setStyle({weight:1,opacity:0.12});
-        [o,d].forEach(code=>{
-          const m=baseMarkers[code];if(!m)return;
-          m.unbindTooltip();
-          const isHub=DATA.some(a=>a.hub===code);
-          const tip=`<b>${code}</b> — ${cityOf(code)}${countryOf(code)?' · '+countryOf(code):''}`;
-          m.bindTooltip(tip,{sticky:true,className:'leaflet-tooltip-zed',direction:'top',offset:[0,-4]});
-        });
       });
     });
   });
@@ -2334,26 +2320,12 @@ function showOriginRoutes(orig){
     line.bindTooltip(tipText,{sticky:true,className:'leaflet-tooltip-zed',direction:'top'});
     line.on('mouseover',()=>{
       line.setStyle({weight:4,opacity:1});
-      if(baseMarkers[dest]){
-        baseMarkers[dest].setStyle({fillOpacity:1,radius:markerRadius(dest)+3});
-        baseMarkers[dest].unbindTooltip();
-        baseMarkers[dest].bindTooltip(
-          `<b>${dest}</b> — ${cityOf(dest)}`,
-          {permanent:true,direction:'top',offset:[0,-(markerRadius(dest)+5)],className:'leaflet-tooltip-zed'}
-        ).openTooltip();
-      }
+      if(baseMarkers[dest])baseMarkers[dest].setStyle({fillOpacity:1,radius:markerRadius(dest)+3});
     });
     line.on('mouseout',()=>{
       line.setStyle({weight:2,opacity:0.5});
-      if(dest!==mapDest&&baseMarkers[dest]){
+      if(dest!==mapDest&&baseMarkers[dest])
         baseMarkers[dest].setStyle({fillOpacity:0.85,radius:markerRadius(dest)+1});
-        // Only remove permanent tooltip if not already selected as dest
-        if(dest!==mapOrig){
-          baseMarkers[dest].unbindTooltip();
-          const tip=`<b>${dest}</b> — ${cityOf(dest)}${countryOf(dest)?' · '+countryOf(dest):''}`;
-          baseMarkers[dest].bindTooltip(tip,{sticky:true,className:'leaflet-tooltip-zed',direction:'top',offset:[0,-4]});
-        }
-      }
     });
     line.on('click',()=>onMapAirportClick(dest));
     routeLayers.push(line);
