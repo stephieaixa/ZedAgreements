@@ -2293,27 +2293,66 @@ function setupMapSearch(){
   function attachMapDD(inputId,ddId,setCode){
     const input=document.getElementById(inputId),dd=document.getElementById(ddId);
     if(!input||!dd)return;
+    const clearBtnId=inputId==='map-origin'?'map-clear-origin':'map-clear-dest';
+    
     input.addEventListener('input',()=>{
-      const matches=searchAirports(input.value);
+      const q=input.value.trim();
+      // Show/hide clear button
+      const cb=document.getElementById(clearBtnId);
+      if(cb)cb.style.display=q?'inline':'none';
+      if(!q){setCode(null);dd.classList.remove('open');return;}
+      // Search — try region first if 3+ chars
+      const region=findRegion(q);
+      let matches;
+      if(region){
+        matches=region.codes.filter(c=>allAptCodes.includes(c));
+      } else {
+        matches=searchAirports(q,10);
+      }
       if(!matches.length){dd.classList.remove('open');return;}
-      dd.innerHTML=aptDropdownHTML(matches);dd.classList.add('open');
+      // Build dropdown with region option if applicable
+      let html='';
+      if(region){
+        html+=`<div class="apt-opt" data-code="${matches[0]}" data-group="true" data-label="${region.label}" style="background:var(--accent-light);border-bottom:1px solid var(--border);">
+          <span class="opt-code" style="color:var(--accent)">★</span>
+          <span style="font-weight:600;color:var(--accent)">${region.label} <span style="font-size:11px;opacity:.7">(${matches.length})</span></span>
+        </div>`;
+        html+=matches.slice(0,6).map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}</span></div>`).join('');
+      } else {
+        html=matches.map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span></div>`).join('');
+      }
+      dd.innerHTML=html;
+      dd.classList.add('open');
       dd.querySelectorAll('[data-code]').forEach(opt=>{
         opt.addEventListener('mousedown',e=>{
           e.preventDefault();
           const code=opt.dataset.code;
           input.value=cityOf(code)+' ('+code+')';
-          const mcb=document.getElementById(inputId==='map-origin'?'map-clear-origin':'map-clear-dest');if(mcb)mcb.style.display='inline';
+          const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
           setCode(code);dd.classList.remove('open');
         });
       });
     });
-    input.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
-    input.addEventListener('input',e=>{
-      const cbId=inputId==='map-origin'?'map-clear-origin':'map-clear-dest';
-      const cb=document.getElementById(cbId);
-      if(cb)cb.style.display=e.target.value.trim()?'inline':'none';
-      if(!e.target.value.trim()){setCode(null);}
+    
+    // Enter key: select first option or exact match
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        const first=dd.querySelector('[data-code]');
+        if(first&&dd.classList.contains('open')){
+          first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
+        } else {
+          // Try exact code match
+          const code=input.value.trim().toUpperCase();
+          if(allAptCodes.includes(code)){
+            input.value=cityOf(code)+' ('+code+')';
+            setCode(code);
+          }
+        }
+      }
+      if(e.key==='Escape')dd.classList.remove('open');
     });
+    
+    input.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
   }
   attachMapDD('map-origin','map-origin-dd',code=>{
     if(!code){mapOrig=null;if(mapState!=='idle'){clearMapSelections();}}
