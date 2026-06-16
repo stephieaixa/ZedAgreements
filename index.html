@@ -753,7 +753,7 @@ function findPaths(origin,dest,maxStops=2){
   const results=[];
   const seenSigs=new Set();
   const q=[{curr:origin,path:[{apt:origin,al:null}],visited:new Set([origin])}];
-  while(q.length&&results.length<80){
+  while(q.length&&results.length<150){
     const{curr,path,visited}=q.shift();
     if(curr===dest){
       const segs=path.slice(1);
@@ -852,8 +852,8 @@ const COUNTRY_AIRPORTS={
   'bolivia':['VVI'],
   'paraguay':[],'uruguay':[],
   'canada':['YYZ','YVR','YYC','YOW','YUL'],'canadá':['YYZ','YVR','YYC','YOW','YUL'],
-  'estados unidos':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO'],
-  'usa':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO'],
+  'estados unidos':['JFK','EWR','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','FLL','IAD','PHL','CLT','SEA','PHX','SAN','PDX','STL','MKE','BNA','AUS','HOU','MSP','MDW','RDU','SAT','MSY','PIT','IND','CLE','CMH','CVG','GRR','MCI'],
+  'usa':['JFK','EWR','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','FLL','IAD','PHL','CLT','SEA','PHX','SAN','PDX','STL','MKE','MSP','PIT','IND','CLE','CMH'],
   'japon':['NRT','HND','KIX'],'japón':['NRT','HND','KIX'],
   'singapur':['SIN'],'singapore':['SIN'],
   'tailandia':['BKK','HKT'],'thailand':['BKK','HKT'],
@@ -951,7 +951,7 @@ const COUNTRY_AIRPORTS={
   'polinesia':['PPT'],'tahiti':['PPT'],'tahití':['PPT'],
   // North America by country/city
   'estados unidos':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','SEA','IAD','IAH','PHX'],
-  'usa':['JFK','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO'],
+  'usa':['JFK','EWR','LAX','ORD','MIA','BOS','SFO','DEN','DFW','ATL','LAS','MCO','FLL','IAD','PHL','CLT','SEA','PHX','SAN','PDX','STL','MKE','MSP','PIT','IND','CLE','CMH'],
   'new york':['JFK','EWR'],'nueva york':['JFK','EWR'],
   'los angeles':['LAX'],'los ángeles':['LAX'],
   'chicago':['ORD','MDW'],'miami':['MIA'],'boston':['BOS'],
@@ -1672,7 +1672,7 @@ function runSearch(){
 
   // Sort: directs first, then by score
   allPaths.sort((a,b)=>a.score-b.score);
-  allPaths=allPaths.slice(0,30); // cap at 30
+  allPaths=allPaths.slice(0,40); // cap at 30
 
   const directs=allPaths.filter(p=>p.stops===0);
   const stopovers=allPaths.filter(p=>p.stops>0);
