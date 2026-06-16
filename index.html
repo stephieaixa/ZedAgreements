@@ -753,7 +753,7 @@ function findPaths(origin,dest,maxStops=2){
   const results=[];
   const seenSigs=new Set();
   const q=[{curr:origin,path:[{apt:origin,al:null}],visited:new Set([origin])}];
-  while(q.length&&results.length<150){
+  while(q.length&&results.length<80){
     const{curr,path,visited}=q.shift();
     if(curr===dest){
       const segs=path.slice(1);
