@@ -995,14 +995,46 @@ let selDestGroup=null;
 function searchAirports(q,limit=12){
   const ql=norm(q);
   if(!ql)return[];
-  // ALWAYS search airport codes/cities first (so JFK shows on "j")
-  const direct=allAptCodes.filter(c=>{
-    const city=norm(cityOf(c));
-    const country=norm(countryOf(c));
-    const code=c.toLowerCase();
-    return code.startsWith(ql)||city.startsWith(ql)||(ql.length>=3&&(city.includes(ql)||country.includes(ql)||code.includes(ql)));
-  }).slice(0,limit);
-  return direct;
+  const seen=new Set();
+  const results=[];
+
+  function addCode(c){
+    if(!seen.has(c)&&allAptCodes.includes(c)){seen.add(c);results.push(c);}
+  }
+
+  // 1. Exact code match first (highest priority)
+  allAptCodes.forEach(c=>{
+    if(c.toLowerCase()===ql)addCode(c);
+  });
+
+  // 2. Code starts with query (e.g. "j" → JFK, JAX, JNB...)
+  allAptCodes.forEach(c=>{
+    if(c.toLowerCase().startsWith(ql))addCode(c);
+  });
+
+  // 3. City name starts with query (e.g. "ams" → AMS, "jfk"→JFK via "nueva york jfk")
+  allAptCodes.forEach(c=>{
+    if(norm(cityOf(c)).startsWith(ql))addCode(c);
+  });
+
+  // 4. City name contains query anywhere (e.g. "york"→JFK, "angeles"→LAX)
+  allAptCodes.forEach(c=>{
+    if(norm(cityOf(c)).includes(ql))addCode(c);
+  });
+
+  // 5. Country starts with query (e.g. "jap"→NRT, "aus"→VIE/SYD)
+  allAptCodes.forEach(c=>{
+    if(norm(countryOf(c)).startsWith(ql))addCode(c);
+  });
+
+  // 6. Country contains query
+  if(ql.length>=2){
+    allAptCodes.forEach(c=>{
+      if(norm(countryOf(c)).includes(ql))addCode(c);
+    });
+  }
+
+  return results.slice(0,limit);
 }
 
 function aptDropdownHTML(codes){
