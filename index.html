@@ -731,11 +731,22 @@ function findPaths(origin,dest,maxStops=2){
       const segs=path.slice(1);
       const airlines=[...new Set(segs.map(s=>s.al))];
       const stops=path.length-2;
-      // Dedup by airline sequence + intermediate hubs
       const sig=segs.map(s=>s.al+'→'+s.apt).join('|');
       if(!seenSigs.has(sig)){
         seenSigs.add(sig);
-        results.push({path,segs,airlines,stops,score:stops*10+airlines.length});
+        // Calculate total route distance using coords
+        let dist=0;
+        for(let i=0;i<path.length-1;i++){
+          const c1=ll(path[i].apt),c2=ll(path[i+1].apt);
+          if(c1&&c2){
+            const dlat=(c2[0]-c1[0])*Math.PI/180;
+            const dlng=(c2[1]-c1[1])*Math.PI/180;
+            const a=Math.sin(dlat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dlng/2)**2;
+            dist+=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*6371;
+          }
+        }
+        // Score: stops is PRIMARY (×10000), then distance (normalized), then airlines
+        results.push({path,segs,airlines,stops,dist,score:stops*10000+Math.round(dist/100)+airlines.length*10});
       }
       continue;
     }
