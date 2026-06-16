@@ -2049,13 +2049,14 @@ function highlightMarker(code,col,r,permanent){
   const m=baseMarkers[code];
   if(!m)return;
   m.setStyle({fillColor:col,fillOpacity:1,radius:r,zIndexOffset:500});
-  if(permanent){
-    m.unbindTooltip();
-    m.bindTooltip(
-      `<b>${code}</b> — ${cityOf(code)}`,
-      {permanent:true,direction:'top',offset:[0,-(r+2)],className:'leaflet-tooltip-zed'}
-    ).openTooltip();
-  }
+  // Always use sticky (hover) tooltip - permanent ones break on zoom
+  m.unbindTooltip();
+  m.bindTooltip(
+    `<b>${code}</b> — ${cityOf(code)}`,
+    {sticky:true,direction:'top',offset:[0,-(r+2)],className:'leaflet-tooltip-zed'}
+  );
+  // Show it briefly to indicate selection
+  m.openTooltip();
 }
 
 function onMapAirportClick(code){
@@ -2147,12 +2148,12 @@ function showOriginRoutes(orig){
     routeLayers.push(line);
     if(baseMarkers[dest]){
       baseMarkers[dest].setStyle({fillColor:col,fillOpacity:0.9,radius:markerRadius(dest)+2});
-      // Show permanent label with city name
+      // Sticky hover tooltip (not permanent - avoids overlap on zoom)
       baseMarkers[dest].unbindTooltip();
       baseMarkers[dest].bindTooltip(
         `<b>${dest}</b> — ${cityOf(dest)}`,
-        {permanent:true, direction:'top', offset:[0,-6], className:'leaflet-tooltip-zed'}
-      ).openTooltip();
+        {sticky:true, direction:'top', offset:[0,-4], className:'leaflet-tooltip-zed'}
+      );
     }
   });
   // Side panel
