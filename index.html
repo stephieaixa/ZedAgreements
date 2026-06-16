@@ -402,7 +402,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
         </div>
       </div>
       <div class="map-toolbar-row" style="gap:4px;flex-wrap:wrap;" id="airline-filter-row">
-        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">Aerolínea:</span>
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">Aerolínea:</span><span id="al-filter-indicator" style="font-size:11px;color:var(--accent);font-weight:600;display:none;"></span>
         <button class="mz-btn active" data-al="all" onclick="filterMapByAirline('all')" style="font-weight:600">Todas</button>
       </div>
     </div>
@@ -2030,6 +2030,7 @@ function buildBaseLayer(){
     const r=markerRadius(code),col=markerColor(code);
     const isHub=DATA.some(a=>a.hub===code);
     const m=L.circleMarker(c,{radius:r,fillColor:col,color:'#fff',weight:1.5,fillOpacity:isHub?0.9:0.5,zIndexOffset:isHub?200:0}).addTo(mapInstance);
+    m._code=code;
     // Tooltip on hover: show city name + code, like flightconnections
     const tip=`<b>${code}</b>${cityOf(code)!==code?' — '+cityOf(code):''}${countryOf(code)?' · '+countryOf(code):''}`;
     m.bindTooltip(tip,{sticky:true,className:'leaflet-tooltip-zed',direction:'top',offset:[0,-4]});
@@ -2462,11 +2463,18 @@ function applyMapZoneFilter(z){
 }
 
 function setupMapZoneBtns(){
-  document.querySelectorAll('.mz-btn').forEach(btn=>{
+  document.querySelectorAll('.mz-btn[data-mz]').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      document.querySelectorAll('.mz-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      applyMapZoneFilter(btn.dataset.mz);
+      // Toggle: if already active, go back to all
+      const wasActive = btn.classList.contains('active');
+      document.querySelectorAll('.mz-btn[data-mz]').forEach(b=>b.classList.remove('active'));
+      if(wasActive && btn.dataset.mz!=='all'){
+        document.querySelector('.mz-btn[data-mz="all"]').classList.add('active');
+        applyMapZoneFilter('all');
+      } else {
+        btn.classList.add('active');
+        applyMapZoneFilter(btn.dataset.mz);
+      }
     });
   });
 }
@@ -2493,8 +2501,28 @@ function buildAirlineFilterBtns(){
 }
 
 function filterMapByAirline(iata){
+  // Toggle: if already active, deselect
+  if(activeAirlineFilter===iata && iata!=='all'){
+    activeAirlineFilter='all';
+    document.querySelectorAll('#airline-filter-row .mz-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.al==='all');
+    });
+    // Restore all lines
+    baseLineData.forEach(({line})=>line.setStyle({weight:1,opacity:0.12}));
+    Object.values(baseMarkers).forEach(m=>{
+      const isHub=m.options.fillColor==='#E8420A'||m.options.fillColor==='#F9A67A';
+      m.setStyle({opacity:1,fillOpacity:isHub?0.9:0.5,radius:markerRadius(m._code||'')});
+    });
+    document.getElementById('map-side').classList.remove('open');
+    return;
+  }
   activeAirlineFilter=iata;
-  // Update button states
+  const ind=document.getElementById('al-filter-indicator');
+  if(ind){
+    const a=DATA.find(x=>x.iata===iata);
+    ind.textContent=iata==='all'?'':`${iata} — ${a?a.name:''}`;
+    ind.style.display=iata==='all'?'none':'inline';
+  }
   document.querySelectorAll('#airline-filter-row .mz-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.al===iata);
   });
