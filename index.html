@@ -1915,7 +1915,8 @@ function toggleNearby(nid){
 }
 function renderNearby(nid,el){
   var alts=(window._nearbyAlts||{})[nid]||[];
-  el.innerHTML=alts.map(function(g){
+  el.innerHTML='';
+  alts.forEach(function(g){
     var col2=g.best.stops===0?'#1A6B3C':'#8A6A00';
     var badge=g.best.stops===0?'Directo':g.best.stops===1?'1 escala':g.best.stops+' escalas';
     var als=g.best.airlines.map(function(al){var c=AL_COLORS[al]||'#999';return'<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:'+c+';background:'+c+'22;padding:1px 5px;border-radius:3px">'+al+'</span>';}).join(' ');
@@ -1923,18 +1924,28 @@ function renderNearby(nid,el){
       ?'Ir a <b style="font-family:var(--mono)">'+g.altCode+'</b> ('+cityOf(g.altCode)+') · '+g.km+'km por tierra · luego volar'
       :'Llegar a <b style="font-family:var(--mono)">'+g.altCode+'</b> ('+cityOf(g.altCode)+') · '+g.km+'km por tierra hasta destino';
     var path2=g.best.path.map(function(s){return s.apt;}).join(' → ');
+    // Store path for detail panel
+    var cardId='ny'+(Date.now()+Math.random()).toString(36).slice(-6);
+    window._routePaths=window._routePaths||{};
+    window._routePaths[cardId]={
+      path:g.best.path, segs:g.best.segs, airlines:g.best.airlines,
+      stops:g.best.stops, fromOrig:g.best.path[0].apt, toDest:g.best.path[g.best.path.length-1].apt
+    };
     var div=document.createElement('div');
     div.style.cssText='background:white;border:1px solid #D4A800;border-radius:7px;padding:10px 12px;margin-bottom:7px;cursor:pointer;';
     div.onmouseover=function(){this.style.background='#FEF6E4';};
     div.onmouseout=function(){this.style.background='white';};
-    div.onclick=function(){selectNearbyOrigin(g.altCode,g.side);};
+    div.onclick=function(){openRouteDetail(cardId);};
     div.innerHTML='<div style="font-size:11px;color:#8A6A00;margin-bottom:6px;">'+desc2+'</div>'
       +'<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">'
       +'<span style="font-size:10px;padding:2px 8px;border-radius:99px;background:'+col2+';color:#fff;font-weight:600">'+badge+'</span>'
       +als+'<span style="font-size:10px;color:#9E9C96;margin-left:4px">'+path2+'</span>'
-      +'<span style="font-size:10px;color:#8A6A00;margin-left:auto;font-weight:600">Ver →</span></div>';
-    return div.outerHTML;
-  }).join('');
+      +'<div style="margin-left:auto;display:flex;gap:8px;">'
+      +'<span data-nc="'+g.altCode+'" data-ns="'+g.side+'" onclick="event.stopPropagation();selectNearbyOrigin(this.dataset.nc,this.dataset.ns)" style="font-size:10px;color:#8A6A00;font-weight:600;padding:2px 8px;border:1px solid #D4A800;border-radius:4px;cursor:pointer;">Buscar desde '+g.altCode+'</span>'
+      +'<span style="font-size:10px;color:#8A6A00;font-weight:600">Ver detalle →</span>'
+      +'</div></div>';
+    el.appendChild(div);
+  });
 }
 window.toggleNearby=toggleNearby;
 
