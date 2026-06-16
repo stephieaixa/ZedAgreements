@@ -128,7 +128,7 @@ input.asearch:focus{border-color:var(--accent);}
 .map-side.open{display:flex;}
 .map-side-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 /* Map legend */
-.map-legend{position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:8px;padding:10px 14px;z-index:1000;font-size:11px;}
+.map-legend{position:absolute;bottom:16px;left:16px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:8px;padding:10px 14px;z-index:1000;font-size:11px;max-width:200px;}
 .map-legend-title{font-weight:600;margin-bottom:6px;color:var(--text-primary);}
 .legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;color:var(--text-secondary);}
 .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
@@ -369,7 +369,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="apt-input" id="map-origin" placeholder="Origen…" autocomplete="off" style="padding-right:28px;"/>
           <button id="map-clear-origin" onclick="clearMapField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;z-index:2;">×</button>
-          <div class="apt-dd" id="map-origin-dd" class="apt-dd"></div>
+          <div class="apt-dd" id="map-origin-dd" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
         </div>
         <button id="map-swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
@@ -378,7 +378,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="apt-input" id="map-dest" placeholder="Destino…" autocomplete="off" style="padding-right:28px;"/>
           <button id="map-clear-dest" onclick="clearMapField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;z-index:2;">×</button>
-          <div class="apt-dd" id="map-dest-dd" class="apt-dd"></div>
+          <div class="apt-dd" id="map-dest-dd" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
         </div>
 
         <div style="display:flex;align-items:center;gap:8px;flex:1;">
@@ -993,48 +993,29 @@ let selOrigGroup=null; // null or array of codes
 let selDestGroup=null;
 
 function searchAirports(q,limit=12){
-  const ql=norm(q);
+  const ql=q.toLowerCase().trim();
   if(!ql)return[];
-  const seen=new Set();
-  const results=[];
-
-  function addCode(c){
-    if(!seen.has(c)&&allAptCodes.includes(c)){seen.add(c);results.push(c);}
+  // Alias match (exact)
+  if(SEARCH_ALIASES[ql])return[SEARCH_ALIASES[ql]].flat();
+  // Country/region group (exact)
+  if(COUNTRY_AIRPORTS[ql])return COUNTRY_AIRPORTS[ql].filter(c=>allAptCodes.includes(c));
+  // Partial country/region match (3+ chars)
+  if(ql.length>=3){
+    for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+      if(k.toLowerCase().startsWith(ql)||k.toLowerCase().includes(ql))
+        return v.filter(c=>allAptCodes.includes(c));
+    }
+    for(const[k,v]of Object.entries(SEARCH_ALIASES)){
+      if(k.toLowerCase().startsWith(ql))return[v].flat();
+    }
   }
-
-  // 1. Exact code match first (highest priority)
-  allAptCodes.forEach(c=>{
-    if(c.toLowerCase()===ql)addCode(c);
-  });
-
-  // 2. Code starts with query (e.g. "j" → JFK, JAX, JNB...)
-  allAptCodes.forEach(c=>{
-    if(c.toLowerCase().startsWith(ql))addCode(c);
-  });
-
-  // 3. City name starts with query (e.g. "ams" → AMS, "jfk"→JFK via "nueva york jfk")
-  allAptCodes.forEach(c=>{
-    if(norm(cityOf(c)).startsWith(ql))addCode(c);
-  });
-
-  // 4. City name contains query anywhere (e.g. "york"→JFK, "angeles"→LAX)
-  allAptCodes.forEach(c=>{
-    if(norm(cityOf(c)).includes(ql))addCode(c);
-  });
-
-  // 5. Country starts with query (e.g. "jap"→NRT, "aus"→VIE/SYD)
-  allAptCodes.forEach(c=>{
-    if(norm(countryOf(c)).startsWith(ql))addCode(c);
-  });
-
-  // 6. Country contains query
-  if(ql.length>=2){
-    allAptCodes.forEach(c=>{
-      if(norm(countryOf(c)).includes(ql))addCode(c);
-    });
-  }
-
-  return results.slice(0,limit);
+  // Airport code, city, country match (from first char)
+  return allAptCodes.filter(c=>{
+    const city=cityOf(c).toLowerCase();
+    const country=countryOf(c).toLowerCase();
+    const code=c.toLowerCase();
+    return code.includes(ql)||city.includes(ql)||country.includes(ql);
+  }).slice(0,limit);
 }
 
 function aptDropdownHTML(codes){
@@ -1338,7 +1319,7 @@ function initRouteInputs(){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
       <button id="clear-origin" onclick="clearField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0;z-index:3;">×</button>
-      <div id="dd-origin" class="apt-dd"></div>
+      <div id="dd-origin" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
     </div>
     <button id="swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
@@ -1348,10 +1329,9 @@ function initRouteInputs(){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
       <button id="clear-dest" onclick="clearField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0;z-index:3;">×</button>
-      <div id="dd-dest" class="apt-dd"></div>
+      <div id="dd-dest" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
     </div>
   </div>`;
-  // Swap button
   document.getElementById('swap-btn').addEventListener('click',()=>{
     const tmp=selOrig;const tmpG=selOrigGroup;
     selOrig=selDest;selOrigGroup=selDestGroup;
@@ -1378,65 +1358,87 @@ function attachDropdowns(){
     const clearBtn=document.getElementById('clear-'+id);
     if(!input||!dd)return;
 
-    function showDD(html){
-      if(!html){dd.style.display='none';return;}
+    function openDD(html){
       dd.innerHTML=html;
-      // Position dropdown relative to input
-      const rect=input.getBoundingClientRect();
-      dd.style.cssText=`display:block;position:fixed;top:${rect.bottom+2}px;left:${rect.left}px;width:${rect.width}px;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);font-family:var(--sans);`;
-      dd.querySelectorAll('[data-code],[data-gkey]').forEach(opt=>{
-        opt.addEventListener('mousedown',e=>{
-          e.preventDefault();
-          if(opt.dataset.gkey){
-            const grp=pendingGroups[opt.dataset.gkey]||[];
-            const lbl=opt.dataset.label||id;
-            input.value=lbl+' ('+grp.length+')';
-            if(id==='origin'){selOrig=grp[0]||null;selOrigGroup=grp;}
-            else{selDest=grp[0]||null;selDestGroup=grp;}
-          } else {
-            const code=opt.dataset.code;
-            input.value=cityOf(code)+' ('+code+')';
-            if(id==='origin'){selOrig=code;selOrigGroup=null;}
-            else{selDest=code;selDestGroup=null;}
-          }
-          if(clearBtn)clearBtn.style.display='block';
-          dd.style.display='none';
-          runSearch();
-        });
-      });
+      dd.style.display='block';
+    }
+    function closeDD(){
+      dd.style.display='none';
     }
 
     input.addEventListener('input',()=>{
       const q=input.value.trim();
+      // Show/hide clear button
       if(clearBtn)clearBtn.style.display=q?'block':'none';
       if(!q){
-        dd.style.display='none';
+        closeDD();
         if(id==='origin'){selOrig=null;selOrigGroup=null;}
         else{selDest=null;selDestGroup=null;}
         runSearch();
         return;
       }
-      // Always search airports first
-      const aptMatches=searchAirports(q,8);
+
       let html='';
-      // Add region option if 3+ chars
-      const region=findRegion(q);
-      if(region&&region.codes.length){
-        const gkey='g'+(gcount++);
-        pendingGroups[gkey]=region.codes;
-        html+=`<div class="apt-opt" data-gkey="${gkey}" data-label="${region.label}" style="background:var(--accent-light);border-bottom:1px solid var(--border)80;">
-          <span class="opt-code" style="color:var(--accent)">★</span>
-          <span><b style="color:var(--accent)">${region.label}</b> <span style="font-size:11px;opacity:.6;color:var(--accent)">${region.codes.length} aeropuertos</span></span>
-        </div>`;
+
+      // Region option (3+ chars)
+      if(q.length>=3){
+        const qn=q.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+        let region=null;
+        for(const[k,v]of Object.entries(SEARCH_ALIASES)){
+          if(k.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().startsWith(qn)){
+            region={label:k.charAt(0).toUpperCase()+k.slice(1),codes:[v].flat()};break;
+          }
+        }
+        if(!region){
+          for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
+            const kn=k.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+            if((kn===qn||kn.startsWith(qn)||(qn.length>=3&&kn.includes(qn)))&&v.length){
+              region={label:k.charAt(0).toUpperCase()+k.slice(1),codes:v};break;
+            }
+          }
+        }
+        if(region&&region.codes.length){
+          const gkey='g'+(gcount++);
+          pendingGroups[gkey]=region.codes;
+          html+=`<div class="apt-opt" data-gkey="${gkey}" data-label="${region.label}" style="background:#FDF0EC;border-bottom:1px solid #F0A080;">
+            <span class="opt-code" style="color:#E8420A">★</span>
+            <span><b style="color:#E8420A">${region.label}</b> <span style="font-size:11px;opacity:.6;color:#E8420A">${region.codes.length} aeropuertos</span></span>
+          </div>`;
+        }
       }
-      // Always show individual airport results
-      if(aptMatches.length){
-        html+=aptMatches.map(c=>`<div class="apt-opt" data-code="${c}">
-          <span class="opt-code">${c}</span>
-          <span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span>
-        </div>`).join('');
+
+      // Airport matches (always)
+      const matches=searchAirports(q,10);
+      html+=matches.map(c=>`<div class="apt-opt" data-code="${c}">
+        <span class="opt-code">${c}</span>
+        <span>${cityOf(c)}${countryOf(c)?` <span style="color:#9E9C96;font-size:11px">· ${countryOf(c)}</span>`:''}</span>
+      </div>`).join('');
+
+      if(html){
+        openDD(html);
+        dd.querySelectorAll('[data-code],[data-gkey]').forEach(opt=>{
+          opt.addEventListener('mousedown',e=>{
+            e.preventDefault();
+            if(opt.dataset.gkey){
+              const grp=pendingGroups[opt.dataset.gkey]||[];
+              const lbl=opt.dataset.label||q;
+              input.value=lbl+' ('+grp.length+')';
+              if(id==='origin'){selOrig=grp[0]||null;selOrigGroup=grp;}
+              else{selDest=grp[0]||null;selDestGroup=grp;}
+            } else {
+              const code=opt.dataset.code;
+              input.value=cityOf(code)+' ('+code+')';
+              if(id==='origin'){selOrig=code;selOrigGroup=null;}
+              else{selDest=code;selDestGroup=null;}
+            }
+            if(clearBtn)clearBtn.style.display='block';
+            closeDD();
+            runSearch();
+          });
+        });
+      } else {
+        closeDD();
       }
-      showDD(html||null);
     });
 
     input.addEventListener('keydown',e=>{
@@ -1444,22 +1446,12 @@ function attachDropdowns(){
         const first=dd.querySelector('[data-code],[data-gkey]');
         if(first&&dd.style.display!=='none'){
           first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
-        } else {
-          const code=input.value.trim().toUpperCase();
-          if(allAptCodes&&allAptCodes.includes(code)){
-            input.value=cityOf(code)+' ('+code+')';
-            if(id==='origin'){selOrig=code;selOrigGroup=null;}
-            else{selDest=code;selDestGroup=null;}
-            if(clearBtn)clearBtn.style.display='block';
-            dd.style.display='none';
-            runSearch();
-          }
         }
       }
-      if(e.key==='Escape')dd.style.display='none';
+      if(e.key==='Escape')closeDD();
     });
 
-    input.addEventListener('blur',()=>setTimeout(()=>{dd.style.display='none';},180));
+    input.addEventListener('blur',()=>setTimeout(closeDD,160));
   });
 }
 
@@ -1938,7 +1930,9 @@ function initMap(){
   sc.onload=()=>{
     const mapEl=document.getElementById('map-container');
     mapEl.style.height='100%';
-    mapInstance=L.map(mapEl,{zoomControl:true,minZoom:2,maxZoom:13}).setView([25,10],2);
+    mapInstance=L.map(mapEl,{zoomControl:true,minZoom:2,maxZoom:13,scrollWheelZoom:true}).setView([25,10],2);
+    // Prevent browser zoom when using scroll on map
+    mapEl.addEventListener('wheel',e=>e.stopPropagation(),{passive:false});
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CartoDB',maxZoom:19}).addTo(mapInstance);
     buildBaseLayer();
     setupMapSearch();
@@ -2290,67 +2284,44 @@ function clearMapSelections(){
 function setupMapSearch(){
   function attachMapDD(inputId,ddId,setCode){
     const input=document.getElementById(inputId),dd=document.getElementById(ddId);
-    if(!input||!dd)return;
     const clearBtnId=inputId==='map-origin'?'map-clear-origin':'map-clear-dest';
-    
+    if(!input||!dd)return;
+
+    function openDD(html){dd.innerHTML=html;dd.style.display='block';}
+    function closeDD(){dd.style.display='none';}
+
     input.addEventListener('input',()=>{
       const q=input.value.trim();
-      // Show/hide clear button
       const cb=document.getElementById(clearBtnId);
       if(cb)cb.style.display=q?'inline':'none';
-      if(!q){setCode(null);dd.classList.remove('open');return;}
-      // Search — try region first if 3+ chars
-      const region=findRegion(q);
-      let matches;
-      if(region){
-        matches=region.codes.filter(c=>allAptCodes.includes(c));
-      } else {
-        matches=searchAirports(q,10);
-      }
-      if(!matches.length){dd.classList.remove('open');return;}
-      // Build dropdown with region option if applicable
-      let html='';
-      if(region){
-        html+=`<div class="apt-opt" data-code="${matches[0]}" data-group="true" data-label="${region.label}" style="background:var(--accent-light);border-bottom:1px solid var(--border);">
-          <span class="opt-code" style="color:var(--accent)">★</span>
-          <span style="font-weight:600;color:var(--accent)">${region.label} <span style="font-size:11px;opacity:.7">(${matches.length})</span></span>
-        </div>`;
-        html+=matches.slice(0,6).map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}</span></div>`).join('');
-      } else {
-        html=matches.map(c=>`<div class="apt-opt" data-code="${c}"><span class="opt-code">${c}</span><span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span></div>`).join('');
-      }
-      dd.innerHTML=html;
-      dd.classList.add('open');
+      if(!q){setCode(null);closeDD();return;}
+
+      const matches=searchAirports(q,12);
+      if(!matches.length){closeDD();return;}
+      openDD(matches.map(c=>`<div class="apt-opt" data-code="${c}">
+        <span class="opt-code">${c}</span>
+        <span>${cityOf(c)}${countryOf(c)?` <span style="color:#9E9C96;font-size:11px">· ${countryOf(c)}</span>`:''}</span>
+      </div>`).join(''));
       dd.querySelectorAll('[data-code]').forEach(opt=>{
         opt.addEventListener('mousedown',e=>{
           e.preventDefault();
           const code=opt.dataset.code;
           input.value=cityOf(code)+' ('+code+')';
           const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
-          setCode(code);dd.classList.remove('open');
+          setCode(code);closeDD();
         });
       });
     });
-    
-    // Enter key: select first option or exact match
+
     input.addEventListener('keydown',e=>{
       if(e.key==='Enter'){
         const first=dd.querySelector('[data-code]');
-        if(first&&dd.classList.contains('open')){
-          first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
-        } else {
-          // Try exact code match
-          const code=input.value.trim().toUpperCase();
-          if(allAptCodes.includes(code)){
-            input.value=cityOf(code)+' ('+code+')';
-            setCode(code);
-          }
-        }
+        if(first&&dd.style.display!=='none'){first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));}
+        else{const code=input.value.trim().toUpperCase();if(allAptCodes&&allAptCodes.includes(code)){input.value=cityOf(code)+' ('+code+')';setCode(code);closeDD();}}
       }
-      if(e.key==='Escape')dd.classList.remove('open');
+      if(e.key==='Escape')closeDD();
     });
-    
-    input.addEventListener('blur',()=>setTimeout(()=>dd.classList.remove('open'),150));
+    input.addEventListener('blur',()=>setTimeout(closeDD,160));
   }
   attachMapDD('map-origin','map-origin-dd',code=>{
     if(!code){mapOrig=null;if(mapState!=='idle'){clearMapSelections();}}
