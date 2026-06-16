@@ -1857,43 +1857,71 @@ function runSearch(){
       stopovers.slice(0,20).forEach(p=>{html+=pathCardHTML(p,p.fromOrig||selOrig,p.toDest||selDest);});
     }
 
-    // ── Nearby ground alternatives ──────────────────────────────────
-    if(directs.length===0){
-      const mainOrig=(selOrigGroup?selOrigGroup[0]:selOrig);
-      const mainDest=(selDestGroup?selDestGroup[0]:selDest);
+    // ── Nearby ground alternatives (500km) ───────────────────────────
+    {
+      const mainOrig=selOrigGroup?selOrigGroup[0]:selOrig;
+      const mainDest=selDestGroup?selDestGroup[0]:selDest;
       if(mainOrig&&mainDest){
         buildGraph();
-        // Find nearby airports with DIRECT routes to dest (better than current best)
         const bestStops=allPaths.length>0?allPaths[0].stops:99;
-        const nearbyAlts=findNearbyAirports(mainOrig).filter(({code})=>{
-          const paths=findPaths(code,mainDest,1);
-          return paths.some(p=>p.stops<bestStops);
+        // Check both origin AND destination side
+        const groundAlts=[];
+
+        // 1. Move from origin by ground → fly with fewer stops
+        findNearbyAirports(mainOrig).forEach(({code,km})=>{
+          if(code===mainOrig)return;
+          const paths=findPaths(code,mainDest,3);
+          if(paths.length&&paths[0].stops<bestStops){
+            groundAlts.push({side:'origin',fromCode:mainOrig,toCode:code,km,best:paths[0]});
+          }
         });
-        if(nearbyAlts.length){
-          html+=`<div style="margin-top:20px;padding:12px 14px;background:#FFFBF0;border:1px solid #D4A800;border-radius:8px;">
-            <div style="font-size:11px;font-weight:600;color:#8A6A00;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;">✈ Aeropuertos cercanos con mejores conexiones</div>
-            <div style="font-size:12px;color:#7A5C00;margin-bottom:10px;">Llegar por tierra desde <b>${cityOf(mainOrig)}</b> a uno de estos aeropuertos puede darte rutas más directas:</div>`;
-          nearbyAlts.slice(0,3).forEach(({code,km})=>{
-            const paths=findPaths(code,mainDest,2);
-            if(!paths.length)return;
-            const best=paths[0];
-            const stopsBadge=best.stops===0?'Directo':best.stops+' escala'+(best.stops!==1?'s':'');
-            const stopsBg=best.stops===0?'#1A6B3C':'#666';
-            const alBadges=best.airlines.map(al=>{const col=AL_COLORS[al]||'#999';return`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${col};background:${col}22;padding:1px 5px;border-radius:3px">${al}</span>`;}).join(' ');
-            html+=`<div onclick="selectNearbyOrigin('${code}')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:white;border:1px solid #D4A800;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:background .1s;" onmouseover="this.style.background='#FEF6E4'" onmouseout="this.style.background='white'">
-              <div style="flex-shrink:0;text-align:center;">
-                <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#8A6A00">${code}</div>
-                <div style="font-size:10px;color:#8A6A00;opacity:.8">${km}km</div>
+
+        // 2. Fly to nearby dest airport → ground to final dest
+        findNearbyAirports(mainDest).forEach(({code,km})=>{
+          if(code===mainDest)return;
+          const paths=findPaths(mainOrig,code,3);
+          if(paths.length&&paths[0].stops<bestStops){
+            groundAlts.push({side:'dest',fromCode:code,toCode:mainDest,km,best:paths[0]});
+          }
+        });
+
+        // Deduplicate and sort by fewest stops then km
+        const seen=new Set();
+        const uniq=groundAlts.filter(a=>{
+          const k=a.side+a.fromCode+a.toCode;
+          if(seen.has(k))return false;seen.add(k);return true;
+        }).sort((a,b)=>a.best.stops-b.best.stops||a.km-b.km);
+
+        if(uniq.length){
+          const savingsBest=uniq[0].best.stops;
+          const saving=bestStops-savingsBest;
+          html+=`<div style="margin-top:20px;padding:14px;background:#FFFBF0;border:1px solid #D4A800;border-radius:10px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span style="font-size:16px">🚌</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:#8A6A00;">Moverte ${saving===bestStops?'y volar directo':'con menos escalas'} desplazándote por tierra</div>
+                <div style="font-size:11px;color:#8A6A00;opacity:.8;">Aeropuertos a menos de 500km con mejores conexiones</div>
               </div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;font-weight:500;margin-bottom:3px;">${cityOf(code)}</div>
-                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-                  <span style="font-size:10px;padding:1px 7px;border-radius:99px;background:${stopsBg};color:#fff;font-weight:500">${stopsBadge}</span>
-                  ${alBadges}
-                  <span style="font-size:10px;color:#9E9C96;margin-left:2px">${best.path.map(s=>s.apt).join('→')}</span>
-                </div>
+            </div>`;
+          uniq.slice(0,4).forEach(({side,fromCode,toCode,km,best})=>{
+            const stopsBadge=best.stops===0?'Directo':best.stops===1?'1 escala':best.stops+' escalas';
+            const stopsBg=best.stops===0?'var(--green)':'var(--amber)';
+            const alBadges=best.airlines.map(al=>{
+              const col=AL_COLORS[al]||'#999';
+              return`<span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${col};background:${col}22;padding:1px 5px;border-radius:3px">${al}</span>`;
+            }).join(' ');
+            const groundDesc=side==='origin'
+              ?`Desde <b>${cityOf(mainOrig)}</b> → <b style="font-family:var(--mono)">${fromCode=mainOrig,toCode}</b> (${cityOf(toCode)}) · ${km}km por tierra · luego volar`
+              :`Volar hasta <b style="font-family:var(--mono)">${fromCode}</b> (${cityOf(fromCode)}) · luego ${km}km por tierra hasta <b>${cityOf(mainDest)}</b>`;
+            const altCode=side==='origin'?toCode:fromCode;
+            html+=`<div onclick="selectNearbyOrigin('${altCode}','${side}')" style="background:white;border:1px solid #D4A800;border-radius:7px;padding:10px 12px;margin-bottom:7px;cursor:pointer;" onmouseover="this.style.background='#FEF6E4'" onmouseout="this.style.background='white'">
+              <div style="font-size:11px;color:#8A6A00;margin-bottom:6px;">${groundDesc}</div>
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:${stopsBg};color:#fff;font-weight:600;">${stopsBadge}</span>
+                ${alBadges}
+                <span style="font-size:10px;color:#9E9C96;margin-left:4px">${best.path.map(s=>s.apt).join(' → ')}</span>
+                <span style="font-size:10px;color:#8A6A00;margin-left:auto;font-weight:600;">Ver →</span>
               </div>
-              <div style="font-size:10px;color:#8A6A00;flex-shrink:0;">Buscar →</div>
             </div>`;
           });
           html+=`</div>`;
@@ -1905,17 +1933,25 @@ function runSearch(){
   }
 }
 
-function selectNearbyOrigin(code){
-  selOrig=code;selOrigGroup=null;
-  const input=document.getElementById('input-origin');
-  if(input)input.value=cityOf(code)+' ('+code+')';
-  const cb=document.getElementById('clear-origin');
-  if(cb)cb.style.display='block';
+function selectNearbyOrigin(code, side){
+  if(side==='dest'){
+    selDest=code;selDestGroup=null;
+    const input=document.getElementById('input-dest');
+    if(input)input.value=cityOf(code)+' ('+code+')';
+    const cb=document.getElementById('clear-dest');
+    if(cb)cb.style.display='block';
+  } else {
+    selOrig=code;selOrigGroup=null;
+    const input=document.getElementById('input-origin');
+    if(input)input.value=cityOf(code)+' ('+code+')';
+    const cb=document.getElementById('clear-origin');
+    if(cb)cb.style.display='block';
+  }
   runSearch();
 }
 window.selectNearbyOrigin=selectNearbyOrigin;
 
-// ═══════════════════════════════════════════════════════════════════
+// ════════════════
 // MULTI-DESTINATION
 // ═══════════════════════════════════════════════════════════════════
 let multiStops=[],stopCounter=0;
