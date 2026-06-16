@@ -1306,7 +1306,7 @@ function initRouteInputs(){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="apt-input" id="input-origin" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
       <button id="clear-origin" onclick="clearField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0;z-index:3;">×</button>
-      <div id="dd-origin" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:150;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
+      <div id="dd-origin" class="apt-dd"></div>
     </div>
     <button id="swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
@@ -1316,7 +1316,7 @@ function initRouteInputs(){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" class="apt-input" id="input-dest" placeholder="Ciudad, país o código…" autocomplete="off" style="width:100%;padding-left:30px;padding-right:28px;box-sizing:border-box;"/>
       <button id="clear-dest" onclick="clearField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;padding:0;z-index:3;">×</button>
-      <div id="dd-dest" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:150;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
+      <div id="dd-dest" class="apt-dd"></div>
     </div>
   </div>`;
   // Swap button
@@ -1376,7 +1376,7 @@ function attachDropdowns(){
     input.addEventListener('input',()=>{
       const q=input.value.trim();
       if(!q){
-        dropdown.style.display='none';
+        dropdown.classList.remove('open');
         if(id==='origin'){selOrig=null;selOrigGroup=null;}
         else{selDest=null;selDestGroup=null;}
         runSearch();
@@ -1401,7 +1401,7 @@ function attachDropdowns(){
         </div>`).join('');
       } else {
         const matches=searchAirports(q,10);
-        if(!matches.length){dropdown.style.display='none';return;}
+        if(!matches.length){dropdown.classList.remove('open');return;}
         html=matches.map(c=>`<div class="apt-opt" data-code="${c}">
           <span class="opt-code">${c}</span>
           <span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span>
@@ -1409,7 +1409,7 @@ function attachDropdowns(){
       }
 
       dropdown.innerHTML=html;
-      dropdown.style.display='block';
+      dropdown.classList.add('open');
 
       // Wire click handlers
       dropdown.querySelectorAll('[data-gkey]').forEach(opt=>{
@@ -1420,7 +1420,7 @@ function attachDropdowns(){
           input.value=lbl+' ('+grp.length+')';
           if(id==='origin'){selOrig=grp[0]||null;selOrigGroup=grp;}
           else{selDest=grp[0]||null;selDestGroup=grp;}
-          dropdown.style.display='none';
+          dropdown.classList.remove('open');
           runSearch();
         });
       });
@@ -1431,7 +1431,7 @@ function attachDropdowns(){
           input.value=cityOf(code)+' ('+code+')';
           if(id==='origin'){selOrig=code;selOrigGroup=null;}
           else{selDest=code;selDestGroup=null;}
-          dropdown.style.display='none';
+          dropdown.classList.remove('open');
           runSearch();
         });
       });
@@ -1446,22 +1446,22 @@ function attachDropdowns(){
           input.value=region.label+' ('+region.codes.length+')';
           if(id==='origin'){selOrig=region.codes[0]||null;selOrigGroup=region.codes;}
           else{selDest=region.codes[0]||null;selDestGroup=region.codes;}
-          dropdown.style.display='none';
+          dropdown.classList.remove('open');
           runSearch();
           return;
         }
         // Try first visible dropdown option
         const first=dropdown.querySelector('[data-code],[data-gkey]');
-        if(first&&dropdown.style.display!=='none'){
+        if(first&&dropdown.classList.contains('open')){
           first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
         } else {
           runSearch();
         }
       }
-      if(e.key==='Escape')dropdown.style.display='none';
+      if(e.key==='Escape')dropdown.classList.remove('open');
     });
 
-    input.addEventListener('blur',()=>setTimeout(()=>dropdown.style.display='none',150));
+    input.addEventListener('blur',()=>setTimeout(()=>dropdown.classList.remove('open'),150));
   });
 }
 
