@@ -2492,12 +2492,36 @@ function setupMapSearch(){
       if(cb)cb.style.display=q?'inline':'none';
       if(!q){setCode(null);closeDD();return;}
 
-      const matches=searchAirports(q,12);
-      if(!matches.length){closeDD();return;}
-      openDD(matches.map(c=>`<div class="apt-opt" data-code="${c}">
+      let html='';
+
+      // Region/country suggestion (3+ chars) — same as Buscar ruta
+      if(q.length>=3){
+        const region=findRegion(q);
+        if(region&&region.codes.length){
+          const validCodes=region.codes.filter(c=>allAptCodes.includes(c));
+          if(validCodes.length){
+            const mrk='mr'+(Date.now()).toString(36);
+            window._mapRegions=window._mapRegions||{};
+            window._mapRegions[mrk]={label:region.label,codes:validCodes};
+            html+=`<div class="apt-opt" data-mrkey="${mrk}" style="background:var(--accent-light);border-bottom:1px solid #E2E0D880;">
+              <span class="opt-code" style="color:var(--accent)">★</span>
+              <span><b style="color:var(--accent)">${region.label}</b> <span style="font-size:11px;opacity:.6;color:var(--accent)">${validCodes.length} aeropuertos</span></span>
+            </div>`;
+          }
+        }
+      }
+
+      // Individual airport matches
+      const matches=searchAirports(q,10);
+      html+=matches.map(c=>`<div class="apt-opt" data-code="${c}">
         <span class="opt-code">${c}</span>
         <span>${cityOf(c)}${countryOf(c)?` <span style="color:#9E9C96;font-size:11px">· ${countryOf(c)}</span>`:''}</span>
-      </div>`).join(''));
+      </div>`).join('');
+
+      if(!html){closeDD();return;}
+      openDD(html);
+
+      // Wire airport clicks
       dd.querySelectorAll('[data-code]').forEach(opt=>{
         opt.addEventListener('mousedown',e=>{
           e.preventDefault();
@@ -2505,6 +2529,17 @@ function setupMapSearch(){
           input.value=cityOf(code)+' ('+code+')';
           const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
           setCode(code);closeDD();
+        });
+      });
+      // Wire region clicks
+      dd.querySelectorAll('[data-mrkey]').forEach(opt=>{
+        opt.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          const reg=(window._mapRegions||{})[opt.dataset.mrkey];
+          if(!reg)return;
+          input.value=reg.label+' ('+reg.codes.length+')';
+          const cb2=document.getElementById(clearBtnId);if(cb2)cb2.style.display='inline';
+          setCode(reg.codes[0]);closeDD();
         });
       });
     });
