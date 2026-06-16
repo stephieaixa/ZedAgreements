@@ -1244,59 +1244,47 @@ window.openRouteDetail=openRouteDetail;
 // Open route detail AND draw it on map
 function openMapRoute(cardId){
   const pathData=window._routePaths&&window._routePaths[cardId];
-  if(!pathData||!mapInstance)return openRouteDetail(cardId);
+  if(!pathData||!mapInstance){openRouteDetail(cardId);return;}
   
-  // Draw the route on the map
-  const apts=pathData.path.map(s=>s.apt||s);
+  const apts=pathData.path.map(s=>typeof s==='string'?s:s.apt);
   if(apts.length>=2){
-    // Clear existing route lines
-    mapRouteLines.forEach(l=>mapInstance.removeLayer(l));
-    mapRouteLines=[];
-    mapRouteDots.forEach(d=>mapInstance.removeLayer(d));
-    mapRouteDots=[];
-    
-    // Set map origin/dest for highlighting
+    // Use existing map infrastructure
     mapOrig=apts[0];
     mapDest=apts[apts.length-1];
+    clearRouteLines();
+    resetMarkers();
     
-    // Fade base lines
-    baseLineData.forEach(({line})=>line.setStyle({opacity:0.04,weight:0.5}));
-    Object.values(baseMarkers).forEach(m=>{
-      m.setStyle({fillOpacity:0.15,opacity:0.3});
-    });
+    // Fade base
+    baseLineData.forEach(({line})=>line.setStyle({opacity:0.03,weight:0.5}));
+    Object.values(baseMarkers).forEach(m=>m.setStyle({fillOpacity:0.1,opacity:0.2}));
+    
+    // Highlight origin and dest
+    highlightMarker(mapOrig,'#1A6B3C',10,true);
+    highlightMarker(mapDest,'#E8420A',10,true);
     
     // Draw each segment
     for(let i=0;i<apts.length-1;i++){
       const o=apts[i],d=apts[i+1];
-      const oc=ll(o),dc=ll(d);
-      if(!oc||!dc)continue;
+      const oc=ll(o),dc=ll(d);if(!oc||!dc)continue;
+      const seg=pathData.segs&&pathData.segs[i];
+      const col=seg?(AL_COLORS[seg.al]||'#E8420A'):'#E8420A';
       const isDirect=apts.length===2;
-      const seg=pathData.segs?pathData.segs[i]:null;
-      const col=seg?(AL_COLORS[seg.al]||'#666'):'var(--accent)';
       const line=L.polyline([oc,dc],{
-        color:col,weight:isDirect?3:2.5,
-        opacity:0.85,dashArray:i>0&&apts.length>2?'6 4':null
+        color:col,weight:isDirect?3:2.5,opacity:0.85,
+        dashArray:(!isDirect&&i>0)?'6 4':null
       }).addTo(mapInstance);
-      mapRouteLines.push(line);
+      routeLayers.push(line);
+      // Hub marker for intermediate stops
+      if(i>0&&i<apts.length-1){
+        const hub=L.circleMarker(oc,{radius:7,fillColor:AL_COLORS[seg&&seg.al]||'#999',color:'#fff',weight:2,fillOpacity:1,zIndexOffset:300}).addTo(mapInstance);
+        hub.bindTooltip(`<b>${o}</b> — ${cityOf(o)}`,{sticky:true,className:'leaflet-tooltip-zed',direction:'top'});
+        routeLayers.push(hub);
+      }
     }
     
-    // Highlight airports on route
-    apts.forEach((apt,i)=>{
-      const c=ll(apt);if(!c)return;
-      const isOrig=i===0,isDest=i===apts.length-1;
-      const col=isOrig?'#1A6B3C':isDest?'var(--accent)':'var(--amber)';
-      const dot=L.circleMarker(c,{
-        radius:isOrig||isDest?10:7,
-        fillColor:col,color:'#fff',weight:2,fillOpacity:1,zIndexOffset:500
-      }).addTo(mapInstance);
-      dot.bindTooltip(`<b>${apt}</b> — ${cityOf(apt)}`,{sticky:true,className:'leaflet-tooltip-zed',direction:'top'});
-      mapRouteDots.push(dot);
-      if(baseMarkers[apt])baseMarkers[apt].setStyle({fillOpacity:0,opacity:0});
-    });
-    
     // Fit bounds
-    const coords=apts.map(ll).filter(Boolean);
-    if(coords.length>1)mapInstance.fitBounds(coords,{padding:[60,60]});
+    const pts=apts.map(ll).filter(Boolean);
+    if(pts.length>1)mapInstance.fitBounds(pts,{padding:[60,60]});
     
     // Show clear button
     const cb=document.getElementById('map-clear-btn');
