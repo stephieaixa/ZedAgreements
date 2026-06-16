@@ -1337,131 +1337,95 @@ function initRouteInputs(){
 }
 
 function attachDropdowns(){
-  // Normalize: remove accents for fuzzy matching
-  function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
-
-  // Find region match - returns {label, codes} or null
-  function findRegion(q){
-    const qn=norm(q);
-    // Need at least 3 chars to suggest a region/country
-    if(qn.length<3)return null;
-    // Check aliases — exact or startsWith (only 3+ chars)
-    for(const[k,v]of Object.entries(SEARCH_ALIASES)){
-      const kn=norm(k);
-      if(kn===qn||kn.startsWith(qn)){
-        const codes=Array.isArray(v)?v:[v];
-        return{label:k.charAt(0).toUpperCase()+k.slice(1),codes};
-      }
-    }
-    // Check country/region groups — must match at least 3 chars
-    for(const[k,v]of Object.entries(COUNTRY_AIRPORTS)){
-      const kn=norm(k);
-      if((kn===qn||kn.startsWith(qn)||(qn.length>=4&&kn.includes(qn)))&&v.length){
-        return{label:k.charAt(0).toUpperCase()+k.slice(1),codes:v};
-      }
-    }
-    return null;
-  }
-
-  // Temp store for group selections (avoid JSON in HTML attrs)
   const pendingGroups={};
-  let groupCounter=0;
+  let gcount=0;
 
   ['origin','dest'].forEach(id=>{
     const input=document.getElementById('input-'+id);
-    const dropdown=document.getElementById('dd-'+id);
+    const dd=document.getElementById('dd-'+id);
     const clearBtn=document.getElementById('clear-'+id);
-    if(!input||!dropdown)return;
+    if(!input||!dd)return;
+
+    function showDD(html){
+      if(!html){dd.style.display='none';return;}
+      dd.innerHTML=html;
+      dd.style.cssText='display:block;position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12);';
+      dd.querySelectorAll('[data-code],[data-gkey]').forEach(opt=>{
+        opt.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          if(opt.dataset.gkey){
+            const grp=pendingGroups[opt.dataset.gkey]||[];
+            const lbl=opt.dataset.label||id;
+            input.value=lbl+' ('+grp.length+')';
+            if(id==='origin'){selOrig=grp[0]||null;selOrigGroup=grp;}
+            else{selDest=grp[0]||null;selDestGroup=grp;}
+          } else {
+            const code=opt.dataset.code;
+            input.value=cityOf(code)+' ('+code+')';
+            if(id==='origin'){selOrig=code;selOrigGroup=null;}
+            else{selDest=code;selDestGroup=null;}
+          }
+          if(clearBtn)clearBtn.style.display='block';
+          dd.style.display='none';
+          runSearch();
+        });
+      });
+    }
 
     input.addEventListener('input',()=>{
       const q=input.value.trim();
+      if(clearBtn)clearBtn.style.display=q?'block':'none';
       if(!q){
-        dropdown.classList.remove('open');
+        dd.style.display='none';
         if(id==='origin'){selOrig=null;selOrigGroup=null;}
         else{selDest=null;selDestGroup=null;}
         runSearch();
         return;
       }
-
-      // Build dropdown options
+      // Always search airports first
+      const aptMatches=searchAirports(q,8);
       let html='';
+      // Add region option if 3+ chars
       const region=findRegion(q);
-      if(region){
-        // Store group with key to avoid HTML attribute escaping issues
-        const gkey='g'+(groupCounter++);
+      if(region&&region.codes.length){
+        const gkey='g'+(gcount++);
         pendingGroups[gkey]=region.codes;
-        html+=`<div class="apt-opt" data-gkey="${gkey}" style="background:var(--accent-light);border-bottom:1px solid var(--border);">
+        html+=`<div class="apt-opt" data-gkey="${gkey}" data-label="${region.label}" style="background:var(--accent-light);border-bottom:1px solid var(--border)80;">
           <span class="opt-code" style="color:var(--accent)">★</span>
-          <span><b style="color:var(--accent)">Todos en ${region.label}</b> <span style="font-size:11px;opacity:.7;color:var(--accent)">${region.codes.length} aeropuertos</span></span>
+          <span><b style="color:var(--accent)">${region.label}</b> <span style="font-size:11px;opacity:.6;color:var(--accent)">${region.codes.length} aeropuertos</span></span>
         </div>`;
-        // Show individual airports in group
-        html+=region.codes.slice(0,6).map(c=>`<div class="apt-opt" data-code="${c}">
-          <span class="opt-code">${c}</span>
-          <span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span>
-        </div>`).join('');
-      } else {
-        const matches=searchAirports(q,10);
-        if(!matches.length){dropdown.classList.remove('open');return;}
-        html=matches.map(c=>`<div class="apt-opt" data-code="${c}">
+      }
+      // Always show individual airport results
+      if(aptMatches.length){
+        html+=aptMatches.map(c=>`<div class="apt-opt" data-code="${c}">
           <span class="opt-code">${c}</span>
           <span>${cityOf(c)}${countryOf(c)?` <span style="color:var(--text-muted);font-size:11px">· ${countryOf(c)}</span>`:''}</span>
         </div>`).join('');
       }
-
-      dropdown.innerHTML=html;
-      dropdown.classList.add('open');
-
-      // Wire click handlers
-      dropdown.querySelectorAll('[data-gkey]').forEach(opt=>{
-        opt.addEventListener('mousedown',e=>{
-          e.preventDefault();
-          const grp=pendingGroups[opt.dataset.gkey]||[];
-          const lbl=opt.querySelector('b').textContent;
-          input.value=lbl+' ('+grp.length+')';
-          if(id==='origin'){selOrig=grp[0]||null;selOrigGroup=grp;}
-          else{selDest=grp[0]||null;selDestGroup=grp;}
-          dropdown.classList.remove('open');
-          runSearch();
-        });
-      });
-      dropdown.querySelectorAll('[data-code]').forEach(opt=>{
-        opt.addEventListener('mousedown',e=>{
-          e.preventDefault();
-          const code=opt.dataset.code;
-          input.value=cityOf(code)+' ('+code+')';
-          if(id==='origin'){selOrig=code;selOrigGroup=null;}
-          else{selDest=code;selDestGroup=null;}
-          dropdown.classList.remove('open');
-          runSearch();
-        });
-      });
+      showDD(html||null);
     });
 
-    // Enter key: try region match first, then first dropdown item
     input.addEventListener('keydown',e=>{
       if(e.key==='Enter'){
-        const q=input.value.trim();
-        const region=findRegion(q);
-        if(region){
-          input.value=region.label+' ('+region.codes.length+')';
-          if(id==='origin'){selOrig=region.codes[0]||null;selOrigGroup=region.codes;}
-          else{selDest=region.codes[0]||null;selDestGroup=region.codes;}
-          dropdown.classList.remove('open');
-          runSearch();
-          return;
-        }
-        // Try first visible dropdown option
-        const first=dropdown.querySelector('[data-code],[data-gkey]');
-        if(first&&dropdown.classList.contains('open')){
+        const first=dd.querySelector('[data-code],[data-gkey]');
+        if(first&&dd.style.display!=='none'){
           first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));
         } else {
-          runSearch();
+          const code=input.value.trim().toUpperCase();
+          if(allAptCodes&&allAptCodes.includes(code)){
+            input.value=cityOf(code)+' ('+code+')';
+            if(id==='origin'){selOrig=code;selOrigGroup=null;}
+            else{selDest=code;selDestGroup=null;}
+            if(clearBtn)clearBtn.style.display='block';
+            dd.style.display='none';
+            runSearch();
+          }
         }
       }
-      if(e.key==='Escape')dropdown.classList.remove('open');
+      if(e.key==='Escape')dd.style.display='none';
     });
 
-    input.addEventListener('blur',()=>setTimeout(()=>dropdown.classList.remove('open'),150));
+    input.addEventListener('blur',()=>setTimeout(()=>dd.style.display='none',150));
   });
 }
 
