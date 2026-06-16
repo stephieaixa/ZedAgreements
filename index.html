@@ -369,7 +369,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="apt-input" id="map-origin" placeholder="Origen…" autocomplete="off" style="padding-right:28px;"/>
           <button id="map-clear-origin" onclick="clearMapField('origin')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;z-index:2;">×</button>
-          <div class="apt-dd" id="map-origin-dd"></div>
+          <div class="apt-dd" id="map-origin-dd" class="apt-dd"></div>
         </div>
         <button id="map-swap-btn" style="border:1px solid var(--border);background:var(--surface);border-radius:6px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
@@ -378,7 +378,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="apt-input" id="map-dest" placeholder="Destino…" autocomplete="off" style="padding-right:28px;"/>
           <button id="map-clear-dest" onclick="clearMapField('dest')" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;padding:0;z-index:2;">×</button>
-          <div class="apt-dd" id="map-dest-dd"></div>
+          <div class="apt-dd" id="map-dest-dd" class="apt-dd"></div>
         </div>
 
         <div style="display:flex;align-items:center;gap:8px;flex:1;">
@@ -591,7 +591,7 @@ OS:["VIE-LHR","VIE-CDG","VIE-FRA","VIE-AMS","VIE-ZRH","VIE-FCO","VIE-MAD","VIE-B
 KM:["MLA-LHR","MLA-LGW","MLA-CDG","MLA-FCO","MLA-MXP","MLA-AMS","MLA-FRA","MLA-BER","MLA-MAD","MLA-BCN","MLA-BRU","MLA-DUB","MLA-ATH","MLA-ZRH","MLA-VIE","MLA-WAW","MLA-PRG","MLA-CTA","MLA-PMO","MLA-NAP","MLA-VCE","MLA-CPH","MLA-ARN","MLA-OSL","MLA-HEL","MLA-LIS"],
 X3:["DUS-PMI","DUS-IBZ","DUS-TFS","DUS-LPA","DUS-ACE","DUS-FUE","DUS-AGP","DUS-ALC","DUS-HER","DUS-RHO","DUS-KGS","DUS-JTR","DUS-JMK","DUS-AYT","DUS-BJV","DUS-DLM","DUS-AGA","DUS-RAK","DUS-FNC","DUS-CUN","DUS-PUJ","DUS-MBJ","DUS-VRA","DUS-DXB","DUS-BKK","DUS-HKT","DUS-MLE","DUS-ZNZ","DUS-MRU","DUS-DPS","FRA-PMI","FRA-TFS","FRA-LPA","FRA-AYT","FRA-CUN","MUC-PMI","MUC-TFS","MUC-LPA","MUC-AYT","MUC-CUN","HAM-PMI","HAM-TFS","HAM-AYT","BER-PMI","BER-TFS","BER-AYT"],
 ZO:["LGW-ATL","LGW-BOS","LGW-EWR","LGW-FLL","LGW-IAD","LGW-JFK","LGW-LAS","LGW-LAX","LGW-MCO","LGW-MIA","LGW-ORD","LGW-SFO"],
-NO:["ARN-EWR","ARN-JFK","ARN-LAX","BGO-JFK","CPH-EWR","CPH-JFK","CPH-LAX","HEL-EWR","OSL-ATL","OSL-BKK","OSL-DPS","OSL-EWR","OSL-FLL","OSL-JFK","OSL-LAX","OSL-MIA","OSL-ORD","OSL-SIN"],
+NO:["ARN-EWR","ARN-JFK","ARN-LAX","BGO-JFK","CPH-EWR","CPH-JFK","CPH-LAX","OSL-BKK","OSL-DPS","OSL-EWR","OSL-FLL","OSL-JFK","OSL-LAX","OSL-MIA","OSL-ORD","OSL-SIN"],
 PM:["TFN-LPA","TFN-ACE","TFN-FUE","TFN-SPC","TFN-VDE","TFN-GMZ","LPA-ACE","LPA-FUE","LPA-SPC","LPA-VDE","LPA-GMZ","ACE-FUE","ACE-SPC"],
 S4:["PDL-TER","PDL-HOR","PDL-PIX","PDL-LIS","PDL-OPO","PDL-LGW","PDL-AMS","PDL-FRA","PDL-MAD","PDL-CDG","PDL-BOS","PDL-OAK","PDL-PVD","PDL-YYZ","PDL-YUL","TER-LIS","TER-OPO"],
 SP:["PDL-TER","PDL-SMA","PDL-GRW","PDL-SJZ","PDL-HOR","PDL-PIX","PDL-FLW","PDL-CVU","TER-HOR","TER-SJZ","TER-GRW","TER-PIX","TER-SMA","HOR-PIX","PDL-LIS","PDL-OPO","TER-LIS"],
@@ -602,7 +602,7 @@ G4:["ABQ-LAS","ABQ-PIE","ABQ-SFB","AZA-CLE","AZA-CMH","AZA-CUN","AZA-DSM","AZA-F
 "5T":["YOW-YFB","YFB-YYZ","YFB-YUL","YFB-YYT","YEG-YZF","YEG-YHY","YZF-YEV","YZF-YXY","YZF-YHY","YZF-YRB","YZF-YCB","YZF-YGZ","YZF-YFB","YZF-YXN"],
 "9M":["YVR-YXS","YVR-YKA","YVR-YXJ","YVR-YQQ","YYC-YXS","YYC-YKA","YYC-YXJ","YYC-YQQ","YEG-YXJ","YXS-YKA","YXS-YQQ","YXS-YYD","YXT-YPR","YXJ-YYE","YXJ-YDQ"],
 WP:["YQT-YXL","YXL-YFH","YXL-YOG","YXL-YAX","YXL-YHP","YXL-YNO","YXL-YRL","YXL-YPM","YXL-ZKE","YXL-YAG","YXL-ZTM","YQT-ZKE","YQT-YAG"],
-H2:["SCL-LIM","SCL-BOG","SCL-EZE","SCL-GRU","SCL-VVI","SCL-MDE","SCL-IQQ","SCL-ANF","SCL-LSC","SCL-CCP","SCL-PMC","SCL-PUQ","SCL-ZCO","SCL-CJC","SCL-ARI","SCL-CPO","SCL-CUN","LIM-BOG","LIM-EZE","LIM-GRU"],
+H2:["LIM-BOG","LIM-EZE","LIM-GRU","SCL-ANF","SCL-ARI","SCL-BOG","SCL-CCP","SCL-CJC","SCL-CPO","SCL-EZE","SCL-GRU","SCL-IQQ","SCL-LIM","SCL-LSC","SCL-MDE","SCL-PMC","SCL-PUQ","SCL-VVI","SCL-ZCO"],
 P5:["BOG-CTG","BOG-MDE","BOG-CLO","BOG-BAQ","BOG-CUC","BOG-ADZ","BOG-PEI","BOG-BGA","BOG-PTY","BOG-LIM","BOG-UIO","BOG-GYE","BOG-SDQ","BOG-HAV","BOG-CUN","BOG-SJO","BOG-SAL","BOG-GUA","BOG-CCS","CTG-MDE","CTG-CLO","MDE-CLO","MDE-PTY"],
 VR:["RAI-SID","RAI-VXE","RAI-BVC","RAI-LIS","RAI-OPO","RAI-AMS","RAI-LGW","RAI-CDG","RAI-MAD","RAI-FCO","RAI-MXP","RAI-BOS","RAI-PVD","RAI-FOR","RAI-REC","RAI-GRU","RAI-DSS","SID-LIS","SID-AMS","SID-LGW","SID-CDG","SID-MAD"],
 EY:["AUH-MLE","AUH-LHR","AUH-CDG","AUH-FRA","AUH-AMS","AUH-MAD","AUH-BCN","AUH-FCO","AUH-MXP","AUH-ZRH","AUH-GVA","AUH-DUB","AUH-BRU","AUH-ATH","AUH-VIE","AUH-MUC","AUH-NRT","AUH-KIX","AUH-ICN","AUH-PEK","AUH-PVG","AUH-HKG","AUH-SIN","AUH-BKK","AUH-BOM","AUH-DEL","AUH-KHI","AUH-CMB","AUH-KUL","AUH-CGK","AUH-MNL","AUH-JFK","AUH-LAX","AUH-ORD","AUH-IAD","AUH-YYZ","AUH-BOS","AUH-DFW","AUH-IAH","AUH-SFO","AUH-JNB","AUH-NBO","AUH-CAI","AUH-LOS","AUH-SYD","AUH-MEL","AUH-AKL","AUH-BNE","AUH-DXB","AUH-DOH","AUH-KWI","AUH-BEY","AUH-AMM","AUH-TLV","AUH-RUH","AUH-JED","AUH-MCT"],
