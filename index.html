@@ -2212,13 +2212,20 @@ const baseLineData=[]; // {line, airports:[o,d], iata}
 
 function highlightLinesForAirport(code, highlight){
   if(mapOrig||mapDest)return; // Don't interfere when routes are selected
+  const shown=new Set();
   baseLineData.forEach(({line,airports,iata})=>{
     if(airports.includes(code)){
+      const other=airports.find(a=>a!==code);
       if(highlight){
         line.setStyle({weight:2.5,opacity:0.7});
         line.bringToFront();
+        if(other&&baseMarkers[other]&&!shown.has(other)){
+          shown.add(other);
+          baseMarkers[other].openTooltip(baseMarkers[other].getLatLng());
+        }
       } else {
         line.setStyle({weight:1,opacity:0.12});
+        if(other&&baseMarkers[other])baseMarkers[other].closeTooltip();
       }
     }
   });
@@ -2244,14 +2251,16 @@ function buildBaseLayer(){
       const line=L.polyline([oc,dc],{color,weight:1,opacity:0.12,interactive:true}).addTo(mapInstance);
       baseLines.push(line);
       baseLineData.push({line,airports:[o,d],iata});
-      // Hover on base line: just highlight the line, tooltip is on the markers
+      // Hover on base line: highlight line and show tooltips on both endpoint markers
       line.on('mouseover',function(){
         if(mapOrig||mapDest)return;
         this.setStyle({weight:2.5,opacity:0.65});
+        [o,d].forEach(c=>{if(baseMarkers[c])baseMarkers[c].openTooltip(baseMarkers[c].getLatLng());});
       });
       line.on('mouseout',function(){
         if(mapOrig||mapDest)return;
         this.setStyle({weight:1,opacity:0.12});
+        [o,d].forEach(c=>{if(baseMarkers[c])baseMarkers[c].closeTooltip();});
       });
     });
   });
@@ -2374,12 +2383,17 @@ function showOriginRoutes(orig){
     line.bindTooltip(tipText,{sticky:true,className:'leaflet-tooltip-zed',direction:'top'});
     line.on('mouseover',()=>{
       line.setStyle({weight:4,opacity:1});
-      if(baseMarkers[dest])baseMarkers[dest].setStyle({fillOpacity:1,radius:markerRadius(dest)+3});
+      if(baseMarkers[dest]){
+        baseMarkers[dest].setStyle({fillOpacity:1,radius:markerRadius(dest)+3});
+        baseMarkers[dest].openTooltip(baseMarkers[dest].getLatLng());
+      }
     });
     line.on('mouseout',()=>{
       line.setStyle({weight:2,opacity:0.5});
-      if(dest!==mapDest&&baseMarkers[dest])
+      if(dest!==mapDest&&baseMarkers[dest]){
         baseMarkers[dest].setStyle({fillOpacity:0.85,radius:markerRadius(dest)+1});
+        baseMarkers[dest].closeTooltip();
+      }
     });
     line.on('click',()=>onMapAirportClick(dest));
     routeLayers.push(line);
