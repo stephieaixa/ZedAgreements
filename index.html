@@ -2303,7 +2303,7 @@ function highlightMarker(code,col,r,permanent){
   // Always use sticky (hover) tooltip - permanent ones break on zoom
   m.unbindTooltip();
   m.bindTooltip(
-    `<b>${code}</b> — ${cityOf(code)}`,
+    `<b>${code}</b> — ${cityOf(code)}${countryOf(code)?' · '+countryOf(code):''}`,
     {sticky:true,direction:'top',offset:[0,-(r+2)],className:'leaflet-tooltip-zed'}
   );
   // Show it briefly to indicate selection
@@ -2388,7 +2388,7 @@ function showOriginRoutes(orig){
       // Sticky hover tooltip (not permanent - avoids overlap on zoom)
       baseMarkers[dest].unbindTooltip();
       baseMarkers[dest].bindTooltip(
-        `<b>${dest}</b> — ${cityOf(dest)}`,
+        `<b>${dest}</b> — ${cityOf(dest)}${countryOf(dest)?' · '+countryOf(dest):''}`,
         {sticky:true, direction:'top', offset:[0,-4], className:'leaflet-tooltip-zed'}
       );
     }
@@ -2455,7 +2455,7 @@ function showBothRoutes(){
       const hc=ll(r.path[1].apt);
       if(hc){
         const mh=L.circleMarker(hc,{radius:6,fillColor:'#F9A067',color:'#fff',weight:1.5,fillOpacity:0.9,zIndexOffset:300})
-          .bindTooltip(`Escala: ${r.path[1].apt} — ${cityOf(r.path[1].apt)}`,{sticky:true,className:'leaflet-tooltip-zed'})
+          .bindTooltip(`Escala: ${r.path[1].apt} — ${cityOf(r.path[1].apt)}${countryOf(r.path[1].apt)?' · '+countryOf(r.path[1].apt):''}`,{sticky:true,className:'leaflet-tooltip-zed'})
           .addTo(mapInstance);
         routeLayers.push(mh);
       }
