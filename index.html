@@ -266,6 +266,18 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
   .suggest-body{padding:14px 16px;}
   .suggest-head{padding:14px 16px;}
 }
+/* Ruta Mixta */
+.hybrid-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.hybrid-leg{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);}
+.hybrid-leg:last-of-type{border-bottom:none;}
+.hybrid-leg.zed-leg{background:var(--green-bg);}
+.hybrid-leg.paid-leg{background:var(--amber-bg);}
+.hybrid-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;letter-spacing:.05em;font-family:var(--mono);}
+.hybrid-badge.zed{background:var(--green);color:#fff;}
+.hybrid-badge.paid{background:var(--amber);color:#fff;}
+.hybrid-leg-apts{flex:1;font-size:12px;color:var(--text-primary);}
+.hybrid-leg-detail{font-size:11px;color:var(--text-secondary);white-space:nowrap;}
+.hybrid-footer{padding:8px 14px;background:var(--surface-2);font-size:11px;color:var(--text-muted);}
 </style>
 </head>
 <body>
@@ -283,6 +295,7 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
 <div class="tabs">
   <button class="tab active" data-tab="solo">✓ Viajan solas</button>
   <button class="tab" data-tab="route">Buscar ruta</button>
+  <button class="tab" data-tab="hybrid">Ruta Mixta</button>
   <button class="tab" data-tab="map">Mapa</button>
 </div>
 
@@ -357,6 +370,16 @@ aside::-webkit-scrollbar-thumb,.panel-body::-webkit-scrollbar-thumb,.map-side::-
       </div>
       <div id="multi-results"></div>
     </div>
+  </div>
+</div>
+
+<!-- TAB: RUTA MIXTA -->
+<div class="tab-content" id="tab-hybrid">
+  <div class="route-section">
+    <h2 style="margin-bottom:5px;">Ruta Mixta</h2>
+    <p style="margin-bottom:16px;">Combiná un tramo ZED con un vuelo pago cuando no hay conexión ZED directa o conveniente.</p>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;" id="hybrid-inputs-area"></div>
+    <div id="hybrid-results"></div>
   </div>
 </div>
 
@@ -2131,6 +2154,136 @@ function findMultiRoute(by){
 window.findMultiRoute=findMultiRoute;
 
 // ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// RUTA MIXTA — ZED + 1 tramo pago
+// ═══════════════════════════════════════════════════════════════════
+let selOrigH=null,selDestH=null;
+
+function reachableZED(start,maxStops){
+  buildGraph();
+  const result={};
+  const queue=[{curr:start,path:[{apt:start,al:null}],visited:new Set([start])}];
+  while(queue.length){
+    const{curr,path,visited}=queue.shift();
+    for(const{d,al}of(GRAPH[curr]||[])){
+      if(visited.has(d))continue;
+      const newPath=[...path,{apt:d,al}];
+      const stops=newPath.length-2;
+      if(!result[d]||result[d].stops>stops){
+        const segs=newPath.slice(1);
+        result[d]={path:newPath,segs,stops,airlines:[...new Set(segs.map(s=>s.al))]};
+      }
+      if(stops<maxStops)queue.push({curr:d,path:newPath,visited:new Set([...visited,d])});
+    }
+  }
+  return result;
+}
+
+function findHybridRoutes(origin,dest,maxLeg){
+  maxLeg=maxLeg||1;
+  const fromO=reachableZED(origin,maxLeg);
+  const fromD=reachableZED(dest,maxLeg);
+  const seen=new Set();
+  const pairs=[];
+  for(const bA of Object.keys(fromO)){
+    if(bA===dest)continue;
+    const dA=fromO[bA];
+    for(const bB of Object.keys(fromD)){
+      if(bB===origin||bA===bB)continue;
+      const dB=fromD[bB];
+      const key=bA+'|'+bB;
+      if(seen.has(key))continue;
+      seen.add(key);
+      const paidKm=haversineKm(bA,bB);
+      if(paidKm>13000)continue;
+      pairs.push({
+        zed1:{to:bA,path:dA.path,segs:dA.segs,stops:dA.stops,airlines:dA.airlines},
+        paid:{from:bA,to:bB,km:Math.round(paidKm)},
+        zed2:{from:bB,to:dest,path:dB.path,segs:dB.segs,stops:dB.stops,airlines:dB.airlines},
+        totalStops:dA.stops+dB.stops,
+        score:(dA.stops+dB.stops)*100000+Math.round(paidKm/10)
+      });
+    }
+  }
+  return pairs.sort((a,b)=>a.score-b.score).slice(0,6);
+}
+
+function renderHybridCard(h){
+  function fmtLeg(data){
+    const apts=data.path.map(p=>'<b style="font-family:var(--mono)">'+p.apt+'</b>').join(' → ');
+    const als=data.airlines.join(', ');
+    const sl=data.stops===0?'Directo':data.stops+' escala'+(data.stops>1?'s':'');
+    return'<div class="hybrid-leg zed-leg"><span class="hybrid-badge zed">ZED</span><span class="hybrid-leg-apts">'+apts+'</span><span class="hybrid-leg-detail">'+sl+' · '+als+'</span></div>';
+  }
+  const pKm=h.paid.km;
+  const pLabel=pKm<500?'Corto (~'+pKm+' km)':pKm<3000?'Regional (~'+pKm+' km)':'Largo (~'+pKm+' km)';
+  return'<div class="hybrid-card">'+
+    fmtLeg(h.zed1)+
+    '<div class="hybrid-leg paid-leg"><span class="hybrid-badge paid">PAGO</span><span class="hybrid-leg-apts"><b style="font-family:var(--mono)">'+h.paid.from+'</b> → <b style="font-family:var(--mono)">'+h.paid.to+'</b></span><span class="hybrid-leg-detail">'+pLabel+'</span></div>'+
+    fmtLeg(h.zed2)+
+    '<div class="hybrid-footer">Total ZED: '+h.totalStops+' escala'+(h.totalStops!==1?'s':'')+' · Verificá precio del tramo pago en Google Flights</div>'+
+  '</div>';
+}
+
+function runHybridSearch(){
+  const box=document.getElementById('hybrid-results');
+  if(!selOrigH||!selDestH){box.innerHTML='';return;}
+  const hybrids=findHybridRoutes(selOrigH,selDestH,1);
+  if(!hybrids.length){
+    box.innerHTML='<div class="route-result-empty">No se encontraron combinaciones. Probá con aeropuertos de hub principales.</div>';
+    return;
+  }
+  const purePaths=findPaths(selOrigH,selDestH,2);
+  let html='';
+  if(purePaths.length&&purePaths[0].stops<=1){
+    html+='<div style="background:var(--green-bg);border:1px solid #C8E6D4;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--green)">Ya existe ruta ZED con '+purePaths[0].stops+' escala'+(purePaths[0].stops!==1?'s':'')+'. Las opciones mixtas igual pueden ser útiles si el tramo pago te sale barato.</div>';
+  }
+  html+='<p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Tramo <b style="color:var(--amber)">PAGO</b>: vuelo comercial que comprás vos. El resto en tarifa ZED. Ordenados por menor coste total de escalas ZED.</p>';
+  hybrids.forEach(h=>{html+=renderHybridCard(h);});
+  box.innerHTML=html;
+}
+
+function initHybridInputs(){
+  const area=document.getElementById('hybrid-inputs-area');
+  if(!area||area.hasChildNodes())return;
+  area.innerHTML=`
+    <label style="font-size:12px;color:var(--text-secondary);font-weight:500;flex-shrink:0">Origen</label>
+    <div style="position:relative;flex:1;min-width:160px;max-width:260px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="apt-input" id="hinput-origin" placeholder="Ciudad o código…" autocomplete="off" style="width:100%;padding-left:30px;box-sizing:border-box;"/>
+      <div id="hdd-origin" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
+    </div>
+    <label style="font-size:12px;color:var(--text-secondary);font-weight:500;flex-shrink:0">Destino</label>
+    <div style="position:relative;flex:1;min-width:160px;max-width:260px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="apt-input" id="hinput-dest" placeholder="Ciudad o código…" autocomplete="off" style="width:100%;padding-left:30px;box-sizing:border-box;"/>
+      <div id="hdd-dest" style="position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid #E2E0D8;border-radius:6px;z-index:9999;max-height:220px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none;"></div>
+    </div>`;
+  ['origin','dest'].forEach(id=>{
+    const inp=document.getElementById('hinput-'+id);
+    const dd=document.getElementById('hdd-'+id);
+    inp.addEventListener('input',()=>{
+      const q=inp.value.trim();
+      if(q.length<1){dd.style.display='none';return;}
+      const matches=searchAirports(q,12);
+      if(!matches.length){dd.style.display='none';return;}
+      dd.innerHTML=matches.map(m=>'<div class="apt-opt" data-code="'+m.code+'"><span class="opt-code">'+m.code+'</span><span>'+m.label+'</span></div>').join('');
+      dd.querySelectorAll('.apt-opt').forEach(opt=>{
+        opt.addEventListener('mousedown',e=>{
+          e.preventDefault();
+          inp.value=opt.querySelector('span:last-child').textContent;
+          dd.style.display='none';
+          if(id==='origin')selOrigH=opt.dataset.code;
+          else selDestH=opt.dataset.code;
+          runHybridSearch();
+        });
+      });
+      dd.style.display='block';
+    });
+    inp.addEventListener('blur',()=>setTimeout(()=>{dd.style.display='none';},150));
+  });
+}
+
 // TABS
 // ═══════════════════════════════════════════════════════════════════
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
@@ -2145,6 +2298,7 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   tc.style.display='flex';
   tc.style.flexDirection='column';
   if(t.dataset.tab==='map')initMap();
+  if(t.dataset.tab==='hybrid')initHybridInputs();
 }));
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2916,6 +3070,7 @@ document.querySelectorAll('.tab-content').forEach(tc=>{
 });
 renderSolo();
 initRouteInputs();
+initHybridInputs();
 </script>
 </body>
 </html>
